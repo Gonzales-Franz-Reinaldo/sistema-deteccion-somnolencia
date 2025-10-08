@@ -139,8 +139,8 @@ graph TB
     style K fill:#ba68c8
     style L fill:#ff8a65
     style M fill:#ff8a65
-    style N fill:#000000
-    style O fill:#000000
+    style N fill:#90a4ae
+    style O fill:#90a4ae
 ```
 
 ### 🔄 Arquitectura en Capas 3D
