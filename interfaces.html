@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Detección de Somnolencia - Prototipo UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #1a1a2e;
+        }
+
+        /* ==================== SCREENS ==================== */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== SPLASH SCREEN ==================== */
+        .splash-screen {
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .splash-content {
+            text-align: center;
+            color: white;
+        }
+
+        .splash-logo {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .splash-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .splash-subtitle {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .splash-button {
+            padding: 15px 60px;
+            font-size: 18px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .splash-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ==================== SELECTION SCREEN ==================== */
+        .selection-screen {
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 40px;
+        }
+
+        .selection-title {
+            font-size: 42px;
+            color: white;
+            margin-bottom: 60px;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .selection-cards {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+        }
+
+        .selection-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 280px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .selection-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .selection-card-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .selection-card-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .selection-card-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .selection-card-button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .card-admin .selection-card-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-driver .selection-card-button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        /* ==================== LOGIN SCREEN ==================== */
+        .login-screen {
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            width: 450px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .form-checkbox input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .form-checkbox label {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* ==================== DASHBOARD SCREEN ==================== */
+        .dashboard-screen {
+            background: #f5f7fa;
+        }
+
+        .dashboard-header {
+            background: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .dashboard-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .dashboard-logo-icon {
+            font-size: 36px;
+        }
+
+        .dashboard-logo-text {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .dashboard-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .dashboard-user-info {
+            text-align: right;
+        }
+
+        .dashboard-user-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .dashboard-user-role {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .dashboard-user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .dashboard-body {
+            display: flex;
+            height: calc(100vh - 85px);
+        }
+
+        .dashboard-sidebar {
+            width: 280px;
+            background: white;
+            padding: 30px 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-menu-item {
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #666;
+            font-size: 15px;
+        }
+
+        .sidebar-menu-item:hover {
+            background: #f5f7fa;
+            color: #667eea;
+            border-left: 4px solid #667eea;
+            padding-left: 26px;
+        }
+
+        .sidebar-menu-item.active {
+            background: linear-gradient(90deg, #667eea15 0%, transparent 100%);
+            color: #667eea;
+            border-left: 4px solid #667eea;
+            padding-left: 26px;
+            font-weight: bold;
+        }
+
+        .sidebar-menu-icon {
+            font-size: 20px;
+        }
+
+        .dashboard-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .content-header {
+            margin-bottom: 30px;
+        }
+
+        .content-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .content-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-card-icon {
+            font-size: 32px;
+        }
+
+        .stat-card-trend {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .trend-up {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .trend-down {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .stat-card-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-card-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .data-table {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-icon:hover {
+            background: #f5f7fa;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead tr {
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        table th {
+            padding: 15px;
+            text-align: left;
+            font-size: 13px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        table tbody tr {
+            transition: all 0.3s;
+        }
+
+        table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-alert {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* ==================== MONITORING SCREEN ==================== */
+        .monitoring-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 25px;
+            height: 100%;
+        }
+
+        .camera-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .camera-view {
+            background: #000;
+            border-radius: 15px;
+            height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .camera-placeholder {
+            text-align: center;
+            color: #666;
+        }
+
+        .camera-placeholder-icon {
+            font-size: 80px;
+            margin-bottom: 10px;
+        }
+
+        .camera-status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .camera-controls {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-button {
+            flex: 1;
+            margin: 0 5px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .analysis-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .analysis-card-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .metric-status {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+
+        .status-normal {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-critical {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .alert-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            animation: pulse-alert 2s infinite;
+        }
+
+        @keyframes pulse-alert {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .alert-box-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-box-message {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .event-log {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            padding: 10px;
+            border-left: 3px solid #e0e0e0;
+            margin-bottom: 8px;
+            font-size: 13px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .event-item.event-info {
+            border-left-color: #17a2b8;
+        }
+
+        .event-item.event-warning {
+            border-left-color: #ffc107;
+        }
+
+        .event-item.event-error {
+            border-left-color: #dc3545;
+        }
+
+        .event-time {
+            color: #666;
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .monitoring-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== UTILITIES ==================== */
+        .hidden {
+            display: none !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- ==================== SPLASH SCREEN ==================== -->
+        <div class="screen active" id="splashScreen">
+            <div class="splash-screen">
+                <div class="splash-content">
+                    <div class="splash-logo">🚗</div>
+                    <h1 class="splash-title">Sistema de Detección<br/>de Somnolencia</h1>
+                    <p class="splash-subtitle">Tecnología de IA para tu seguridad vial</p>
+                    <button class="splash-button" onclick="showScreen('selectionScreen')">
+                        Comenzar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SELECTION SCREEN ==================== -->
+        <div class="screen" id="selectionScreen">
+            <div class="selection-screen">
+                <h1 class="selection-title">Selecciona tu tipo de acceso</h1>
+                <div class="selection-cards">
+                    <div class="selection-card card-admin" onclick="showScreen('loginAdminScreen')">
+                        <div class="selection-card-icon">🔧</div>
+                        <h2 class="selection-card-title">Administrador</h2>
+                        <p class="selection-card-description">
+                            Gestiona usuarios, configura el sistema y visualiza reportes
+                        </p>
+                        <button class="selection-card-button">Acceder como Admin</button>
+                    </div>
+                    
+                    <div class="selection-card card-driver" onclick="showScreen('loginDriverScreen')">
+                        <div class="selection-card-icon">👤</div>
+                        <h2 class="selection-card-title">Chofer</h2>
+                        <p class="selection-card-description">
+                            Inicia sesión y comienza el monitoreo en tiempo real
+                        </p>
+                        <button class="selection-card-button">Acceder como Chofer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== LOGIN ADMIN SCREEN ==================== -->
+        <div class="screen" id="loginAdminScreen">
+            <div class="login-screen">
+                <div class="login-box">
+                    <div class="login-header">
+                        <div class="login-icon">🔧</div>
+                        <h2 class="login-title">Acceso Administrador</h2>
+                        <p class="login-subtitle">Ingresa tus credenciales de administrador</p>
+                    </div>
+                    
+                    <form onsubmit="login('admin'); return false;">
+                        <div class="form-group">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-input" placeholder="admin" value="admin">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-input" placeholder="••••••••" value="admin123">
+                        </div>
+                        
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="rememberAdmin">
+                            <label for="rememberAdmin">Recordar sesión</label>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary">Iniciar Sesión</button>
+                        <button type="button" class="btn-secondary" onclick="showScreen('selectionScreen')">
+                            Volver
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== LOGIN DRIVER SCREEN ==================== -->
+        <div class="screen" id="loginDriverScreen">
+            <div class="login-screen">
+                <div class="login-box">
+                    <div class="login-header">
+                        <div class="login-icon">👤</div>
+                        <h2 class="login-title">Acceso Chofer</h2>
+                        <p class="login-subtitle">Ingresa tus credenciales personales</p>
+                    </div>
+                    
+                    <form onsubmit="login('driver'); return false;">
+                        <div class="form-group">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-input" placeholder="jperez" value="jperez">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-input" placeholder="••••••••" value="chofer123">
+                        </div>
+                        
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="rememberDriver">
+                            <label for="rememberDriver">Recordar usuario</label>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary">Iniciar Sesión</button>
+                        <button type="button" class="btn-secondary" onclick="showScreen('selectionScreen')">
+                            Volver
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== ADMIN DASHBOARD ==================== -->
+        <div class="screen" id="adminDashboard">
+            <div class="dashboard-screen">
+                <div class="dashboard-header">
+                    <div class="dashboard-logo">
+                        <div class="dashboard-logo-icon">🚗</div>
+                        <div class="dashboard-logo-text">Panel Administrador</div>
+                    </div>
+                    <div class="dashboard-user">
+                        <div class="dashboard-user-info">
+                            <div class="dashboard-user-name">Administrador</div>
+                            <div class="dashboard-user-role">Super Admin</div>
+                        </div>
+                        <div class="dashboard-user-avatar">A</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-body">
+                    <div class="dashboard-sidebar">
+                        <div class="sidebar-menu-item active" onclick="showAdminSection('dashboard')">
+                            <span class="sidebar-menu-icon">📊</span>
+                            <span>Dashboard</span>
+                        </div>
+                        <div class="sidebar-menu-item" onclick="showAdminSection('drivers')">
+                            <span class="sidebar-menu-icon">👥</span>
+                            <span>Gestión de Choferes</span>
+                        </div>
+                        <div class="sidebar-menu-item" onclick="showAdminSection('monitoring')">
+                            <span class="sidebar-menu-icon">📹</span>
+                            <span>Monitoreo en Vivo</span>
+                        </div>
+                        <div class="sidebar-menu-item" onclick="showAdminSection('reports')">
+                            <span class="sidebar-menu-icon">📈</span>
+                            <span>Reportes</span>
+                        </div>
+                        <div class="sidebar-menu-item" onclick="showAdminSection('settings')">
+                            <span class="sidebar-menu-icon">⚙️</span>
+                            <span>Configuración</span>
+                        </div>
+                        <div class="sidebar-menu-item" onclick="showAdminSection('logs')">
+                            <span class="sidebar-menu-icon">📝</span>
+                            <span>Logs del Sistema</span>
+                        </div>
+                        <div class="sidebar-menu-item" style="margin-top: 20px; color: #dc3545;" onclick="logout()">
+                            <span class="sidebar-menu-icon">🚪</span>
+                            <span>Cerrar Sesión</span>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-content">
+                        <!-- Dashboard Overview -->
+                        <div id="adminSectionDashboard">
+                            <div class="content-header">
+                                <h1 class="content-title">Dashboard General</h1>
+                                <p class="content-subtitle">Resumen de actividad del sistema</p>
+                            </div>
+                            
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">👥</div>
+                                        <div class="stat-card-trend trend-up">+12%</div>
+                                    </div>
+                                    <div class="stat-card-value">24</div>
+                                    <div class="stat-card-label">Choferes Activos</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">🚗</div>
+                                        <div class="stat-card-trend trend-up">+8%</div>
+                                    </div>
+                                    <div class="stat-card-value">156</div>
+                                    <div class="stat-card-label">Sesiones Hoy</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">⚠️</div>
+                                        <div class="stat-card-trend trend-down">-5%</div>
+                                    </div>
+                                    <div class="stat-card-value">47</div>
+                                    <div class="stat-card-label">Alertas Generadas</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">🛑</div>
+                                        <div class="stat-card-trend trend-down">-15%</div>
+                                    </div>
+                                    <div class="stat-card-value">3</div>
+                                    <div class="stat-card-label">Incidentes Críticos</div>
+                                </div>
+                            </div>
+                            
+                            <div class="data-table">
+                                <div class="table-header">
+                                    <h2 class="table-title">Actividad Reciente</h2>
+                                    <div class="table-actions">
+                                        <button class="btn-icon">🔄 Actualizar</button>
+                                        <button class="btn-icon">📥 Exportar</button>
+                                    </div>
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Chofer</th>
+                                            <th>Empresa</th>
+                                            <th>Última Sesión</th>
+                                            <th>Duración</th>
+                                            <th>Alertas</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Juan Pérez</td>
+                                            <td>TransCorp</td>
+                                            <td>Hoy, 14:32</td>
+                                            <td>2h 15min</td>
+                                            <td>3</td>
+                                            <td><span class="status-badge status-active">Normal</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>María López</td>
+                                            <td>Individual</td>
+                                            <td>Hoy, 13:15</td>
+                                            <td>3h 45min</td>
+                                            <td>7</td>
+                                            <td><span class="status-badge status-alert">Alerta</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Carlos Gómez</td>
+                                            <td>FleetPro</td>
+                                            <td>Ayer, 18:45</td>
+                                            <td>4h 20min</td>
+                                            <td>2</td>
+                                            <td><span class="status-badge status-inactive">Inactivo</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Ana Martínez</td>
+                                            <td>TransCorp</td>
+                                            <td>Hoy, 15:20</td>
+                                            <td>1h 30min</td>
+                                            <td>1</td>
+                                            <td><span class="status-badge status-active">Normal</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Roberto Silva</td>
+                                            <td>Individual</td>
+                                            <td>Hoy, 12:00</td>
+                                            <td>5h 10min</td>
+                                            <td>12</td>
+                                            <td><span class="status-badge status-alert">Alerta</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Drivers Management -->
+                        <div id="adminSectionDrivers" class="hidden">
+                            <div class="content-header">
+                                <h1 class="content-title">Gestión de Choferes</h1>
+                                <p class="content-subtitle">Administra los usuarios del sistema</p>
+                            </div>
+                            
+                            <div class="data-table">
+                                <div class="table-header">
+                                    <h2 class="table-title">Choferes Registrados</h2>
+                                    <div class="table-actions">
+                                        <button class="btn-icon" style="background: #667eea; color: white; border-color: #667eea;">
+                                            ➕ Nuevo Chofer
+                                        </button>
+                                        <button class="btn-icon">🔍 Buscar</button>
+                                        <button class="btn-icon">📥 Exportar</button>
+                                    </div>
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Email</th>
+                                            <th>Empresa</th>
+                                            <th>Registro</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>#001</td>
+                                            <td>Juan Pérez</td>
+                                            <td>jperez@transcorp.com</td>
+                                            <td>TransCorp</td>
+                                            <td>15/05/2024</td>
+                                            <td><span class="status-badge status-active">Activo</span></td>
+                                            <td>
+                                                <button class="btn-icon" style="padding: 5px 10px;">✏️</button>
+                                                <button class="btn-icon" style="padding: 5px 10px;">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>#002</td>
+                                            <td>María López</td>
+                                            <td>mlopez@email.com</td>
+                                            <td>Individual</td>
+                                            <td>22/06/2024</td>
+                                            <td><span class="status-badge status-active">Activo</span></td>
+                                            <td>
+                                                <button class="btn-icon" style="padding: 5px 10px;">✏️</button>
+                                                <button class="btn-icon" style="padding: 5px 10px;">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>#003</td>
+                                            <td>Carlos Gómez</td>
+                                            <td>cgomez@fleetpro.com</td>
+                                            <td>FleetPro</td>
+                                            <td>10/07/2024</td>
+                                            <td><span class="status-badge status-inactive">Inactivo</span></td>
+                                            <td>
+                                                <button class="btn-icon" style="padding: 5px 10px;">✏️</button>
+                                                <button class="btn-icon" style="padding: 5px 10px;">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== DRIVER DASHBOARD ==================== -->
+        <div class="screen" id="driverDashboard">
+            <div class="dashboard-screen">
+                <div class="dashboard-header">
+                    <div class="dashboard-logo">
+                        <div class="dashboard-logo-icon">🚗</div>
+                        <div class="dashboard-logo-text">Sistema de Monitoreo</div>
+                    </div>
+                    <div class="dashboard-user">
+                        <div class="dashboard-user-info">
+                            <div class="dashboard-user-name">Juan Pérez</div>
+                            <div class="dashboard-user-role">TransCorp SA</div>
+                        </div>
+                        <div class="dashboard-user-avatar">JP</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-body">
+                    <div class="dashboard-sidebar">
+                        <div class="sidebar-menu-item active" onclick="showDriverSection('home')">
+                            <span class="sidebar-menu-icon">🏠</span>
+                            <span>Inicio</span>
+                        </div>
+                        <div class="sidebar-menu-item" onclick="showDriverSection('monitoring')">
+                            <span class="sidebar-menu-icon">📹</span>
+                            <span>Monitoreo</span>
+                        </div>
+                        <div class="sidebar-menu-item" onclick="showDriverSection('history')">
+                            <span class="sidebar-menu-icon">📊</span>
+                            <span>Mi Historial</span>
+                        </div>
+                        <div class="sidebar-menu-item" onclick="showDriverSection('settings')">
+                            <span class="sidebar-menu-icon">⚙️</span>
+                            <span>Configuración</span>
+                        </div>
+                        <div class="sidebar-menu-item" onclick="showDriverSection('help')">
+                            <span class="sidebar-menu-icon">❓</span>
+                            <span>Ayuda</span>
+                        </div>
+                        <div class="sidebar-menu-item" style="margin-top: 20px; color: #dc3545;" onclick="logout()">
+                            <span class="sidebar-menu-icon">🚪</span>
+                            <span>Cerrar Sesión</span>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-content">
+                        <!-- Driver Home -->
+                        <div id="driverSectionHome">
+                            <div class="content-header">
+                                <h1 class="content-title">Bienvenido, Juan Pérez</h1>
+                                <p class="content-subtitle">¿Listo para comenzar tu jornada?</p>
+                            </div>
+                            
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">⏱️</div>
+                                    </div>
+                                    <div class="stat-card-value">3h 24min</div>
+                                    <div class="stat-card-label">Última Sesión</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">⚠️</div>
+                                    </div>
+                                    <div class="stat-card-value">8</div>
+                                    <div class="stat-card-label">Alertas Totales</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">📅</div>
+                                    </div>
+                                    <div class="stat-card-value">12</div>
+                                    <div class="stat-card-label">Sesiones (7 días)</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">✅</div>
+                                    </div>
+                                    <div class="stat-card-value">Normal</div>
+                                    <div class="stat-card-label">Estado Final</div>
+                                </div>
+                            </div>
+                            
+                            <div class="data-table">
+                                <div class="table-header">
+                                    <h2 class="table-title">Acciones Rápidas</h2>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; padding: 20px;">
+                                    <div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 40px; border-radius: 15px; text-align: center; cursor: pointer; transition: all 0.3s;" onclick="showDriverSection('monitoring')">
+                                        <div style="font-size: 48px; margin-bottom: 15px;">🎥</div>
+                                        <h3 style="font-size: 22px; margin-bottom: 10px;">Iniciar Monitoreo</h3>
+                                        <p style="opacity: 0.9; font-size: 14px;">Comienza una nueva sesión de detección</p>
+                                    </div>
+                                    
+                                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 15px; text-align: center; cursor: pointer; transition: all 0.3s;" onclick="showDriverSection('history')">
+                                        <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
+                                        <h3 style="font-size: 22px; margin-bottom: 10px;">Ver Mi Historial</h3>
+                                        <p style="opacity: 0.9; font-size: 14px;">Revisa tus sesiones anteriores</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Driver Monitoring -->
+                        <div id="driverSectionMonitoring" class="hidden">
+                            <div class="content-header">
+                                <h1 class="content-title">Monitoreo en Tiempo Real</h1>
+                                <p class="content-subtitle">Sesión activa • 01:23:45</p>
+                            </div>
+                            
+                            <div class="monitoring-container">
+                                <div class="camera-section">
+                                    <div class="camera-view">
+                                        <div class="camera-status">
+                                            <div class="status-indicator"></div>
+                                            <span>EN VIVO • 30 FPS</span>
+                                        </div>
+                                        <div class="camera-placeholder">
+                                            <div class="camera-placeholder-icon">📹</div>
+                                            <div>Cámara Activa</div>
+                                            <div style="font-size: 12px; margin-top: 10px; color: #999;">
+                                                Resolución: 640x480 • MediaPipe: OK
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="camera-controls">
+                                        <button class="control-button btn-start">
+                                            <span>▶</span>
+                                            <span>Iniciar</span>
+                                        </button>
+                                        <button class="control-button btn-pause">
+                                            <span>⏸</span>
+                                            <span>Pausar</span>
+                                        </button>
+                                        <button class="control-button btn-stop">
+                                            <span>⏹</span>
+                                            <span>Detener</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="analysis-panel">
+                                    <div class="analysis-card">
+                                        <div class="analysis-card-title">
+                                            <span>⚡</span>
+                                            <span>Análisis en Tiempo Real</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">👁️ Parpadeos/min</span>
+                                            <div>
+                                                <span class="metric-value">16</span>
+                                                <span class="metric-status status-normal">✓ Normal</span>
+                                            </div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">😴 Apertura ocular</span>
+                                            <div>
+                                                <span class="metric-value">95%</span>
+                                                <span class="metric-status status-normal">✓ Alerta</span>
+                                            </div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">📐 Postura cabeza</span>
+                                            <div>
+                                                <span class="metric-value">0°</span>
+                                                <span class="metric-status status-normal">✓ Correcta</span>
+                                            </div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">🥱 Apertura bucal</span>
+                                            <div>
+                                                <span class="metric-value">Normal</span>
+                                                <span class="metric-status status-normal">✓</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="analysis-card">
+                                        <div class="analysis-card-title">
+                                            <span>📊</span>
+                                            <span>Estadísticas de Sesión</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">👁️ Parpadeos</span>
+                                            <span class="metric-value">124</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">😴 Microsueños</span>
+                                            <span class="metric-value" style="color: #ffc107;">2</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">🥱 Bostezos</span>
+                                            <span class="metric-value">0</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">⚠️ Alertas</span>
+                                            <span class="metric-value" style="color: #ffc107;">2</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="analysis-card">
+                                        <div class="analysis-card-title">
+                                            <span>📝</span>
+                                            <span>Registro de Eventos</span>
+                                        </div>
+                                        <div class="event-log">
+                                            <div class="event-item event-info">
+                                                <div class="event-time">13:27:45</div>
+                                                <div>✓ Sesión iniciada correctamente</div>
+                                            </div>
+                                            <div class="event-item event-info">
+                                                <div class="event-time">13:35:23</div>
+                                                <div>ℹ Parpadeo detectado - Frecuencia normal</div>
+                                            </div>
+                                            <div class="event-item event-warning">
+                                                <div class="event-time">13:42:15</div>
+                                                <div>⚠ ALERTA: Microsueño detectado (2.3s)</div>
+                                            </div>
+                                            <div class="event-item event-info">
+                                                <div class="event-time">13:42:18</div>
+                                                <div>✓ Estado normalizado</div>
+                                            </div>
+                                            <div class="event-item event-warning">
+                                                <div class="event-time">13:51:07</div>
+                                                <div>⚠ ALERTA: Microsueño detectado (3.1s)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Driver History -->
+                        <div id="driverSectionHistory" class="hidden">
+                            <div class="content-header">
+                                <h1 class="content-title">Mi Historial de Sesiones</h1>
+                                <p class="content-subtitle">Últimos 7 días de actividad</p>
+                            </div>
+                            
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">📅</div>
+                                    </div>
+                                    <div class="stat-card-value">12</div>
+                                    <div class="stat-card-label">Total Sesiones</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">⏱️</div>
+                                    </div>
+                                    <div class="stat-card-value">28h 45m</div>
+                                    <div class="stat-card-label">Tiempo Total</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">📊</div>
+                                    </div>
+                                    <div class="stat-card-value">4h 6m</div>
+                                    <div class="stat-card-label">Promedio/Día</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <div class="stat-card-icon">⚠️</div>
+                                    </div>
+                                    <div class="stat-card-value">23</div>
+                                    <div class="stat-card-label">Alertas Totales</div>
+                                </div>
+                            </div>
+                            
+                            <div class="data-table">
+                                <div class="table-header">
+                                    <h2 class="table-title">Historial de Sesiones</h2>
+                                    <div class="table-actions">
+                                        <button class="btn-icon">📥 Descargar Reporte</button>
+                                    </div>
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Hora Inicio</th>
+                                            <th>Duración</th>
+                                            <th>Microsueños</th>
+                                            <th>Bostezos</th>
+                                            <th>Alertas</th>
+                                            <th>Estado Final</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>12/10/2025</td>
+                                            <td>08:30</td>
+                                            <td>3h 24min</td>
+                                            <td>2</td>
+                                            <td>1</td>
+                                            <td>3</td>
+                                            <td><span class="status-badge status-active">Normal</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>11/10/2025</td>
+                                            <td>09:15</td>
+                                            <td>4h 12min</td>
+                                            <td>5</td>
+                                            <td>3</td>
+                                            <td>8</td>
+                                            <td><span class="status-badge status-alert">Alerta</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>10/10/2025</td>
+                                            <td>07:45</td>
+                                            <td>2h 45min</td>
+                                            <td>1</td>
+                                            <td>0</td>
+                                            <td>1</td>
+                                            <td><span class="status-badge status-active">Normal</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>09/10/2025</td>
+                                            <td>10:00</td>
+                                            <td>5h 18min</td>
+                                            <td>7</td>
+                                            <td>5</td>
+                                            <td>12</td>
+                                            <td><span class="status-badge status-inactive">Crítico</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Navigation functions
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function login(userType) {
+            if (userType === 'admin') {
+                showScreen('adminDashboard');
+            } else {
+                showScreen('driverDashboard');
+            }
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                showScreen('selectionScreen');
+            }
+        }
+
+        function showAdminSection(section) {
+            // Update sidebar
+            document.querySelectorAll('#adminDashboard .sidebar-menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Show section
+            document.querySelectorAll('#adminDashboard .dashboard-content > div').forEach(div => {
+                div.classList.add('hidden');
+            });
+            const sectionId = 'adminSection' + section.charAt(0).toUpperCase() + section.slice(1);
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.classList.remove('hidden');
+            }
+        }
+
+        function showDriverSection(section) {
+            // Update sidebar
+            document.querySelectorAll('#driverDashboard .sidebar-menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Show section
+            document.querySelectorAll('#driverDashboard .dashboard-content > div').forEach(div => {
+                div.classList.add('hidden');
+            });
+            const sectionId = 'driverSection' + section.charAt(0).toUpperCase() + section.slice(1);
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.classList.remove('hidden');
+            }
+        }
+
+        // Auto-start splash screen
+        window.addEventListener('load', function() {
+            // Optional: Auto-advance from splash after 3 seconds
+            // setTimeout(() => showScreen('selectionScreen'), 3000);
+        });
+    </script>
+</body>
+</html>
