@@ -1,0 +1,3305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Detección de Somnolencia - Diseño de Interfaces</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* NAVEGACIÓN SUPERIOR */
+        .top-nav {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        .content {
+            display: none;
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* TARJETAS */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: 2px solid #e0e7ff;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e7ff;
+        }
+
+        .card-header h2 {
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .card-icon {
+            font-size: 2em;
+        }
+
+        /* FORMULARIOS */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e7ff;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: #f7fafc;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* BOTONES */
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e7ff;
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #c7d2fe;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        /* GRID DE ESTADÍSTICAS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* TABLA */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 2px solid #e0e7ff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e7ff;
+            color: #4a5568;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-inactive {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-warning {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        /* CÁMARA Y MONITOREO */
+        .camera-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .camera-view {
+            background: #2d3748;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border: 3px solid #4a5568;
+        }
+
+        .camera-placeholder {
+            font-size: 5em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .camera-status {
+            text-align: center;
+        }
+
+        .camera-status h3 {
+            margin-bottom: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            justify-content: center;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.green {
+            background: #48bb78;
+            box-shadow: 0 0 10px #48bb78;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .metrics-panel {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e0e7ff;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* ALERTAS */
+        .alert {
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: slideIn 0.5s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 5px solid #3182ce;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            color: #7c2d12;
+            border-left: 5px solid #ed8936;
+        }
+
+        .alert-danger {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 5px solid #f56565;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 5px solid #48bb78;
+        }
+
+        .alert-icon {
+            font-size: 2em;
+        }
+
+        /* LOGS */
+        .log-container {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #4a5568;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 8px;
+            border-left: 3px solid transparent;
+            font-size: 0.9em;
+        }
+
+        .log-info { border-left-color: #3182ce; }
+        .log-success { border-left-color: #48bb78; }
+        .log-warning { border-left-color: #ed8936; }
+        .log-error { border-left-color: #f56565; }
+
+        /* GRÁFICOS PLACEHOLDER */
+        .chart-placeholder {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 15px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a0aec0;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+
+        /* PROGRESO */
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e7ff;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        /* MENÚ DE OPCIONES */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .menu-card {
+            background: white;
+            border: 2px solid #e0e7ff;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .menu-card-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .menu-card-title {
+            color: #667eea;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .menu-card-desc {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 0;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .camera-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* BREADCRUMB */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .breadcrumb span {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e7ff;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #718096;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        /* MODAL OVERLAY */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 1.5em;
+            color: #a0aec0;
+        }
+
+        .modal-close:hover {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- NAVEGACIÓN SUPERIOR -->
+        <div class="top-nav">
+            <div class="logo">
+                🚗 Sistema de Detección de Somnolencia
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="showScreen('welcome')">Inicio</button>
+                <button class="nav-btn" onclick="showScreen('admin-login')">Admin</button>
+                <button class="nav-btn" onclick="showScreen('client-login')">Cliente</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE BIENVENIDA -->
+        <div id="welcome" class="content active">
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 5em; margin-bottom: 20px;">😴</div>
+                <h1 style="color: #667eea; font-size: 2.5em; margin-bottom: 20px;">
+                    Sistema de Detección de Somnolencia
+                </h1>
+                <p style="color: #718096; font-size: 1.2em; max-width: 600px; margin: 0 auto 40px;">
+                    Monitoreo en tiempo real para garantizar la seguridad vial mediante inteligencia artificial
+                </p>
+
+                <div class="menu-grid">
+                    <div class="menu-card" onclick="showScreen('admin-login')">
+                        <div class="menu-card-icon">🔧</div>
+                        <div class="menu-card-title">Panel Administrativo</div>
+                        <div class="menu-card-desc">Gestión de choferes, configuración y reportes</div>
+                    </div>
+
+                    <div class="menu-card" onclick="showScreen('client-login')">
+                        <div class="menu-card-icon">👤</div>
+                        <div class="menu-card-title">Acceso de Cliente</div>
+                        <div class="menu-card-desc">Iniciar sesión de monitoreo de somnolencia</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 60px; padding: 30px; background: #f7fafc; border-radius: 15px;">
+                    <h3 style="color: #667eea; margin-bottom: 20px;">Características del Sistema</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; text-align: left;">
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">👁️</div>
+                            <strong>Parpadeo</strong>
+                            <p style="color: #718096; font-size: 0.9em;">Detecta frecuencia anormal de parpadeo</p>
+                        </div>
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">😴</div>
+                            <strong>Microsueños</strong>
+                            <p style="color: #718096; font-size: 0.9em;">Identifica ojos cerrados prolongados</p>
+                        </div>
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">🥱</div>
+                            <strong>Bostezos</strong>
+                            <p style="color: #718096; font-size: 0.9em;">Reconoce apertura bucal excesiva</p>
+                        </div>
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">🙇</div>
+                            <strong>Cabeceo</strong>
+                            <p style="color: #718096; font-size: 0.9em;">Detecta inclinación de cabeza</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOGIN ADMIN -->
+        <div id="admin-login" class="content">
+            <div style="max-width: 500px; margin: 60px auto;">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔧</span>
+                        <h2>Acceso Administrativo</h2>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <span class="alert-icon">ℹ️</span>
+                        <span>Use sus credenciales de administrador para acceder</span>
+                    </div>
+
+                    <form onsubmit="event.preventDefault(); showScreen('admin-dashboard');">
+                        <div class="form-group">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-input" placeholder="admin" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-input" placeholder="********" required>
+                        </div>
+
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="remember-admin">
+                            <label for="remember-admin">Recordar sesión</label>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 30px;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                🔓 Iniciar Sesión
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="showScreen('welcome')">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="alert alert-warning" style="margin-top: 20px;">
+                        <span class="alert-icon">⚠️</span>
+                        <span>3 intentos fallidos bloquearán la cuenta</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD ADMIN -->
+        <div id="admin-dashboard" class="content">
+            <div class="breadcrumb">
+                Admin > <span>Dashboard</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>Panel de Administración</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">👥 Choferes Activos</div>
+                        <div class="stat-value">24</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                        <div class="stat-label">🚗 Sesiones Hoy</div>
+                        <div class="stat-value">156</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
+                        <div class="stat-label">⚠️ Alertas</div>
+                        <div class="stat-value">47</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);">
+                        <div class="stat-label">🛑 Críticos</div>
+                        <div class="stat-value">3</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card" onclick="showScreen('admin-drivers')">
+                    <div class="menu-card-icon">👥</div>
+                    <div class="menu-card-title">Gestión de Choferes</div>
+                    <div class="menu-card-desc">Crear, editar y administrar usuarios</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('admin-config')">
+                    <div class="menu-card-icon">⚙️</div>
+                    <div class="menu-card-title">Configuración</div>
+                    <div class="menu-card-desc">Parámetros y umbrales del sistema</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('admin-reports')">
+                    <div class="menu-card-icon">📈</div>
+                    <div class="menu-card-title">Reportes</div>
+                    <div class="menu-card-desc">Análisis y estadísticas detalladas</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('admin-monitoring')">
+                    <div class="menu-card-icon">📺</div>
+                    <div class="menu-card-title">Monitoreo en Vivo</div>
+                    <div class="menu-card-desc">Ver sesiones activas en tiempo real</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn btn-danger" onclick="showScreen('admin-login')">
+                    🚪 Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- GESTIÓN DE CHOFERES -->
+        <div id="admin-drivers" class="content">
+            <div class="breadcrumb">
+                Admin > Dashboard > <span>Gestión de Choferes</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">👥</span>
+                    <h2>Choferes Registrados</h2>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <input type="text" class="form-input" placeholder="🔍 Buscar chofer..." style="max-width: 300px;">
+                    <button class="btn btn-success" onclick="showModal('add-driver')">
+                        ➕ Registrar Nuevo Chofer
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre Completo</th>
+                                <th>Empresa</th>
+                                <th>Email</th>
+                                <th>Estado</th>
+                                <th>Última Sesión</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>001</td>
+                                <td>Juan Pérez</td>
+                                <td>TransCorp</td>
+                                <td>jperez@transcorp.com</td>
+                                <td><span class="status-badge badge-active">ACTIVO</span></td>
+                                <td>Hoy, 14:32</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">✏️ Editar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>002</td>
+                                <td>María López</td>
+                                <td>Individual</td>
+                                <td>mlopez@email.com</td>
+                                <td><span class="status-badge badge-active">ACTIVO</span></td>
+                                <td>Hoy, 13:15</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">✏️ Editar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>003</td>
+                                <td>Carlos Gómez</td>
+                                <td>FleetPro</td>
+                                <td>cgomez@fleetpro.com</td>
+                                <td><span class="status-badge badge-inactive">INACTIVO</span></td>
+                                <td>Ayer, 18:45</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">✏️ Editar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>004</td>
+                                <td>Ana Martínez</td>
+                                <td>TransCorp</td>
+                                <td>amartin@transcorp.com</td>
+                                <td><span class="status-badge badge-active">ACTIVO</span></td>
+                                <td>Hoy, 15:20</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">✏️ Editar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="showScreen('admin-dashboard')">
+                    ← Volver al Dashboard
+                </button>
+            </div>
+        </div>
+
+        <!-- CONFIGURACIÓN -->
+        <div id="admin-config" class="content">
+            <div class="breadcrumb">
+                Admin > <span>Configuración del Sistema</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">⚙️</span>
+                    <h2>Parámetros de Detección</h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">👁️ Sensibilidad de Parpadeo</label>
+                    <input type="range" min="0" max="100" value="80" class="form-input" 
+                           oninput="this.nextElementSibling.textContent = this.value + '%'">
+                    <div style="text-align: center; color: #667eea; font-weight: bold; margin-top: 5px;">80%</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">😴 Umbral de Microsueño (segundos)</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="adjustValue('microsleep', -0.5)">-</button>
+                        <input type="number" id="microsleep" class="form-input" value="2.5" step="0.5" style="text-align: center;">
+                        <button class="btn btn-secondary" onclick="adjustValue('microsleep', 0.5)">+</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">🥱 Detección de Bostezos</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label class="form-label" style="font-size: 0.85em;">Frecuencia</label>
+                            <input type="number" class="form-input" value="3" min="1">
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 0.85em;">Ventana (seg)</label>
+                            <input type="number" class="form-input" value="180" min="60">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">🙇 Detección de Postura</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label class="form-label" style="font-size: 0.85em;">Ángulo crítico (°)</label>
+                            <input type="number" class="form-input" value="30" min="10" max="60">
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 0.85em;">Tiempo mínimo (seg)</label>
+                            <input type="number" class="form-input" value="3" min="1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🔔</span>
+                    <h2>Alertas y Notificaciones</h2>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="sound-alert" checked>
+                    <label for="sound-alert">🔊 Alertas Sonoras</label>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="push-notif" checked>
+                    <label for="push-notif">📱 Notificaciones Push</label>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="server-log" checked>
+                    <label for="server-log">💾 Registro en Servidor</label>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="email-super">
+                    <label for="email-super">✉️ Email al Supervisor</label>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-success">💾 Guardar Cambios</button>
+                <button class="btn btn-secondary">🔄 Restaurar Predeterminados</button>
+                <button class="btn btn-secondary" onclick="showScreen('admin-dashboard')">← Volver</button>
+            </div>
+        </div>
+
+        <!-- REPORTES -->
+        <div id="admin-reports" class="content">
+            <div class="breadcrumb">
+                Admin > <span>Reportes y Análisis</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>Resumen del Día</h2>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <p style="color: #718096;">📅 12 de Octubre, 2025 - 13:27:45</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="stat-label">Sesiones Activas</div>
+                        <div class="stat-value">8</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                        <div class="stat-label">Total Sesiones</div>
+                        <div class="stat-value">156</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
+                        <div class="stat-label">Parpadeos/min</div>
+                        <div class="stat-value">18.5</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);">
+                        <div class="stat-label">Microsueños</div>
+                        <div class="stat-value">47</div>
+                    </div>
+                </div>
+
+                <div class="chart-placeholder">
+                    📈 GRÁFICO DE ALERTAS POR HORA
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🏆</span>
+                    <h2>Top Alertas Detectadas</h2>
+                </div>
+
+                <div class="metric-item" style="border-left-color: #f56565;">
+                    <div class="metric-label">1. Microsueños detectados</div>
+                    <div class="metric-value" style="color: #f56565;">47 eventos</div>
+                </div>
+
+                <div class="metric-item" style="border-left-color: #ed8936;">
+                    <div class="metric-label">2. Bostezos frecuentes</div>
+                    <div class="metric-value" style="color: #ed8936;">23 eventos</div>
+                </div>
+
+                <div class="metric-item" style="border-left-color: #ed8936;">
+                    <div class="metric-label">3. Postura inadecuada</div>
+                    <div class="metric-value" style="color: #ed8936;">12 eventos</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-success">📄 Exportar PDF</button>
+                <button class="btn btn-success">📊 Exportar CSV</button>
+                <button class="btn btn-secondary" onclick="showScreen('admin-dashboard')">← Volver</button>
+            </div>
+        </div>
+
+        <!-- MONITOREO EN VIVO ADMIN -->
+        <div id="admin-monitoring" class="content">
+            <div class="breadcrumb">
+                Admin > <span>Monitoreo en Tiempo Real</span>
+            </div>
+
+            <div class="alert alert-success">
+                <span class="alert-icon">✅</span>
+                <span><strong>8 sesiones activas</strong> en este momento</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📺</span>
+                    <h2>Choferes en Línea</h2>
+                </div>
+
+                <div style="display: grid; gap: 15px;">
+                    <div class="metric-item" style="border-left-color: #48bb78;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748;">Juan Pérez (TransCorp)</div>
+                                <div style="font-size: 0.85em; color: #718096;">Sesión: 1h 23m | Alertas: 2</div>
+                            </div>
+                            <span class="status-badge badge-active">NORMAL</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #48bb78;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748;">María López (Individual)</div>
+                                <div style="font-size: 0.85em; color: #718096;">Sesión: 0h 45m | Alertas: 0</div>
+                            </div>
+                            <span class="status-badge badge-active">NORMAL</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #ed8936;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748;">Carlos Gómez (FleetPro)</div>
+                                <div style="font-size: 0.85em; color: #718096;">Sesión: 2h 18m | Alertas: 5</div>
+                            </div>
+                            <span class="status-badge badge-warning">ALERTA</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #f56565;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748;">Roberto Silva (Individual)</div>
+                                <div style="font-size: 0.85em; color: #718096;">Sesión: 3h 05m | Alertas: 8</div>
+                            </div>
+                            <span class="status-badge badge-inactive">CRÍTICO</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🚨</span>
+                    <h2>Alertas Recientes</h2>
+                </div>
+
+                <div class="alert alert-danger">
+                    <span class="alert-icon">🛑</span>
+                    <div>
+                        <strong>Roberto Silva - Microsueño 4.2s</strong>
+                        <div style="font-size: 0.85em;">Tiempo: 13:51:15</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <span class="alert-icon">⚠️</span>
+                    <div>
+                        <strong>Carlos Gómez - 3 Bostezos consecutivos</strong>
+                        <div style="font-size: 0.85em;">Tiempo: 13:48:32</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-primary">🔄 Actualizar</button>
+                <button class="btn btn-danger">🚨 Enviar Alerta Grupal</button>
+                <button class="btn btn-secondary" onclick="showScreen('admin-dashboard')">← Volver</button>
+            </div>
+        </div>
+
+        <!-- LOGIN CLIENTE -->
+        <div id="client-login" class="content">
+            <div style="max-width: 500px; margin: 60px auto;">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">👤</span>
+                        <h2>Acceso de Cliente</h2>
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="font-size: 4em; margin-bottom: 10px;">🚗</div>
+                        <h3 style="color: #667eea;">BIENVENIDO CHOFER</h3>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <span class="alert-icon">ℹ️</span>
+                        <span>Este sistema monitoreará su estado de alerta durante la conducción</span>
+                    </div>
+
+                    <form onsubmit="event.preventDefault(); showScreen('client-dashboard');">
+                        <div class="form-group">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-input" placeholder="jperez" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-input" placeholder="********" required>
+                        </div>
+
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="remember-client" checked>
+                            <label for="remember-client">Recordar usuario</label>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 30px;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                🔓 Iniciar Sesión
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="showScreen('welcome')">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD CLIENTE -->
+        <div id="client-dashboard" class="content">
+            <div class="breadcrumb">
+                Usuario > <span>Panel Principal</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">👤</span>
+                    <h2>Juan Pérez - TransCorp SA</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">📅 Fecha</div>
+                        <div class="metric-value" style="font-size: 1em;">12/10/2025 - 13:27</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">⏱️ Tiempo</div>
+                        <div class="metric-value" style="font-size: 1em;">00:00:00</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ️</span>
+                    <span>Sin sesión activa. Inicie el monitoreo para comenzar.</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>Historial Reciente</h2>
+                </div>
+
+                <div class="metric-item">
+                    <div class="metric-label">Última sesión</div>
+                    <div class="metric-value" style="font-size: 1em; color: #718096;">11/10/2025 - 3h 24min</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px;">
+                    <div style="text-align: center;">
+                        <div style="color: #718096; font-size: 0.85em;">Alertas totales</div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #ed8936;">8</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #718096; font-size: 0.85em;">Microsueños</div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #f56565;">2</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #718096; font-size: 0.85em;">Estado final</div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #48bb78;">✓</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card" onclick="showScreen('client-monitoring')">
+                    <div class="menu-card-icon">🎥</div>
+                    <div class="menu-card-title">Iniciar Monitoreo</div>
+                    <div class="menu-card-desc">Comenzar sesión de detección</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('client-history')">
+                    <div class="menu-card-icon">📊</div>
+                    <div class="menu-card-title">Mi Historial</div>
+                    <div class="menu-card-desc">Ver sesiones anteriores</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('client-settings')">
+                    <div class="menu-card-icon">⚙️</div>
+                    <div class="menu-card-title">Configuración</div>
+                    <div class="menu-card-desc">Preferencias personales</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('client-help')">
+                    <div class="menu-card-icon">ℹ️</div>
+                    <div class="menu-card-title">Ayuda</div>
+                    <div class="menu-card-desc">Información del sistema</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn btn-danger" onclick="showScreen('client-login')">
+                    🚪 Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- MONITOREO ACTIVO CLIENTE -->
+        <div id="client-monitoring" class="content">
+            <div class="breadcrumb">
+                Usuario > Dashboard > <span>Monitoreo en Tiempo Real</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="alert alert-success" style="margin: 0; flex: 1;">
+                    <span class="alert-icon">●</span>
+                    <span><strong>SESIÓN ACTIVA</strong> - ⏱️ 01:23:45</span>
+                </div>
+            </div>
+
+            <div class="camera-grid">
+                <div class="camera-view">
+                    <div class="camera-placeholder">📹</div>
+                    <div class="camera-status">
+                        <h3>CÁMARA EN VIVO</h3>
+                        <p style="margin-bottom: 15px;">Detección facial activa</p>
+                        <div style="font-size: 0.9em; color: #cbd5e0;">
+                            FPS: 30 | Resolución: 640x480
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <div class="status-indicator">
+                                <span class="status-dot green"></span>
+                                <span>Rostro detectado</span>
+                            </div>
+                            <div class="status-indicator">
+                                <span class="status-dot green"></span>
+                                <span>Manos rastreadas</span>
+                            </div>
+                            <div class="status-indicator">
+                                <span class="status-dot green"></span>
+                                <span>MediaPipe: OK</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-panel">
+                    <h3 style="color: #667eea; margin-bottom: 20px; text-align: center;">
+                        ⚡ ANÁLISIS EN TIEMPO REAL
+                    </h3>
+
+                    <div class="metric-item">
+                        <div class="metric-label">👁️ Parpadeos/min</div>
+                        <div class="metric-value">16 <span style="font-size: 0.6em; color: #48bb78;">✓ Normal</span></div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div class="metric-label">👁️ Apertura ocular</div>
+                        <div class="metric-value">95% <span style="font-size: 0.6em; color: #48bb78;">✓ Alerta</span></div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div class="metric-label">🎯 Postura cabeza</div>
+                        <div class="metric-value">0° <span style="font-size: 0.6em; color: #48bb78;">✓ Correcta</span></div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div class="metric-label">👄 Apertura bucal</div>
+                        <div class="metric-value">Normal <span style="font-size: 0.6em; color: #48bb78;">✓</span></div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div class="metric-label">🤲 Frotamiento ojos</div>
+                        <div class="metric-value">0 <span style="font-size: 0.6em; color: #48bb78;">✓</span></div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px; padding: 20px; background: #c6f6d5; border-radius: 10px;">
+                        <div style="font-size: 2em; color: #22543d;">✓</div>
+                        <div style="font-size: 1.2em; font-weight: bold; color: #22543d;">ESTADO: NORMAL</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="stat-label">👁️ Parpadeos</div>
+                    <div class="stat-value">124</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
+                    <div class="stat-label">😴 Microsueños</div>
+                    <div class="stat-value">2</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                    <div class="stat-label">🥱 Bostezos</div>
+                    <div class="stat-value">0</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
+                    <div class="stat-label">⚠️ Alertas</div>
+                    <div class="stat-value">2</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📜</span>
+                    <h2>Registro de Eventos</h2>
+                </div>
+
+                <div class="log-container">
+                    <div class="log-entry log-success">[13:27:45] ✓ Sesión iniciada correctamente</div>
+                    <div class="log-entry log-info">[13:28:12] ℹ Detección facial estable - FPS: 30</div>
+                    <div class="log-entry log-info">[13:35:23] ℹ Parpadeo detectado - Frecuencia normal</div>
+                    <div class="log-entry log-warning">[13:42:15] ⚠ ALERTA: Microsueño detectado (2.3 segundos)</div>
+                    <div class="log-entry log-info">[13:42:18] ℹ Estado normalizado</div>
+                    <div class="log-entry log-info">[13:48:32] ℹ Análisis continuo - Todo normal</div>
+                    <div class="log-entry log-warning">[13:51:07] ⚠ ALERTA: Microsueño detectado (3.1 segundos)</div>
+                    <div class="log-entry log-success">[13:51:11] ✓ Recuperación detectada</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-danger" onclick="showScreen('client-dashboard')">
+                    ⏹️ Detener Monitoreo
+                </button>
+                <button class="btn btn-secondary">⏸️ Pausa</button>
+                <button class="btn btn-primary">⚙️ Configuración</button>
+            </div>
+        </div>
+
+        <!-- HISTORIAL CLIENTE -->
+        <div id="client-history" class="content">
+            <div class="breadcrumb">
+                Usuario > <span>Mi Historial</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>Resumen Últimos 7 Días</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">Total sesiones</div>
+                        <div class="metric-value">12</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Tiempo total</div>
+                        <div class="metric-value" style="font-size: 1em;">28h 45min</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Promedio/día</div>
+                        <div class="metric-value" style="font-size: 1em;">4h 6min</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Alertas totales</div>
+                        <div class="metric-value" style="color: #ed8936;">23</div>
+                    </div>
+                </div>
+
+                <div class="chart-placeholder">
+                    📈 GRÁFICO DE ALERTAS SEMANALES<br>
+                    <small>Tendencia: ↗ Incremento leve</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📋</span>
+                    <h2>Sesiones Recientes</h2>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Duración</th>
+                                <th>Microsueños</th>
+                                <th>Bostezos</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>12/10/2025</td>
+                                <td>3h 24min</td>
+                                <td>2</td>
+                                <td>1</td>
+                                <td><span class="status-badge badge-active">NORMAL</span></td>
+                            </tr>
+                            <tr>
+                                <td>11/10/2025</td>
+                <!-- filepath: /home/franz/workspace/projects/sistema-deteccion-somnolencia/diseno_interfaces_sistema_somnolencia.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Detección de Somnolencia - Diseño de Interfaces</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* NAVEGACIÓN SUPERIOR */
+        .top-nav {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        .content {
+            display: none;
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* TARJETAS */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: 2px solid #e0e7ff;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e7ff;
+        }
+
+        .card-header h2 {
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .card-icon {
+            font-size: 2em;
+        }
+
+        /* FORMULARIOS */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e7ff;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: #f7fafc;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* BOTONES */
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e7ff;
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #c7d2fe;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        /* GRID DE ESTADÍSTICAS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* TABLA */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 2px solid #e0e7ff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e7ff;
+            color: #4a5568;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-inactive {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-warning {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        /* CÁMARA Y MONITOREO */
+        .camera-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .camera-view {
+            background: #2d3748;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border: 3px solid #4a5568;
+        }
+
+        .camera-placeholder {
+            font-size: 5em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .camera-status {
+            text-align: center;
+        }
+
+        .camera-status h3 {
+            margin-bottom: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            justify-content: center;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.green {
+            background: #48bb78;
+            box-shadow: 0 0 10px #48bb78;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .metrics-panel {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e0e7ff;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* ALERTAS */
+        .alert {
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: slideIn 0.5s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 5px solid #3182ce;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            color: #7c2d12;
+            border-left: 5px solid #ed8936;
+        }
+
+        .alert-danger {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 5px solid #f56565;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 5px solid #48bb78;
+        }
+
+        .alert-icon {
+            font-size: 2em;
+        }
+
+        /* LOGS */
+        .log-container {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #4a5568;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 8px;
+            border-left: 3px solid transparent;
+            font-size: 0.9em;
+        }
+
+        .log-info { border-left-color: #3182ce; }
+        .log-success { border-left-color: #48bb78; }
+        .log-warning { border-left-color: #ed8936; }
+        .log-error { border-left-color: #f56565; }
+
+        /* GRÁFICOS PLACEHOLDER */
+        .chart-placeholder {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 15px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a0aec0;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+
+        /* PROGRESO */
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e7ff;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        /* MENÚ DE OPCIONES */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .menu-card {
+            background: white;
+            border: 2px solid #e0e7ff;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .menu-card-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .menu-card-title {
+            color: #667eea;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .menu-card-desc {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 0;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .camera-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* BREADCRUMB */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .breadcrumb span {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e7ff;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #718096;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        /* MODAL OVERLAY */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 1.5em;
+            color: #a0aec0;
+        }
+
+        .modal-close:hover {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- NAVEGACIÓN SUPERIOR -->
+        <div class="top-nav">
+            <div class="logo">
+                🚗 Sistema de Detección de Somnolencia
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="showScreen('welcome')">Inicio</button>
+                <button class="nav-btn" onclick="showScreen('admin-login')">Admin</button>
+                <button class="nav-btn" onclick="showScreen('client-login')">Cliente</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE BIENVENIDA -->
+        <div id="welcome" class="content active">
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 5em; margin-bottom: 20px;">😴</div>
+                <h1 style="color: #667eea; font-size: 2.5em; margin-bottom: 20px;">
+                    Sistema de Detección de Somnolencia
+                </h1>
+                <p style="color: #718096; font-size: 1.2em; max-width: 600px; margin: 0 auto 40px;">
+                    Monitoreo en tiempo real para garantizar la seguridad vial mediante inteligencia artificial
+                </p>
+
+                <div class="menu-grid">
+                    <div class="menu-card" onclick="showScreen('admin-login')">
+                        <div class="menu-card-icon">🔧</div>
+                        <div class="menu-card-title">Panel Administrativo</div>
+                        <div class="menu-card-desc">Gestión de choferes, configuración y reportes</div>
+                    </div>
+
+                    <div class="menu-card" onclick="showScreen('client-login')">
+                        <div class="menu-card-icon">👤</div>
+                        <div class="menu-card-title">Acceso de Cliente</div>
+                        <div class="menu-card-desc">Iniciar sesión de monitoreo de somnolencia</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 60px; padding: 30px; background: #f7fafc; border-radius: 15px;">
+                    <h3 style="color: #667eea; margin-bottom: 20px;">Características del Sistema</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; text-align: left;">
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">👁️</div>
+                            <strong>Parpadeo</strong>
+                            <p style="color: #718096; font-size: 0.9em;">Detecta frecuencia anormal de parpadeo</p>
+                        </div>
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">😴</div>
+                            <strong>Microsueños</strong>
+                            <p style="color: #718096; font-size: 0.9em;">Identifica ojos cerrados prolongados</p>
+                        </div>
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">🥱</div>
+                            <strong>Bostezos</strong>
+                            <p style="color: #718096; font-size: 0.9em;">Reconoce apertura bucal excesiva</p>
+                        </div>
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">🙇</div>
+                            <strong>Cabeceo</strong>
+                            <p style="color: #718096; font-size: 0.9em;">Detecta inclinación de cabeza</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOGIN ADMIN -->
+        <div id="admin-login" class="content">
+            <div style="max-width: 500px; margin: 60px auto;">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔧</span>
+                        <h2>Acceso Administrativo</h2>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <span class="alert-icon">ℹ️</span>
+                        <span>Use sus credenciales de administrador para acceder</span>
+                    </div>
+
+                    <form onsubmit="event.preventDefault(); showScreen('admin-dashboard');">
+                        <div class="form-group">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-input" placeholder="admin" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-input" placeholder="********" required>
+                        </div>
+
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="remember-admin">
+                            <label for="remember-admin">Recordar sesión</label>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 30px;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                🔓 Iniciar Sesión
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="showScreen('welcome')">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="alert alert-warning" style="margin-top: 20px;">
+                        <span class="alert-icon">⚠️</span>
+                        <span>3 intentos fallidos bloquearán la cuenta</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD ADMIN -->
+        <div id="admin-dashboard" class="content">
+            <div class="breadcrumb">
+                Admin > <span>Dashboard</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>Panel de Administración</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">👥 Choferes Activos</div>
+                        <div class="stat-value">24</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                        <div class="stat-label">🚗 Sesiones Hoy</div>
+                        <div class="stat-value">156</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
+                        <div class="stat-label">⚠️ Alertas</div>
+                        <div class="stat-value">47</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);">
+                        <div class="stat-label">🛑 Críticos</div>
+                        <div class="stat-value">3</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card" onclick="showScreen('admin-drivers')">
+                    <div class="menu-card-icon">👥</div>
+                    <div class="menu-card-title">Gestión de Choferes</div>
+                    <div class="menu-card-desc">Crear, editar y administrar usuarios</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('admin-config')">
+                    <div class="menu-card-icon">⚙️</div>
+                    <div class="menu-card-title">Configuración</div>
+                    <div class="menu-card-desc">Parámetros y umbrales del sistema</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('admin-reports')">
+                    <div class="menu-card-icon">📈</div>
+                    <div class="menu-card-title">Reportes</div>
+                    <div class="menu-card-desc">Análisis y estadísticas detalladas</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('admin-monitoring')">
+                    <div class="menu-card-icon">📺</div>
+                    <div class="menu-card-title">Monitoreo en Vivo</div>
+                    <div class="menu-card-desc">Ver sesiones activas en tiempo real</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn btn-danger" onclick="showScreen('admin-login')">
+                    🚪 Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- GESTIÓN DE CHOFERES -->
+        <div id="admin-drivers" class="content">
+            <div class="breadcrumb">
+                Admin > Dashboard > <span>Gestión de Choferes</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">👥</span>
+                    <h2>Choferes Registrados</h2>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <input type="text" class="form-input" placeholder="🔍 Buscar chofer..." style="max-width: 300px;">
+                    <button class="btn btn-success" onclick="showModal('add-driver')">
+                        ➕ Registrar Nuevo Chofer
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre Completo</th>
+                                <th>Empresa</th>
+                                <th>Email</th>
+                                <th>Estado</th>
+                                <th>Última Sesión</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>001</td>
+                                <td>Juan Pérez</td>
+                                <td>TransCorp</td>
+                                <td>jperez@transcorp.com</td>
+                                <td><span class="status-badge badge-active">ACTIVO</span></td>
+                                <td>Hoy, 14:32</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">✏️ Editar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>002</td>
+                                <td>María López</td>
+                                <td>Individual</td>
+                                <td>mlopez@email.com</td>
+                                <td><span class="status-badge badge-active">ACTIVO</span></td>
+                                <td>Hoy, 13:15</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">✏️ Editar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>003</td>
+                                <td>Carlos Gómez</td>
+                                <td>FleetPro</td>
+                                <td>cgomez@fleetpro.com</td>
+                                <td><span class="status-badge badge-inactive">INACTIVO</span></td>
+                                <td>Ayer, 18:45</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">✏️ Editar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>004</td>
+                                <td>Ana Martínez</td>
+                                <td>TransCorp</td>
+                                <td>amartin@transcorp.com</td>
+                                <td><span class="status-badge badge-active">ACTIVO</span></td>
+                                <td>Hoy, 15:20</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85em;">✏️ Editar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="showScreen('admin-dashboard')">
+                    ← Volver al Dashboard
+                </button>
+            </div>
+        </div>
+
+        <!-- CONFIGURACIÓN -->
+        <div id="admin-config" class="content">
+            <div class="breadcrumb">
+                Admin > <span>Configuración del Sistema</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">⚙️</span>
+                    <h2>Parámetros de Detección</h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">👁️ Sensibilidad de Parpadeo</label>
+                    <input type="range" min="0" max="100" value="80" class="form-input" 
+                           oninput="this.nextElementSibling.textContent = this.value + '%'">
+                    <div style="text-align: center; color: #667eea; font-weight: bold; margin-top: 5px;">80%</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">😴 Umbral de Microsueño (segundos)</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="adjustValue('microsleep', -0.5)">-</button>
+                        <input type="number" id="microsleep" class="form-input" value="2.5" step="0.5" style="text-align: center;">
+                        <button class="btn btn-secondary" onclick="adjustValue('microsleep', 0.5)">+</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">🥱 Detección de Bostezos</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label class="form-label" style="font-size: 0.85em;">Frecuencia</label>
+                            <input type="number" class="form-input" value="3" min="1">
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 0.85em;">Ventana (seg)</label>
+                            <input type="number" class="form-input" value="180" min="60">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">🙇 Detección de Postura</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label class="form-label" style="font-size: 0.85em;">Ángulo crítico (°)</label>
+                            <input type="number" class="form-input" value="30" min="10" max="60">
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 0.85em;">Tiempo mínimo (seg)</label>
+                            <input type="number" class="form-input" value="3" min="1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🔔</span>
+                    <h2>Alertas y Notificaciones</h2>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="sound-alert" checked>
+                    <label for="sound-alert">🔊 Alertas Sonoras</label>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="push-notif" checked>
+                    <label for="push-notif">📱 Notificaciones Push</label>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="server-log" checked>
+                    <label for="server-log">💾 Registro en Servidor</label>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="email-super">
+                    <label for="email-super">✉️ Email al Supervisor</label>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-success">💾 Guardar Cambios</button>
+                <button class="btn btn-secondary">🔄 Restaurar Predeterminados</button>
+                <button class="btn btn-secondary" onclick="showScreen('admin-dashboard')">← Volver</button>
+            </div>
+        </div>
+
+        <!-- REPORTES -->
+        <div id="admin-reports" class="content">
+            <div class="breadcrumb">
+                Admin > <span>Reportes y Análisis</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>Resumen del Día</h2>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <p style="color: #718096;">📅 12 de Octubre, 2025 - 13:27:45</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="stat-label">Sesiones Activas</div>
+                        <div class="stat-value">8</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                        <div class="stat-label">Total Sesiones</div>
+                        <div class="stat-value">156</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
+                        <div class="stat-label">Parpadeos/min</div>
+                        <div class="stat-value">18.5</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);">
+                        <div class="stat-label">Microsueños</div>
+                        <div class="stat-value">47</div>
+                    </div>
+                </div>
+
+                <div class="chart-placeholder">
+                    📈 GRÁFICO DE ALERTAS POR HORA
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🏆</span>
+                    <h2>Top Alertas Detectadas</h2>
+                </div>
+
+                <div class="metric-item" style="border-left-color: #f56565;">
+                    <div class="metric-label">1. Microsueños detectados</div>
+                    <div class="metric-value" style="color: #f56565;">47 eventos</div>
+                </div>
+
+                <div class="metric-item" style="border-left-color: #ed8936;">
+                    <div class="metric-label">2. Bostezos frecuentes</div>
+                    <div class="metric-value" style="color: #ed8936;">23 eventos</div>
+                </div>
+
+                <div class="metric-item" style="border-left-color: #ed8936;">
+                    <div class="metric-label">3. Postura inadecuada</div>
+                    <div class="metric-value" style="color: #ed8936;">12 eventos</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-success">📄 Exportar PDF</button>
+                <button class="btn btn-success">📊 Exportar CSV</button>
+                <button class="btn btn-secondary" onclick="showScreen('admin-dashboard')">← Volver</button>
+            </div>
+        </div>
+
+        <!-- MONITOREO EN VIVO ADMIN -->
+        <div id="admin-monitoring" class="content">
+            <div class="breadcrumb">
+                Admin > <span>Monitoreo en Tiempo Real</span>
+            </div>
+
+            <div class="alert alert-success">
+                <span class="alert-icon">✅</span>
+                <span><strong>8 sesiones activas</strong> en este momento</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📺</span>
+                    <h2>Choferes en Línea</h2>
+                </div>
+
+                <div style="display: grid; gap: 15px;">
+                    <div class="metric-item" style="border-left-color: #48bb78;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748;">Juan Pérez (TransCorp)</div>
+                                <div style="font-size: 0.85em; color: #718096;">Sesión: 1h 23m | Alertas: 2</div>
+                            </div>
+                            <span class="status-badge badge-active">NORMAL</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #48bb78;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748;">María López (Individual)</div>
+                                <div style="font-size: 0.85em; color: #718096;">Sesión: 0h 45m | Alertas: 0</div>
+                            </div>
+                            <span class="status-badge badge-active">NORMAL</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #ed8936;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748;">Carlos Gómez (FleetPro)</div>
+                                <div style="font-size: 0.85em; color: #718096;">Sesión: 2h 18m | Alertas: 5</div>
+                            </div>
+                            <span class="status-badge badge-warning">ALERTA</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #f56565;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: bold; color: #2d3748;">Roberto Silva (Individual)</div>
+                                <div style="font-size: 0.85em; color: #718096;">Sesión: 3h 05m | Alertas: 8</div>
+                            </div>
+                            <span class="status-badge badge-inactive">CRÍTICO</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🚨</span>
+                    <h2>Alertas Recientes</h2>
+                </div>
+
+                <div class="alert alert-danger">
+                    <span class="alert-icon">🛑</span>
+                    <div>
+                        <strong>Roberto Silva - Microsueño 4.2s</strong>
+                        <div style="font-size: 0.85em;">Tiempo: 13:51:15</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <span class="alert-icon">⚠️</span>
+                    <div>
+                        <strong>Carlos Gómez - 3 Bostezos consecutivos</strong>
+                        <div style="font-size: 0.85em;">Tiempo: 13:48:32</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-primary">🔄 Actualizar</button>
+                <button class="btn btn-danger">🚨 Enviar Alerta Grupal</button>
+                <button class="btn btn-secondary" onclick="showScreen('admin-dashboard')">← Volver</button>
+            </div>
+        </div>
+
+        <!-- LOGIN CLIENTE -->
+        <div id="client-login" class="content">
+            <div style="max-width: 500px; margin: 60px auto;">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">👤</span>
+                        <h2>Acceso de Cliente</h2>
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="font-size: 4em; margin-bottom: 10px;">🚗</div>
+                        <h3 style="color: #667eea;">BIENVENIDO CHOFER</h3>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <span class="alert-icon">ℹ️</span>
+                        <span>Este sistema monitoreará su estado de alerta durante la conducción</span>
+                    </div>
+
+                    <form onsubmit="event.preventDefault(); showScreen('client-dashboard');">
+                        <div class="form-group">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-input" placeholder="jperez" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-input" placeholder="********" required>
+                        </div>
+
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="remember-client" checked>
+                            <label for="remember-client">Recordar usuario</label>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 30px;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                🔓 Iniciar Sesión
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="showScreen('welcome')">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD CLIENTE -->
+        <div id="client-dashboard" class="content">
+            <div class="breadcrumb">
+                Usuario > <span>Panel Principal</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">👤</span>
+                    <h2>Juan Pérez - TransCorp SA</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">📅 Fecha</div>
+                        <div class="metric-value" style="font-size: 1em;">12/10/2025 - 13:27</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">⏱️ Tiempo</div>
+                        <div class="metric-value" style="font-size: 1em;">00:00:00</div>
+                   …                </div>
+
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ️</span>
+                    <span>Sin sesión activa. Inicie el monitoreo para comenzar.</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>Historial Reciente</h2>
+                </div>
+
+                <div class="metric-item">
+                    <div class="metric-label">Última sesión</div>
+                    <div class="metric-value" style="font-size: 1em; color: #718096;">11/10/2025 - 3h 24min</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px;">
+                    <div style="text-align: center;">
+                        <div style="color: #718096; font-size: 0.85em;">Alertas totales</div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #ed8936;">8</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #718096; font-size: 0.85em;">Microsueños</div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #f56565;">2</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #718096; font-size: 0.85em;">Estado final</div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #48bb78;">✓</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card" onclick="showScreen('client-monitoring')">
+                    <div class="menu-card-icon">🎥</div>
+                    <div class="menu-card-title">Iniciar Monitoreo</div>
+                    <div class="menu-card-desc">Comenzar sesión de detección</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('client-history')">
+                    <div class="menu-card-icon">📊</div>
+                    <div class="menu-card-title">Mi Historial</div>
+                    <div class="menu-card-desc">Ver sesiones anteriores</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('client-settings')">
+                    <div class="menu-card-icon">⚙️</div>
+                    <div class="menu-card-title">Configuración</div>
+                    <div class="menu-card-desc">Preferencias personales</div>
+                </div>
+
+                <div class="menu-card" onclick="showScreen('client-help')">
+                    <div class="menu-card-icon">ℹ️</div>
+                    <div class="menu-card-title">Ayuda</div>
+                    <div class="menu-card-desc">Información del sistema</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn btn-danger" onclick="showScreen('client-login')">
+                    🚪 Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- MONITOREO ACTIVO CLIENTE -->
+        <div id="client-monitoring" class="content">
+            <div class="breadcrumb">
+                Usuario > Dashboard > <span>Monitoreo en Tiempo Real</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="alert alert-success" style="margin: 0; flex: 1;">
+                    <span class="alert-icon">●</span>
+                    <span><strong>SESIÓN ACTIVA</strong> - ⏱️ 01:23:45</span>
+                </div>
+            </div>
+
+            <div class="camera-grid">
+                <div class="camera-view">
+                    <div class="camera-placeholder">📹</div>
+                    <div class="camera-status">
+                        <h3>CÁMARA EN VIVO</h3>
+                        <p style="margin-bottom: 15px;">Detección facial activa</p>
+                        <div style="font-size: 0.9em; color: #cbd5e0;">
+                            FPS: 30 | Resolución: 640x480
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <div class="status-indicator">
+                                <span class="status-dot green"></span>
+                                <span>Rostro detectado</span>
+                            </div>
+                            <div class="status-indicator">
+                                <span class="status-dot green"></span>
+                                <span>Manos rastreadas</span>
+                            </div>
+                            <div class="status-indicator">
+                                <span class="status-dot green"></span>
+                                <span>MediaPipe: OK</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-panel">
+                    <h3 style="color: #667eea; margin-bottom: 20px; text-align: center;">
+                        ⚡ ANÁLISIS EN TIEMPO REAL
+                    </h3>
+
+                    <div class="metric-item">
+                        <div class="metric-label">👁️ Parpadeos/min</div>
+                        <div class="metric-value">16 <span style="font-size: 0.6em; color: #48bb78;">✓ Normal</span></div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div class="metric-label">👁️ Apertura ocular</div>
+                        <div class="metric-value">95% <span style="font-size: 0.6em; color: #48bb78;">✓ Alerta</span></div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div class="metric-label">🎯 Postura cabeza</div>
+                        <div class="metric-value">0° <span style="font-size: 0.6em; color: #48bb78;">✓ Correcta</span></div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div class="metric-label">👄 Apertura bucal</div>
+                        <div class="metric-value">Normal <span style="font-size: 0.6em; color: #48bb78;">✓</span></div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div class="metric-label">🤲 Frotamiento ojos</div>
+                        <div class="metric-value">0 <span style="font-size: 0.6em; color: #48bb78;">✓</span></div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px; padding: 20px; background: #c6f6d5; border-radius: 10px;">
+                        <div style="font-size: 2em; color: #22543d;">✓</div>
+                        <div style="font-size: 1.2em; font-weight: bold; color: #22543d;">ESTADO: NORMAL</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="stat-label">👁️ Parpadeos</div>
+                    <div class="stat-value">124</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
+                    <div class="stat-label">😴 Microsueños</div>
+                    <div class="stat-value">2</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                    <div class="stat-label">🥱 Bostezos</div>
+                    <div class="stat-value">0</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
+                    <div class="stat-label">⚠️ Alertas</div>
+                    <div class="stat-value">2</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📜</span>
+                    <h2>Registro de Eventos</h2>
+                </div>
+
+                <div class="log-container">
+                    <div class="log-entry log-success">[13:27:45] ✓ Sesión iniciada correctamente</div>
+                    <div class="log-entry log-info">[13:28:12] ℹ Detección facial estable - FPS: 30</div>
+                    <div class="log-entry log-info">[13:35:23] ℹ Parpadeo detectado - Frecuencia normal</div>
+                    <div class="log-entry log-warning">[13:42:15] ⚠ ALERTA: Microsueño detectado (2.3 segundos)</div>
+                    <div class="log-entry log-info">[13:42:18] ℹ Estado normalizado</div>
+                    <div class="log-entry log-info">[13:48:32] ℹ Análisis continuo - Todo normal</div>
+                    <div class="log-entry log-warning">[13:51:07] ⚠ ALERTA: Microsueño detectado (3.1 segundos)</div>
+                    <div class="log-entry log-success">[13:51:11] ✓ Recuperación detectada</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-danger" onclick="showScreen('client-dashboard')">
+                    ⏹️ Detener Monitoreo
+                </button>
+                <button class="btn btn-secondary">⏸️ Pausa</button>
+                <button class="btn btn-primary">⚙️ Configuración</button>
+            </div>
+        </div>
+
+        <!-- HISTORIAL CLIENTE -->
+        <div id="client-history" class="content">
+            <div class="breadcrumb">
+                Usuario > <span>Mi Historial</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>Resumen Últimos 7 Días</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">Total sesiones</div>
+                        <div class="metric-value">12</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Tiempo total</div>
+                        <div class="metric-value" style="font-size: 1em;">28h 45min</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Promedio/día</div>
+                        <div class="metric-value" style="font-size: 1em;">4h 6min</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Alertas totales</div>
+                        <div class="metric-value" style="color: #ed8936;">23</div>
+                    </div>
+                </div>
+
+                <div class="chart-placeholder">
+                    📈 GRÁFICO DE ALERTAS SEMANALES<br>
+                    <small>Tendencia: ↗ Incremento leve</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📋</span>
+                    <h2>Sesiones Recientes</h2>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Duración</th>
+                                <th>Microsueños</th>
+                                <th>Bostezos</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>12/10/2025</td>
+                                <td>3h 24min</td>
+                                <td>2</td>
+                                <td>1</td>
+                                <td><span class="status-badge badge-active">NORMAL</span></td>
+                            </tr>
+                            <tr>
+                                <td>11/10/2025</td>
+                                <td>4h 12min</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td><span class="status-badge badge-warning">ALERTA</span></td>
+                            </tr>
+                            <tr>
+                                <td>10/10/2025</td>
+                                <td>2h 45min</td>
+                                <td>1</td>
+                                <td>0</td>
+                                <td><span class="status-badge badge-active">NORMAL</span></td>
+                            </tr>
+                            <tr>
+                                <td>09/10/2025</td>
+                                <td>5h 18min</td>
+                                <td>7</td>
+                                <td>5</td>
+                                <td><span class="status-badge badge-inactive">CRÍTICO</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-success">📄 Descargar Reporte</button>
+                <button class="btn btn-secondary" onclick="showScreen('client-dashboard')">← Volver</button>
+            </div>
+        </div>
+
+        <!-- CONFIGURACIÓN CLIENTE -->
+        <div id="client-settings" class="content">
+            <div class="breadcrumb">
+                Usuario > <span>Configuración Personal</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">⚙️</span>
+                    <h2>Preferencias de Alertas</h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">🔊 Volumen de Alertas</label>
+                    <input type="range" min="0" max="100" value="80" class="form-input" 
+                           oninput="this.nextElementSibling.textContent = this.value + '%'">
+                    <div style="text-align: center; color: #667eea; font-weight: bold; margin-top: 5px;">80%</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tipo de Alerta</label>
+                    <div style="display: flex; gap: 20px;">
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="sound-alert-client" checked>
+                            <label for="sound-alert-client">🔊 Sonido</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="visual-alert-client" checked>
+                            <label for="visual-alert-client">👁️ Visual</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="vibration-alert-client">
+                            <label for="vibration-alert-client">📳 Vibración</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notificaciones Push</label>
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="push-critical" checked>
+                        <label for="push-critical">Alertas críticas</label>
+                    </div>
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="push-summary" checked>
+                        <label for="push-summary">Resumen diario</label>
+                    </div>
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="push-reminders">
+                        <label for="push-reminders">Recordatorios de descanso</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📹</span>
+                    <h2>Preferencias de Cámara</h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Resolución</label>
+                    <div style="display: flex; gap: 15px;">
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="resolution" value="320x240">
+                            320x240
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="resolution" value="640x480" checked>
+                            640x480
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="resolution" value="1280x720">
+                            1280x720
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="auto-brightness" checked>
+                    <label for="auto-brightness">☀️ Brillo automático</label>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="show-landmarks" checked>
+                    <label for="show-landmarks">🎯 Mostrar puntos de referencia faciales</label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">👤</span>
+                    <h2>Datos Personales</h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nombre Completo</label>
+                    <input type="text" class="form-input" value="Juan Pérez" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" value="jperez@transcorp.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input type="tel" class="form-input" value="+591 70123456">
+                </div>
+
+                <button class="btn btn-primary">🔐 Cambiar Contraseña</button>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-success">💾 Guardar Cambios</button>
+                <button class="btn btn-secondary" onclick="showScreen('client-dashboard')">← Volver</button>
+            </div>
+        </div>
+
+        <!-- AYUDA CLIENTE -->
+        <div id="client-help" class="content">
+            <div class="breadcrumb">
+                Usuario > <span>Ayuda e Información</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">ℹ️</span>
+                    <h2>¿Cómo Funciona el Sistema?</h2>
+                </div>
+
+                <div style="display: grid; gap: 20px;">
+                    <div class="metric-item" style="border-left-color: #667eea;">
+                        <div style="font-size: 1.5em; margin-bottom: 10px;">👁️</div>
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">Parpadeo y Cierre de Ojos</div>
+                        <div style="color: #718096;">
+                            El sistema detecta patrones anormales de parpadeo y cierres de ojos prolongados que pueden indicar fatiga.
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #667eea;">
+                        <div style="font-size: 1.5em; margin-bottom: 10px;">😴</div>
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">Microsueños</div>
+                        <div style="color: #718096;">
+                            Identifica episodios breves de sueño (2-3 segundos) que son extremadamente peligrosos durante la conducción.
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #667eea;">
+                        <div style="font-size: 1.5em; margin-bottom: 10px;">🥱</div>
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">Bostezos Frecuentes</div>
+                        <div style="color: #718096;">
+                            Reconoce la apertura bucal característica de los bostezos, un indicador claro de somnolencia.
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #667eea;">
+                        <div style="font-size: 1.5em; margin-bottom: 10px;">📐</div>
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">Postura de Cabeza</div>
+                        <div style="color: #718096;">
+                            Monitorea la inclinación y caída de la cabeza, señales de pérdida de control postural por fatiga.
+                        </div>
+                    </div>
+
+                    <div class="metric-item" style="border-left-color: #667eea;">
+                        <div style="font-size: 1.5em; margin-bottom: 10px;">✋</div>
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">Frotamiento de Ojos</div>
+                        <div style="color: #718096;">
+                            Detecta el contacto repetitivo de las manos con el rostro, especialmente en la zona de los ojos.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🚦</span>
+                    <h2>Niveles de Alerta</h2>
+                </div>
+
+                <div style="display: grid; gap: 15px;">
+                    <div style="padding: 20px; background: #c6f6d5; border-radius: 10px; border-left: 5px solid #48bb78;">
+                        <div style="font-size: 1.2em; font-weight: bold; color: #22543d; margin-bottom: 5px;">
+                            🟢 NORMAL
+                        </div>
+                        <div style="color: #2d3748;">
+                            Todo en orden. Continúe conduciendo con precaución y tome descansos regulares cada 2 horas.
+                        </div>
+                    </div>
+
+                    <div style="padding: 20px; background: #feebc8; border-radius: 10px; border-left: 5px solid #ed8936;">
+                        <div style="font-size: 1.2em; font-weight: bold; color: #7c2d12; margin-bottom: 5px;">
+                            🟡 ALERTA
+                        </div>
+                        <div style="color: #2d3748;">
+                            Signos de fatiga detectados. Considere tomar un descanso pronto. Abra las ventanillas y manténgase hidratado.
+                        </div>
+                    </div>
+
+                    <div style="padding: 20px; background: #fed7d7; border-radius: 10px; border-left: 5px solid #f56565;">
+                        <div style="font-size: 1.2em; font-weight: bold; color: #742a2a; margin-bottom: 5px;">
+                            🔴 CRÍTICO
+                        </div>
+                        <div style="color: #2d3748;">
+                            <strong>FATIGA SEVERA.</strong> Detenga el vehículo de forma segura INMEDIATAMENTE. Descanso obligatorio de 15-20 minutos.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">💡</span>
+                    <h2>Recomendaciones de Seguridad</h2>
+                </div>
+
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 10px; margin: 8px 0; background: #f7fafc; border-left: 3px solid #667eea; border-radius: 5px;">
+                        ✓ Descanse cada 2 horas de conducción continua
+                    </li>
+                    <li style="padding: 10px; margin: 8px 0; background: #f7fafc; border-left: 3px solid #667eea; border-radius: 5px;">
+                        ✓ Duerma al menos 7-8 horas antes de viajes largos
+                    </li>
+                    <li style="padding: 10px; margin: 8px 0; background: #f7fafc; border-left: 3px solid #667eea; border-radius: 5px;">
+                        ✓ Evite comidas pesadas antes de conducir
+                    </li>
+                    <li style="padding: 10px; margin: 8px 0; background: #f7fafc; border-left: 3px solid #667eea; border-radius: 5px;">
+                        ✓ Mantenga el habitáculo bien ventilado
+                    </li>
+                    <li style="padding: 10px; margin: 8px 0; background: #f7fafc; border-left: 3px solid #667eea; border-radius: 5px;">
+                        ✓ No ignore las alertas del sistema
+                    </li>
+                    <li style="padding: 10px; margin: 8px 0; background: #f7fafc; border-left: 3px solid #667eea; border-radius: 5px;">
+                        ✓ Evite conducir entre las 2:00 AM y 6:00 AM
+                    </li>
+                    <li style="padding: 10px; margin: 8px 0; background: #f7fafc; border-left: 3px solid #667eea; border-radius: 5px;">
+                        ✓ Manténgase hidratado durante el viaje
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📞</span>
+                    <h2>Contacto y Soporte</h2>
+                </div>
+
+                <div style="display: grid; gap: 15px;">
+                    <div class="metric-item">
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">📧 Email de Soporte</div>
+                        <div style="color: #667eea;">support@drowsiness-system.com</div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">📞 Teléfono de Emergencia</div>
+                        <div style="color: #667eea;">+591 800-SEGURO (734876)</div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">🌐 Portal Web</div>
+                        <div style="color: #667eea;">www.drowsiness-system.com</div>
+                    </div>
+
+                    <div class="metric-item">
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">📖 Documentación</div>
+                        <div style="color: #667eea;">docs.drowsiness-system.com</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="showScreen('client-dashboard')">← Volver al Dashboard</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT PARA NAVEGACIÓN -->
+    <script>
+        function showScreen(screenId) {
+            // Ocultar todas las pantallas
+            const contents = document.querySelectorAll('.content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Mostrar la pantalla seleccionada
+            const screen = document.getElementById(screenId);
+            if (screen) {
+                screen.classList.add('active');
+            }
+
+            // Actualizar botones de navegación
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+
+            // Activar el botón correspondiente
+            if (screenId === 'welcome') {
+                navButtons[0].classList.add('active');
+            } else if (screenId.includes('admin')) {
+                navButtons[1].classList.add('active');
+            } else if (screenId.includes('client')) {
+                navButtons[2].classList.add('active');
+            }
+        }
+
+        function showModal(modalId) {
+            alert('Modal: ' + modalId + ' - Funcionalidad pendiente de implementación');
+        }
+
+        function adjustValue(inputId, delta) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                const currentValue = parseFloat(input.value);
+                const newValue = currentValue + delta;
+                if (newValue >= parseFloat(input.min || 0) && newValue <= parseFloat(input.max || 100)) {
+                    input.value = newValue;
+                }
+            }
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Sistema de Detección de Somnolencia - Diseño de Interfaces Cargado');
+            console.log('Navegación disponible: Inicio, Admin, Cliente');
+        });
+    </script>
+</body>
+</html>
