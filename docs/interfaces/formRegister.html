@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Nuevo Chofer - Sistema de Detección de Somnolencia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Variables y Reset Básico */
+        :root {
+            --color-primary: #667eea; /* Púrpura azulado principal de la imagen */
+            --color-primary-dark: #5a67d8;
+            --color-secondary: #f6ad55; /* Naranja/Amarillo para alertas */
+            --color-background-soft: #f7fafc; /* Fondo de secciones de formulario */
+            --color-input-focus: #e9d8fd; /* Púrpura muy suave para focus */
+            --color-input-bg: #fff;
+            --color-info-bg: #ebf8ff; /* Azul claro para alerts de información */
+            --color-info-text: #2c5282;
+            --color-success: #48bb78;
+            --color-danger: #f56565;
+            --color-warning-bg: #fffaf0;
+            --color-warning-text: #9f7924;
+            --color-border: #e2e8f0;
+            --color-text-light: #718096;
+            --color-text-dark: #2d3748;
+            --header-height: 70px; /* Altura de la cabecera */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #a7b5fd 0%, #667eea 100%); /* Fondo degradado similar al header de la imagen */
+            color: var(--color-text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(90deg, #5c67e8 0%, #8b99f8 100%); /* Degradado similar al de la imagen */
+            height: var(--header-height);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-left .logo {
+            font-size: 1.8em;
+        }
+
+        .header-left .title {
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-nav .nav-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .header-nav .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .header-nav .nav-button.active {
+            background-color: white;
+            color: var(--color-primary-dark);
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto; /* Para permitir scroll si el contenido es largo */
+        }
+
+        /* Contenedor Principal (Simula el "card" grande) */
+        #admin-driver-form {
+            max-width: 1200px; /* Ancho máximo para el layout horizontal */
+            margin: 0 auto;
+        }
+        
+        /* Estilos de la Tarjeta Principal */
+        .card {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 15px;
+        }
+
+        .card-icon {
+            font-size: 1.8em;
+            margin-right: 15px;
+            color: var(--color-primary);
+        }
+
+        .card-header h2 {
+            font-size: 1.8em;
+            color: var(--color-primary-dark);
+            font-weight: 700;
+        }
+
+        /* Breadcrumb (Migas de Pan) */
+        .breadcrumb {
+            color: white;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .breadcrumb span {
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        /* Estilos de Formulario */
+        .form-group {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--color-text-dark);
+            font-size: 0.95em;
+        }
+
+        .form-input, select.form-input, textarea.form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.2s ease;
+            background-color: var(--color-input-bg);
+            color: var(--color-text-dark);
+        }
+
+        .form-input:focus, select.form-input:focus, textarea.form-input:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-input-focus);
+            outline: none;
+        }
+        
+        /* Estilos para el campo de confirmar contraseña */
+        input[type="password"].form-input {
+            font-family: 'Arial', sans-serif; /* Para asegurar que los puntos se vean bien */
+        }
+
+        .form-group small {
+            color: var(--color-text-light);
+            font-size: 0.85em;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* Estilos de las Secciones del Formulario */
+        .form-section { /* Nueva clase para los divs de sección */
+            background: var(--color-background-soft);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 1px solid var(--color-border);
+        }
+
+        .form-section h3 {
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.3em;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #c3dafe;
+        }
+        
+        .form-section h3 span {
+            font-size: 1.5em;
+        }
+        
+        /* Contenedor para las dos columnas principales del formulario */
+        .form-layout {
+            display: grid;
+            grid-template-columns: 1fr; /* Por defecto una columna */
+            gap: 30px; /* Espacio entre las columnas */
+        }
+
+        /* Estilos para las rejillas de 2 columnas dentro de las secciones */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr; /* Por defecto 1 columna */
+            gap: 15px;
+        }
+
+        /* Alertas */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .alert-icon {
+            font-size: 1.2em;
+            margin-right: 10px;
+            align-self: flex-start;
+        }
+
+        /* Alerta de Info */
+        .alert-info {
+            background-color: var(--color-info-bg);
+            color: var(--color-info-text);
+            border: 1px solid #90cdf4;
+        }
+
+        .alert-info .alert-icon {
+            color: #3182ce;
+        }
+
+        /* Alerta de Warning (Similar a la de la imagen de login) */
+        .alert-warning {
+            background-color: var(--color-warning-bg);
+            color: var(--color-warning-text);
+            border: 1px solid #f6e0b5;
+        }
+        
+        .alert-warning .alert-icon {
+            color: var(--color-secondary);
+        }
+        
+        /* Checkboxes */
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--color-primary); /* Color del check al marcar */
+        }
+        
+        .form-checkbox label {
+            user-select: none;
+            font-weight: 400;
+            color: var(--color-text-dark);
+        }
+
+        /* Botones */
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-success {
+            background-color: var(--color-primary);
+            color: white;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success:hover {
+            background-color: var(--color-primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-text-light);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5d687a;
+        }
+
+        /* Media Queries para Responsive Design */
+        @media (min-width: 1024px) { /* Para pantallas más grandes que un tablet */
+            .form-layout {
+                grid-template-columns: 1fr 1fr; /* Dos columnas principales */
+            }
+            .grid-2 {
+                grid-template-columns: 1fr 1fr; /* Dentro de las secciones, también dos columnas */
+            }
+        }
+
+        @media (max-width: 1023px) { /* Tablets y móviles */
+            .main-content {
+                padding: 20px;
+            }
+            .header {
+                padding: 0 20px;
+                flex-wrap: wrap;
+                height: auto;
+                min-height: var(--header-height);
+            }
+            .header-left {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+            .header-nav {
+                width: 100%;
+                justify-content: center;
+            }
+            .card {
+                padding: 20px;
+            }
+            .card-header h2 {
+                font-size: 1.5em;
+            }
+            .form-section h3 {
+                font-size: 1.2em;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .form-buttons { /* Clase agregada para los botones de acción */
+                flex-direction: column;
+                gap: 15px !important;
+            }
+        }
+
+        @media (max-width: 600px) { /* Móviles pequeños */
+            .header-left .title {
+                font-size: 1em;
+            }
+            .header-nav .nav-button {
+                padding: 6px 10px;
+                font-size: 0.85em;
+            }
+            .breadcrumb {
+                font-size: 0.8em;
+                padding: 8px 10px;
+            }
+            .card-header h2 {
+                font-size: 1.3em;
+            }
+            .card-icon {
+                font-size: 1.5em;
+            }
+            .form-section h3 {
+                font-size: 1.1em;
+            }
+            .form-input, select.form-input, textarea.form-input {
+                padding: 8px 10px;
+                font-size: 0.9em;
+            }
+            .alert {
+                font-size: 0.85em;
+                padding: 12px;
+            }
+            .btn {
+                font-size: 0.9em;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <span class="logo">🚗</span>
+            <span class="title">Sistema de Detección de Somnolencia</span>
+        </div>
+        <nav class="header-nav">
+            <button class="nav-button">Inicio</button>
+            <button class="nav-button active">Admin</button>
+            <button class="nav-button">Cliente</button>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div id="admin-driver-form">
+            <div class="breadcrumb">
+                Admin &gt; Gestión de Choferes &gt; <span>Registrar Nuevo Chofer</span>
+            </div>
+        
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">➕</span>
+                    <h2>Registro de Nuevo Chofer</h2>
+                </div>
+        
+        
+                <form onsubmit="event.preventDefault(); alert('Chofer registrado exitosamente'); /* showScreen('admin-drivers'); */">
+                    
+                    <div class="form-layout">
+                        <div>
+                            <div class="form-section">
+                                <h3>
+                                    <span>👤</span>
+                                    Datos Personales
+                                </h3>
+                
+                                <div class="grid-2">
+                                    <div class="form-group">
+                                        <label class="form-label">Nombre Completo *</label>
+                                        <input type="text" class="form-input" placeholder="Ej: Juan Carlos" required>
+                                    </div>
+                
+                                    <div class="form-group">
+                                        <label class="form-label">Apellidos *</label>
+                                        <input type="text" class="form-input" placeholder="Ej: Pérez Gómez" required>
+                                    </div>
+                                </div>
+                
+                                <div class="grid-2">
+                                    <div class="form-group">
+                                        <label class="form-label">DNI/CI *</label>
+                                        <input type="text" class="form-input" placeholder="Ej: 12345678" required>
+                                    </div>
+                
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Género *</label>
+                                        <select class="form-input" required>
+                                            <option value="">Seleccionar...</option>
+                                            <option value="masculino">Masculino</option>
+                                            <option value="femenino">Femenino</option>
+                                            <option value="otro">Otro</option>
+                                        </select>
+                                    </div>
+                                </div>
+                
+                                <div class="grid-2">
+                
+                                    <div class="form-group">
+                                        <label class="form-label">Nacionalidad</label>
+                                        <input type="text" class="form-input" placeholder="Ej: Boliviana">
+                                    </div>
+                                </div>
+                            </div>
+                
+                            <div class="form-section">
+                                <h3>
+                                    <span>📞</span>
+                                    Información de Contacto
+                                </h3>
+                
+                                <div class="grid-2">
+                                    <div class="form-group">
+                                        <label class="form-label">Email *</label>
+                                        <input type="email" class="form-input" placeholder="Ej: jperez@email.com" required>
+                                    </div>
+                
+                                    <div class="form-group">
+                                        <label class="form-label">Teléfono *</label>
+                                        <input type="tel" class="form-input" placeholder="Ej: +591 70123456" required>
+                                    </div>
+                                </div>
+                
+                                <div class="form-group">
+                                    <label class="form-label">Dirección</label>
+                                    <input type="text" class="form-input" placeholder="Ej: Av. Principal #123, Ciudad">
+                                </div>
+                
+                                <div class="grid-2">
+                                    <div class="form-group">
+                                        <label class="form-label">Ciudad</label>
+                                        <input type="text" class="form-input" placeholder="Ej: La Paz">
+                                    </div>
+                
+                                    <div class="form-group">
+                                        <label class="form-label">Código Postal</label>
+                                        <input type="text" class="form-input" placeholder="Ej: 00000">
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                        </div>
+        
+                        <div>
+                            <div class="form-section">
+                                <h3>
+                                    <span>🚗</span>
+                                    Información Laboral
+                                </h3>
+                
+                                <div class="grid-2">
+                                    <div class="form-group">
+                                        <label class="form-label">Tipo de Chofer *</label>
+                                        <select class="form-input" id="tipo-chofer" onchange="toggleEmpresa()" required>
+                                            <option value="">Seleccionar...</option>
+                                            <option value="individual">Individual</option>
+                                            <option value="empresa">Empresa</option>
+                                        </select>
+                                    </div>
+                
+                                    <div class="form-group" id="empresa-field" style="display: none;">
+                                        <label class="form-label">Empresa *</label>
+                                        <select class="form-input" id="empresa-select">
+                                            <option value="">Seleccionar empresa...</option>
+                                            <option value="transcorp">TransCorp SA</option>
+                                            <option value="fleetpro">FleetPro</option>
+                                            <option value="expreso">Expreso del Sur</option>
+                                            <option value="otra">Otra empresa</option>
+                                        </select>
+                                    </div>
+                                </div>
+                
+                                <div class="grid-2">
+                                    <div class="form-group">
+                                        <label class="form-label">Número de Licencia *</label>
+                                        <input type="text" class="form-input" placeholder="Ej: LIC-123456" required>
+                                    </div>
+                
+                                    <div class="form-group">
+                                        <label class="form-label">Categoría de Licencia *</label>
+                                        <select class="form-input" required>
+                                            <option value="">Seleccionar...</option>
+                                            <option value="a">Categoría A - Motocicletas</option>
+                                            <option value="b">Categoría B - Vehículos Livianos</option>
+                                            <option value="c">Categoría C - Vehículos Pesados</option>
+                                            <option value="d">Categoría D - Transporte Público</option>
+                                        </select>
+                                    </div>
+                                </div>
+                
+                                
+                
+                            </div>
+                
+                            <div class="form-section">
+                                <h3>
+                                    <span>🔐</span>
+                                    Credenciales de Acceso al Sistema
+                                </h3>
+                
+                                <div class="grid-2">
+                                    <div class="form-group">
+                                        <label class="form-label">Usuario *</label>
+                                        <input type="text" class="form-input" placeholder="Ej: jperez" required>
+                                        <small>Mínimo 5 caracteres</small>
+                                    </div>
+                
+                                    <div class="form-group">
+                                        <label class="form-label">Confirmar contraseña *</label>
+                                        <input type="password" class="form-input" placeholder="********" required>
+                                    </div>
+                                </div>
+                
+                                <div class="alert alert-warning">
+                                    <span class="alert-icon">⚠️</span>
+                                    <span>El chofer deberá cambiar su contraseña en el primer inicio de sesión</span>
+                                </div>
+                            </div>
+        
+                            <div class="form-section">
+                                <h3>
+                                    Configuración
+                                </h3>
+                
+                                <div class="form-checkbox">
+                                    <input type="checkbox" id="notif-email" checked>
+                                    <label for="notif-email">Enviar credenciales por email</label>
+                                </div>
+                
+                                <div class="form-checkbox">
+                                    <input type="checkbox" id="activo-inicio" checked>
+                                    <label for="activo-inicio">Activar cuenta inmediatamente</label>
+                                </div>
+                
+                                
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-buttons" style="display: flex; gap: 10px; justify-content: center; margin-top: 30px;">
+                        <button type="submit" class="btn btn-success">
+                            💾 Registrar Chofer
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="if(confirm('¿Está seguro de cancelar? Los datos no se guardarán.')) console.log('Cancelar')">
+                            ❌ Cancelar
+                        </button>
+                        <button type="reset" class="btn btn-secondary">
+                            🔄 Limpiar Formulario
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+    function toggleEmpresa() {
+        const tipoChofer = document.getElementById('tipo-chofer').value;
+        const empresaField = document.getElementById('empresa-field');
+        const empresaSelect = document.getElementById('empresa-select');
+        
+        if (tipoChofer === 'empresa') {
+            empresaField.style.display = 'block';
+            empresaSelect.required = true;
+        } else {
+            empresaField.style.display = 'none';
+            empresaSelect.required = false;
+        }
+    }
+    </script>
+</body>
+</html>
