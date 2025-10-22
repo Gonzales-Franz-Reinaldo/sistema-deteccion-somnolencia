@@ -100,12 +100,7 @@ CREATE TABLE sesiones_viaje (
     total_frotamiento_ojos INTEGER DEFAULT 0,
     
     -- Notas adicionales
-    observaciones TEXT,
-    
-    -- Validación: Solo choferes pueden tener sesiones
-    CONSTRAINT chk_sesion_chofer CHECK (
-        (SELECT rol FROM usuarios WHERE id_usuario = usuarios.id_usuario) = 'chofer'
-    )
+    observaciones TEXT
 );
 
 -- ============================================
@@ -208,12 +203,8 @@ CREATE TABLE configuracion_usuario (
     notificaciones_email BOOLEAN DEFAULT FALSE,
     email_notificacion VARCHAR(100),
     
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    -- Validación: Solo para choferes
-    CONSTRAINT chk_config_chofer CHECK (
-        (SELECT rol FROM usuarios WHERE id_usuario = usuarios.id_usuario) = 'chofer'
-    )
 );
 
 -- ============================================
@@ -338,6 +329,6 @@ VALUES (
     'empresa', 1, 'LIC-789012', 'Categoría D - Transporte Público', TRUE, TRUE
 );
 
--- Configuración por defecto para los choferes
-INSERT INTO configuracion_usuario (id_usuario) 
-SELECT id_usuario FROM usuarios WHERE rol = 'chofer';
+-- -- Configuración por defecto para los choferes
+-- INSERT INTO configuracion_usuario (id_usuario) 
+-- SELECT id_usuario FROM usuarios WHERE rol = 'chofer';

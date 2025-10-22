@@ -73,3 +73,5 @@ timestamp,eye_rub_first_hand_report,eye_rub_first_hand_count,eye_rub_first_hand_
 2025-10-13 07:07:05,False,0,[],|,False,0,[],|,True,14,|,False,0,[],|,False,Counting pitches...,[],|,False,Counting yawns... 61.0 seconds remaining.,[]
 2025-10-13 07:12:05,False,0,[],|,False,0,[],|,True,14,|,False,0,[],|,False,Counting pitches...,[],|,False,Counting yawns... 120.0 seconds remaining.,[]
 2025-10-13 07:13:04,False,0,[],|,False,0,[],|,True,20,|,False,0,[],|,False,Counting pitches...,[],|,False,Counting yawns... 61.0 seconds remaining.,[]
+2025-10-22 01:23:04,False,0,[],|,False,0,[],|,False,Counting flickers... 47.0 seconds remaining.,|,False,0,[],|,True,1,['1 pitch: 6.0 seconds'],|,False,Counting yawns... 167.0 seconds remaining.,[]
+2025-10-22 03:52:12,False,0,[],|,False,0,[],|,False,Counting flickers... 45.0 seconds remaining.,|,False,0,[],|,True,1,['1 pitch: 3.0 seconds'],|,False,Counting yawns... 165.0 seconds remaining.,[]
