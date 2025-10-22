@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Arquitectura de Detección de Somnolencia</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Definición de colores principales para las capas */
+        :root {
+            --color-presentation: #6366f1; /* Indigo */
+            --color-transport: #10b981; /* Esmeralda */
+            --color-core: #f97316; /* Naranja */
+            --color-persistence: #0ea5e9; /* Cyan */
+            --color-border: #43968e; /* Gris muy claro */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: white; /* Fondo blanco solicitado */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .diagram-container {
+            width: 80%;
+            max-width: 900px; /* Aumentado a 1200px para más ancho */
+            padding: 20px;
+        }
+
+        /* Estilo base para cada caja de capa */
+        .layer-box {
+            border: 2px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .layer-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Títulos de Capa */
+        .layer-title {
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            font-size: 1.125rem; /* text-lg */
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Estilos específicos de cada capa */
+        .presentation-layer .layer-title { background-color: var(--color-presentation); }
+        .transport-layer .layer-title { background-color: var(--color-transport); }
+        .core-layer .layer-title { background-color: var(--color-core); }
+        .persistence-layer .layer-title { background-color: var(--color-persistence); }
+
+        /* Contenido de la capa (puntos) */
+        .layer-content p {
+            /* margin-bottom: 0.5rem;
+            padding-left: 0.5rem; */
+            border-left: 3px solid #cbd5e1; /* Línea separadora suave */
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Flechas de Conexión (CSS) */
+        .connector {
+            display: flex;
+            justify-content: center;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .arrow-down {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            /* La flecha toma el color de la capa de destino (el borde inferior) */
+            border-top: 15px solid #6b7280; /* Gris para la flecha */
+        }
+        
+        /* Contenedor Flex/Grid para la Capa CORE */
+        .core-content-grid {
+            display: grid;
+            gap: 1.5rem;
+            /* Dos columnas para escritorio */
+            grid-template-columns: repeat(2, 1fr); 
+        }
+
+        /* Vuelve a una sola columna en pantallas pequeñas */
+        @media (max-width: 768px) {
+            .core-content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Estilo para los grupos dentro de la capa Core */
+        .core-group {
+            margin-top: 0; /* Eliminamos el margen superior redundante */
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px dashed #d1d5db;
+        }
+        
+        .core-group-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px dotted #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="diagram-container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">
+            Diagrama de Arquitectura: Sistema de Detección de Somnolencia
+        </h1>
+
+        <!-- 1. CAPA DE PRESENTACIÓN -->
+        <div class="layer-box presentation-layer">
+            <div class="layer-title">
+                <span>🔥</span> CAPA DE PRESENTACIÓN
+            </div>
+            <div class="layer-content">
+                <p><span class="text-2xl">💻</span> Start Page</p>
+                <p><span class="text-2xl">😵</span> Drowsiness Detection Page</p>
+            </div>
+        </div>
+        
+        <div class="connector"><div class="arrow-down"></div></div>
+
+        <!-- 2. CAPA DE TRANSPORTE (WebSocket) -->
+        <div class="layer-box transport-layer">
+            <div class="layer-title">
+                <span>🌐</span> CAPA DE TRANSPORTE (WebSocket)
+            </div>
+            <div class="layer-content">
+                <p><span class="text-xl">⬆️</span> Cliente: Envío de frames</p>
+                <p><span class="text-xl">⬇️</span> Servidor: Recepción y respuesta</p>
+                <p><span class="text-xl">🔄</span> Comunicación bidireccional</p>
+            </div>
+        </div>
+
+        <div class="connector"><div class="arrow-down"></div></div>
+
+        <!-- 3. CAPA DE LÓGICA DE NEGOCIO (CORE) -->
+        <div class="layer-box core-layer">
+            <div class="layer-title">
+                <span>🛠️</span> CAPA DE LÓGICA DE NEGOCIO (CORE)
+            </div>
+            <!-- Aplicación de Grid para mostrar 2 columnas -->
+            <div class="layer-content core-content-grid">
+                
+                <!-- Grupo: Extracción de puntos -->
+                <div class="core-group bg-red-50/50">
+                    <div class="core-group-title text-red-600">
+                        <span class="text-2xl">🚨</span> Capa de extracción de puntos
+                    </div>
+                    <p><span class="text-xl text-red-500">👁️</span> Procesador de malla facial (<span class="font-bold">468 puntos</span> de referencia)</p>
+                    <p><span class="text-xl text-red-500">✋</span> Procesador de manos (21 puntos de referencia x 2 manos)</p>
+                </div>
+
+                <!-- Grupo: Procesamiento de datos -->
+                <div class="core-group bg-yellow-50/50">
+                    <div class="core-group-title text-yellow-700">
+                        <span class="text-2xl">⚙️</span> Capa de procesamiento de datos
+                    </div>
+                    <p><span class="text-xl text-yellow-600">📏</span> Procesador de ojos (Distancias euclidianas)</p>
+                    <p><span class="text-xl text-yellow-600">👄</span> Procesador bucal (Apertura labial)</p>
+                    <p><span class="text-xl text-yellow-600">🪖</span> Procesador de cabezal (Ángulo de paso)</p>
+                    <p><span class="text-xl text-yellow-600">👐</span> Procesador de manos (Proximidad a ojos)</p>
+                </div>
+
+                <!-- Grupo: Detección de características -->
+                <div class="core-group bg-blue-50/50">
+                    <div class="core-group-title text-blue-600">
+                        <span class="text-2xl">🧠</span> Capa de detección de características
+                    </div>
+                    <p><span class="text-xl text-blue-500">⚡</span> Flicker & MicroSleep (Contador de parpadeos)</p>
+                    <p><span class="text-xl text-blue-500">😴</span> Detección de Bostezos (Duración de bostezos)</p>
+                    <p><span class="text-xl text-blue-500">🧑‍🎤</span> Detección de cabeceo</p>
+                    <p><span class="text-xl text-blue-500">💆</span> Detección de frotamiento de ojos (Frotamiento de ojos)</p>
+                </div>
+                
+                <!-- Grupo: Informes y visualización -->
+                <div class="core-group bg-green-50/50">
+                    <div class="core-group-title text-green-600">
+                        <span class="text-2xl">📊</span> Capa de informes y visualización
+                    </div>
+                    <p><span class="text-xl text-green-500">📄</span> Generador de informes (CSV y JSON)</p>
+                    <p><span class="text-xl text-green-500">🔔</span> Alertas visuales (superposición en video)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="connector"><div class="arrow-down"></div></div>
+
+        <!-- 4. CAPA DE PERSISTENCIA (Storage) -->
+        <div class="layer-box persistence-layer">
+            <div class="layer-title">
+                <span>🗄️</span> CAPA DE PERSISTENCIA (Storage)
+            </div>
+            <div class="layer-content">
+                <p><span class="text-xl text-cyan-600">💾</span> drowsiness_report.csv</p>
+                <p><span class="text-xl text-cyan-600">📝</span> JSON Reports (Real-time)</p>
+                <p><span class="text-xl text-cyan-600">🖼️</span> Processed Frames (Base64)</p>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
