@@ -22,9 +22,7 @@ class Usuario(Base):
     # Primary Key
     id_usuario = Column(Integer, primary_key=True, index=True)
     
-    # ============================================
     # CREDENCIALES (Compartidas por ambos roles)
-    # ============================================
     usuario = Column(String(50), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     rol = Column(
@@ -34,9 +32,7 @@ class Usuario(Base):
         index=True
     )
     
-    # ============================================
     # DATOS PERSONALES
-    # ============================================
     nombre_completo = Column(String(200), nullable=False)
     dni_ci = Column(String(20), unique=True, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
@@ -53,9 +49,7 @@ class Usuario(Base):
     ciudad = Column(String(100))
     codigo_postal = Column(String(20))
     
-    # ============================================
     # INFORMACIÓN LABORAL (Solo para CHOFER)
-    # ============================================
     tipo_chofer = Column(
         String(20),
         CheckConstraint("tipo_chofer IN ('individual', 'empresa')")
@@ -64,21 +58,15 @@ class Usuario(Base):
     numero_licencia = Column(String(50))
     categoria_licencia = Column(String(50))
     
-    # ============================================
     # ESTADO Y CONTROL
-    # ============================================
     activo = Column(Boolean, default=True, index=True, nullable=False)
     primer_inicio = Column(Boolean, default=True, nullable=False)
     
-    # ============================================
     # METADATOS
-    # ============================================
     fecha_registro = Column(DateTime(timezone=True), server_default=func.now())
     ultima_sesion = Column(DateTime(timezone=True))
     
-    # ============================================
     # RELACIONES
-    # ============================================
     empresa = relationship("Empresa", back_populates="choferes")
     
     def __repr__(self):

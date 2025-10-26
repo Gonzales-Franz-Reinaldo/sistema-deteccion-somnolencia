@@ -23,9 +23,7 @@ class TipoChoferEnum(str, Enum):
     EMPRESA = "empresa"
 
 
-# ============================================
 # SCHEMAS DE AUTENTICACIÓN
-# ============================================
 
 class LoginRequest(BaseModel):
     """Schema para solicitud de login con JSON"""
@@ -41,9 +39,7 @@ class LoginRequest(BaseModel):
         }
 
 
-# ============================================
 # SCHEMAS BASE
-# ============================================
 
 class UserBase(BaseModel):
     """Schema base para Usuario"""
@@ -53,9 +49,7 @@ class UserBase(BaseModel):
     telefono: Optional[str] = Field(None, max_length=20)
 
 
-# ============================================
 # SCHEMAS PARA CREACIÓN
-# ============================================
 
 class UserCreate(UserBase):
     """Schema para crear un nuevo usuario"""
@@ -141,9 +135,7 @@ class PasswordReset(BaseModel):
         }
 
 
-# ============================================
 # SCHEMAS PARA RESPUESTA
-# ============================================
 
 class UserResponse(UserBase):
     """Schema para respuesta de usuario"""

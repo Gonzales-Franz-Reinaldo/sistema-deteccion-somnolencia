@@ -52,3 +52,12 @@ proyecto-frontend-app/
 ├── tsconfig.json           
 ├── tsconfig.node.json
 └── vite.config.ts          # Plugins React, aliases @
+
+
+### Instalar las dependencias
+- npm install
+
+## ver el archivo .env
+
+### Ejecutar la aplicación
+- npm run dev

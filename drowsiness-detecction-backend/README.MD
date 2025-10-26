@@ -102,3 +102,7 @@ python -m app.main
 
 # Opción 2: Usar uvicorn
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+## Para que funcione el login con las credenciales válidas ejecutar el scrip test/regenerate_password
+- python test/regenerate_passwords.py
+

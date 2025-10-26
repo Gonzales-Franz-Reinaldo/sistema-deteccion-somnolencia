@@ -70,6 +70,28 @@ CREATE TABLE usuarios (
     )
 );
 
+
+
+-- ============================================
+-- TABLA: token_blacklist
+-- Tokens JWT invalidados (logout)
+-- ============================================
+CREATE TABLE token_blacklist (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(500) NOT NULL UNIQUE,
+    id_usuario INTEGER REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    fecha_invalidacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_expiracion TIMESTAMP NOT NULL
+);
+
+-- Índice para búsqueda rápida
+CREATE INDEX idx_token_blacklist_token ON token_blacklist(token);
+CREATE INDEX idx_token_blacklist_expiracion ON token_blacklist(fecha_expiracion);
+
+-- Comentario
+COMMENT ON TABLE token_blacklist IS 'Tokens JWT invalidados por logout o revocación manual';
+
+
 -- ============================================
 -- 3. TABLA: sesiones_viaje
 -- Registro de cada sesión de monitoreo
