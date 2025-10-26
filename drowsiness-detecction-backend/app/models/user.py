@@ -79,9 +79,7 @@ class Usuario(Base):
     # ============================================
     # RELACIONES
     # ============================================
-    # empresa = relationship("Empresa", back_populates="choferes")
-    # sesiones = relationship("SesionViaje", back_populates="usuario")
-    # configuracion = relationship("ConfiguracionUsuario", back_populates="usuario", uselist=False)
+    empresa = relationship("Empresa", back_populates="choferes")
     
     def __repr__(self):
         return f"<Usuario {self.usuario} ({self.rol})>"
@@ -100,3 +98,8 @@ class Usuario(Base):
     def nombre_corto(self) -> str:
         """Obtener primer nombre"""
         return self.nombre_completo.split()[0] if self.nombre_completo else ""
+    
+    @property
+    def nombre_empresa(self) -> str:
+        """Obtener nombre de la empresa (si tiene)"""
+        return self.empresa.nombre_empresa if self.empresa else "Individual"

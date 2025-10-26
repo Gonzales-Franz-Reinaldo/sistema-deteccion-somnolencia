@@ -1,16 +1,20 @@
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
 
 from app.core.config import settings
 
+# Deshabilitar logging de SQLAlchemy
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+
 # Crear engine de SQLAlchemy
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,  # Verificar conexión antes de usar
-    echo=settings.DEBUG,  # Log SQL queries en desarrollo
-    pool_size=10,         # Conexiones en el pool
-    max_overflow=20       # Conexiones adicionales si es necesario
+    echo=False,          # Desactivar logging SQL
+    pool_size=10,        # Conexiones en el pool
+    max_overflow=20      # Conexiones adicionales si es necesario
 )
 
 # Crear SessionLocal factory

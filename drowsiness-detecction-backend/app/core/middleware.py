@@ -21,7 +21,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         start_time = time.time()
         
         # Log request
-        logger.info(f"🔵 {request.method} {request.url.path}")
+        logger.info(f"{request.method} {request.url.path}")
         
         # Procesar request
         response = await call_next(request)
@@ -31,7 +31,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         
         # Log response
         logger.info(
-            f"✅ {request.method} {request.url.path} - "
+            f"{request.method} {request.url.path} - "
             f"Status: {response.status_code} - "
             f"Time: {process_time:.2f}s"
         )
@@ -115,4 +115,4 @@ def setup_middlewares(app):
     if not settings.DEBUG:
         app.add_middleware(RateLimitMiddleware)
     
-    logger.info("✅ Middlewares configurados")
+    logger.info("Middlewares configurados")
