@@ -1,13 +1,10 @@
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import HTTPException, status
 
 from app.core.config import settings
-
-# Contexto para hashing de passwords (bcrypt)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -21,7 +18,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True si coincide, False si no
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8'),
+            hashed_password.encode('utf-8')
+        )
+    except Exception as e:
+        print(f"Error verificando password: {e}")
+        return False
 
 
 def get_password_hash(password: str) -> str:
@@ -34,7 +38,9 @@ def get_password_hash(password: str) -> str:
     Returns:
         Hash bcrypt de la contraseña
     """
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 
 def create_access_token(

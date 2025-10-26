@@ -8,6 +8,7 @@ from app.db.session import get_db
 from app.models.user import Usuario
 from app.core.security import decode_token, verify_token_type
 from app.crud.user import user as user_crud
+from app.crud.token_blacklist import token_blacklist
 
 # OAuth2 scheme para extraer el token del header Authorization
 oauth2_scheme = OAuth2PasswordBearer(
@@ -39,6 +40,14 @@ def get_current_user(
         detail="No se pudo validar las credenciales",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    # Verificar si el token está en blacklist
+    if token_blacklist.is_blacklisted(db, token=token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalidado. Por favor, inicie sesión nuevamente.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     try:
         # Decodificar token
@@ -136,3 +145,16 @@ def get_current_chofer_user(
             detail="No tiene permisos de chofer"
         )
     return current_user
+
+
+def get_current_token(token: str = Depends(oauth2_scheme)) -> str:
+    """
+    Dependency para obtener el token actual
+    
+    Args:
+        token: JWT token del header Authorization
+        
+    Returns:
+        Token JWT
+    """
+    return token

@@ -17,6 +17,17 @@ class Base:
         """
         Genera el nombre de la tabla automáticamente
         Convierte CamelCase a snake_case
-        Ejemplo: Usuario -> usuarios
+        Ejemplo: 
+            - Usuario -> usuarios
+            - Empresa -> empresas
         """
-        return cls.__name__.lower() + "s"
+        # Convertir CamelCase a snake_case con pluralización
+        import re
+        name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
+        name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+        
+        # Agregar 's' para pluralizar (para tablas)
+        if not name.endswith('s'):
+            name += 's'
+        
+        return name

@@ -13,34 +13,23 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     """
     CRUD genérico con operaciones básicas
-    
-    Type Parameters:
-        - ModelType: Modelo SQLAlchemy
-        - CreateSchemaType: Schema Pydantic para creación
-        - UpdateSchemaType: Schema Pydantic para actualización
     """
     
     def __init__(self, model: Type[ModelType]):
-        """
-        Inicializar CRUD con el modelo
-        
-        Args:
-            model: Clase del modelo SQLAlchemy
-        """
+        """Inicializar CRUD con el modelo"""
         self.model = model
     
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
         """
         Obtener un registro por ID
         
-        Args:
-            db: Sesión de BD
-            id: ID del registro
-            
-        Returns:
-            Instancia del modelo o None
+        IMPORTANTE: Usar el nombre correcto de la columna primary key
         """
-        return db.query(self.model).filter(self.model.id == id).first()
+        # Obtener el nombre de la primary key del modelo
+        pk_name = list(self.model.__table__.primary_key.columns.keys())[0]
+        return db.query(self.model).filter(
+            getattr(self.model, pk_name) == id
+        ).first()
     
     def get_multi(
         self, 
@@ -49,30 +38,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         skip: int = 0, 
         limit: int = 100
     ) -> List[ModelType]:
-        """
-        Obtener múltiples registros con paginación
-        
-        Args:
-            db: Sesión de BD
-            skip: Número de registros a saltar
-            limit: Número máximo de registros a retornar
-            
-        Returns:
-            Lista de instancias del modelo
-        """
+        """Obtener múltiples registros con paginación"""
         return db.query(self.model).offset(skip).limit(limit).all()
     
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
-        """
-        Crear un nuevo registro
-        
-        Args:
-            db: Sesión de BD
-            obj_in: Schema Pydantic con datos para crear
-            
-        Returns:
-            Instancia del modelo creada
-        """
+        """Crear un nuevo registro"""
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
@@ -87,17 +57,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj: ModelType,
         obj_in: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        """
-        Actualizar un registro existente
-        
-        Args:
-            db: Sesión de BD
-            db_obj: Instancia actual del modelo
-            obj_in: Schema Pydantic o dict con datos a actualizar
-            
-        Returns:
-            Instancia del modelo actualizada
-        """
+        """Actualizar un registro existente"""
         obj_data = jsonable_encoder(db_obj)
         
         if isinstance(obj_in, dict):
@@ -115,17 +75,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
     
     def remove(self, db: Session, *, id: int) -> ModelType:
-        """
-        Eliminar un registro
-        
-        Args:
-            db: Sesión de BD
-            id: ID del registro a eliminar
-            
-        Returns:
-            Instancia del modelo eliminada
-        """
-        obj = db.query(self.model).get(id)
+        """Eliminar un registro"""
+        obj = self.get(db, id=id)
         db.delete(obj)
         db.commit()
         return obj

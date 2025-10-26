@@ -24,6 +24,24 @@ class TipoChoferEnum(str, Enum):
 
 
 # ============================================
+# SCHEMAS DE AUTENTICACIÓN
+# ============================================
+
+class LoginRequest(BaseModel):
+    """Schema para solicitud de login con JSON"""
+    username: str = Field(..., min_length=3, max_length=50, description="Nombre de usuario")
+    password: str = Field(..., min_length=6, description="Contraseña")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "admin",
+                "password": "admin123"
+            }
+        }
+
+
+# ============================================
 # SCHEMAS BASE
 # ============================================
 
@@ -33,7 +51,6 @@ class UserBase(BaseModel):
     email: EmailStr
     nombre_completo: str = Field(..., min_length=3, max_length=200)
     telefono: Optional[str] = Field(None, max_length=20)
-    rol: RolEnum
 
 
 # ============================================
@@ -41,58 +58,87 @@ class UserBase(BaseModel):
 # ============================================
 
 class UserCreate(UserBase):
-    """Schema para crear un usuario nuevo"""
-    password: str = Field(..., min_length=6, max_length=100)
-    
-    # Datos adicionales para chofer
+    """Schema para crear un nuevo usuario"""
+    password: str = Field(..., min_length=6)
+    rol: RolEnum
     dni_ci: Optional[str] = Field(None, max_length=20)
+    
+    # Campos opcionales para CHOFER
     genero: Optional[GeneroEnum] = None
-    nacionalidad: Optional[str] = Field(None, max_length=100)
+    nacionalidad: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
     direccion: Optional[str] = None
-    ciudad: Optional[str] = Field(None, max_length=100)
-    codigo_postal: Optional[str] = Field(None, max_length=20)
-    
-    # Información laboral
+    ciudad: Optional[str] = None
+    codigo_postal: Optional[str] = None
     tipo_chofer: Optional[TipoChoferEnum] = None
     id_empresa: Optional[int] = None
-    numero_licencia: Optional[str] = Field(None, max_length=50)
-    categoria_licencia: Optional[str] = Field(None, max_length=50)
+    numero_licencia: Optional[str] = None
+    categoria_licencia: Optional[str] = None
     
-    @validator("dni_ci", "genero", "tipo_chofer")
-    def validate_chofer_required_fields(cls, v, values):
-        """Validar que los choferes tengan campos obligatorios"""
-        if values.get("rol") == RolEnum.CHOFER and v is None:
-            raise ValueError("Este campo es obligatorio para choferes")
+    @validator('id_empresa')
+    def validate_empresa_for_chofer(cls, v, values):
+        """Validar que choferes de empresa tengan id_empresa"""
+        if values.get('tipo_chofer') == TipoChoferEnum.EMPRESA and not v:
+            raise ValueError('Chofer de empresa debe tener id_empresa')
         return v
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "usuario": "jperez",
+                "password": "chofer123",
+                "email": "jperez@ejemplo.com",
+                "nombre_completo": "Juan Pérez García",
+                "telefono": "+591 70123456",
+                "rol": "chofer",
+                "dni_ci": "12345678",
+                "genero": "masculino",
+                "tipo_chofer": "empresa",
+                "id_empresa": 1
+            }
+        }
 
 
 class UserUpdate(BaseModel):
     """Schema para actualizar un usuario"""
     email: Optional[EmailStr] = None
     nombre_completo: Optional[str] = Field(None, min_length=3, max_length=200)
-    telefono: Optional[str] = Field(None, max_length=20)
-    dni_ci: Optional[str] = Field(None, max_length=20)
+    telefono: Optional[str] = None
     genero: Optional[GeneroEnum] = None
-    nacionalidad: Optional[str] = Field(None, max_length=100)
+    nacionalidad: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
     direccion: Optional[str] = None
-    ciudad: Optional[str] = Field(None, max_length=100)
-    codigo_postal: Optional[str] = Field(None, max_length=20)
-    numero_licencia: Optional[str] = Field(None, max_length=50)
-    categoria_licencia: Optional[str] = Field(None, max_length=50)
+    ciudad: Optional[str] = None
+    codigo_postal: Optional[str] = None
+    numero_licencia: Optional[str] = None
+    categoria_licencia: Optional[str] = None
     activo: Optional[bool] = None
 
 
 class PasswordChange(BaseModel):
     """Schema para cambio de contraseña"""
-    current_password: str
-    new_password: str = Field(..., min_length=6, max_length=100)
+    current_password: str = Field(..., min_length=6)
+    new_password: str = Field(..., min_length=6)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "current_password": "password_actual",
+                "new_password": "nueva_password_123"
+            }
+        }
 
 
 class PasswordReset(BaseModel):
-    """Schema para resetear contraseña (admin)"""
-    new_password: str = Field(..., min_length=6, max_length=100)
+    """Schema para reseteo de contraseña por admin"""
+    new_password: str = Field(..., min_length=6)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "new_password": "nuevo_password_temporal"
+            }
+        }
 
 
 # ============================================
@@ -102,14 +148,15 @@ class PasswordReset(BaseModel):
 class UserResponse(UserBase):
     """Schema para respuesta de usuario"""
     id_usuario: int
+    rol: RolEnum
     dni_ci: Optional[str] = None
-    genero: Optional[str] = None
+    genero: Optional[GeneroEnum] = None
     nacionalidad: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
     direccion: Optional[str] = None
     ciudad: Optional[str] = None
     codigo_postal: Optional[str] = None
-    tipo_chofer: Optional[str] = None
+    tipo_chofer: Optional[TipoChoferEnum] = None
     id_empresa: Optional[int] = None
     numero_licencia: Optional[str] = None
     categoria_licencia: Optional[str] = None
@@ -119,7 +166,7 @@ class UserResponse(UserBase):
     ultima_sesion: Optional[datetime] = None
     
     class Config:
-        from_attributes = True  # Pydantic V2 (antes era orm_mode = True)
+        from_attributes = True
 
 
 class UserListResponse(BaseModel):
