@@ -102,3 +102,4 @@ python -m app.main
 
 # Opción 2: Usar uvicorn
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
