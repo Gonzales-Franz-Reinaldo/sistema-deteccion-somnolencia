@@ -3,9 +3,7 @@ from typing import Optional
 from datetime import datetime
 
 
-# ============================================
 # SCHEMAS BASE
-# ============================================
 
 class EmpresaBase(BaseModel):
     """Schema base para Empresa"""
@@ -16,9 +14,7 @@ class EmpresaBase(BaseModel):
     direccion: Optional[str] = None
 
 
-# ============================================
 # SCHEMAS PARA CREACIÓN
-# ============================================
 
 class EmpresaCreate(EmpresaBase):
     """Schema para crear una empresa"""
@@ -35,9 +31,7 @@ class EmpresaUpdate(BaseModel):
     activo: Optional[bool] = None
 
 
-# ============================================
 # SCHEMAS PARA RESPUESTA
-# ============================================
 
 class EmpresaResponse(EmpresaBase):
     """Schema para respuesta de empresa"""
