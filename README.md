@@ -13,7 +13,6 @@ Hola, chicos en este repositorio encontrarán la programación para que puedan c
 - **Dockerizable:** Facilita la ejecución en servidores remotos.
 - **API robusta:** Utiliza FastAPI para ofrecer un backend modular y extensible.
 
-![YoloV8](https://github.com/user-attachments/assets/607fac48-6132-4b36-981b-530491ada198)
 
 ## Requisitos:
 Para utilizar este código, asegúrese de cumplir con los siguientes requisitos previos:
