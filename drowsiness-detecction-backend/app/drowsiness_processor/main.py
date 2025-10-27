@@ -2,11 +2,11 @@ import numpy as np
 import base64
 import cv2
 
-from drowsiness_processor.extract_points.point_extractor import PointsExtractor
-from drowsiness_processor.data_processing.main import PointsProcessing
-from drowsiness_processor.drowsiness_features.processing import FeaturesDrowsinessProcessing
-from drowsiness_processor.visualization.main import ReportVisualizer
-from drowsiness_processor.reports.main import DrowsinessReports
+from app.drowsiness_processor.extract_points.point_extractor import PointsExtractor
+from app.drowsiness_processor.data_processing.main import PointsProcessing
+from app.drowsiness_processor.drowsiness_features.processing import FeaturesDrowsinessProcessing
+from app.drowsiness_processor.visualization.main import ReportVisualizer
+from app.drowsiness_processor.reports.main import DrowsinessReports
 
 
 class DrowsinessDetectionSystem:
@@ -15,7 +15,7 @@ class DrowsinessDetectionSystem:
         self.points_processing = PointsProcessing()
         self.features_processing = FeaturesDrowsinessProcessing()
         self.visualizer = ReportVisualizer()
-        self.reports = DrowsinessReports('drowsiness_processor/reports/august/drowsiness_report.csv')
+        self.reports = DrowsinessReports('app/drowsiness_processor/reports/august/drowsiness_report.csv')
         self.json_report: dict = {}
 
     def run(self, picture_base64: str):

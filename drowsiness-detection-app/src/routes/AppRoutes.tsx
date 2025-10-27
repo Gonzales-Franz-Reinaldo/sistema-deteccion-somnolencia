@@ -1,4 +1,3 @@
-// CONFIGURACIÓN DE RUTAS DE LA APLICACIÓN
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
@@ -7,6 +6,7 @@ import WelcomePage from '../pages/WelcomePage';
 import LoginPage from '../pages/LoginPage';
 import AdminDashboardPage from '../pages/admin/DashboardPage';
 import ChoferDashboardPage from '../pages/chofer/DashboardPage';
+import MonitoreoPage from '../pages/chofer/MonitoreoPage'; 
 
 // Layouts
 import AdminLayout from '../components/layout/AdminLayout';
@@ -110,15 +110,10 @@ export const AppRoutes = () => {
         }
       >
         <Route path="dashboard" element={<ChoferDashboardPage />} />
-        <Route
-          path="monitoreo"
-          element={
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold text-gray-900">Iniciar Monitoreo</h2>
-              <p className="text-gray-600 mt-2">Módulo en desarrollo</p>
-            </div>
-          }
-        />
+        
+        {/* ← NUEVA RUTA DE MONITOREO */}
+        <Route path="monitoreo" element={<MonitoreoPage />} />
+        
         <Route
           path="historial"
           element={

@@ -1,7 +1,7 @@
 import time
 from typing import Tuple, Dict, Any
 from abc import ABC, abstractmethod
-from drowsiness_processor.drowsiness_features.processor import DrowsinessProcessor
+from app.drowsiness_processor.drowsiness_features.processor import DrowsinessProcessor
 
 
 class Detector(ABC):

@@ -1,5 +1,5 @@
-from drowsiness_processor.data_processing.processors.hands_processor import HandsProcessor
-from drowsiness_processor.data_processing.hands.first_hand.first_hand_processing import (EuclideanDistanceCalculator, FirstHandPointsProcessing)
+from app.drowsiness_processor.data_processing.processors.hands_processor import HandsProcessor
+from app.drowsiness_processor.data_processing.hands.first_hand.first_hand_processing import (EuclideanDistanceCalculator, FirstHandPointsProcessing)
 
 
 class FirstHandProcessor(HandsProcessor):

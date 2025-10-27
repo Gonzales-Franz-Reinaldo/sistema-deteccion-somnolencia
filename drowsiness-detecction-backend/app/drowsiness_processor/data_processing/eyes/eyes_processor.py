@@ -1,5 +1,5 @@
-from drowsiness_processor.data_processing.processors.face_processor import FaceProcessor
-from drowsiness_processor.data_processing.eyes.eyes_processing import (EyesPointsProcessing, EuclideanDistanceCalculator)
+from app.drowsiness_processor.data_processing.processors.face_processor import FaceProcessor
+from app.drowsiness_processor.data_processing.eyes.eyes_processing import (EyesPointsProcessing, EuclideanDistanceCalculator)
 
 
 class EyesProcessor(FaceProcessor):
