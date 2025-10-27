@@ -165,9 +165,9 @@ export const MonitoreoPage = () => {
             {/* Resto del contenido */}
             <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="text-center mb-8">
-                    <h1 className="text-5xl font-bold text-purple-900 mb-2">
+                    {/* <h1 className="text-5xl font-bold text-purple-900 mb-2">
                         Sistema de Detección de Somnolencia
-                    </h1>
+                    </h1> */}
                     <p className="text-gray-900">
                         Procesamiento en tiempo real con IA {isRunning && `• ${fps} FPS`}
                     </p>
