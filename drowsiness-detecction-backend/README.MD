@@ -97,10 +97,8 @@ psql -U postgres -d sistema_deteccion_somnolencia
 SELECT usuario, rol, activo FROM usuarios;
 
 ## Paso 4: Ejecutar la aplicación
-# Opción 1: Ejecutar directamente
-python -m app.main
 
-# Opción 2: Usar uvicorn
+#### Usar uvicorn
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ## Para que funcione el login con las credenciales válidas ejecutar el scrip test/regenerate_password
