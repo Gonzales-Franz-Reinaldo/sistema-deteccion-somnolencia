@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'danger';
+    variant?: 'primary' | 'secondary' | 'danger' | 'success'; 
     isLoading?: boolean;
     fullWidth?: boolean;
 }
@@ -15,6 +15,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             primary: 'bg-purple-600 text-white hover:bg-purple-700 active:bg-purple-800',
             secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
             danger: 'bg-red-600 text-white hover:bg-red-700',
+            success: 'bg-green-500 text-white hover:bg-green-600 active:bg-green-700',
         };
 
         const widthStyle = fullWidth ? 'w-full' : '';
