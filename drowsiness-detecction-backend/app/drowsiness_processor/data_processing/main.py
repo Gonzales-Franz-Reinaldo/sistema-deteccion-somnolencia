@@ -1,10 +1,11 @@
-from drowsiness_processor.data_processing.processors.face_processor import FaceProcessor
-from drowsiness_processor.data_processing.processors.hands_processor import HandsProcessor
-from drowsiness_processor.data_processing.eyes.eyes_processor import EyesProcessor
-from drowsiness_processor.data_processing.hands.first_hand.first_hand_processor import FirstHandProcessor
-from drowsiness_processor.data_processing.hands.second_hand.second_hand_processor import SecondHandProcessor
-from drowsiness_processor.data_processing.head.head_processor import HeadProcessor
-from drowsiness_processor.data_processing.mouth.mouth_processor import MouthProcessor
+# Imports absolutos
+from app.drowsiness_processor.data_processing.processors.face_processor import FaceProcessor
+from app.drowsiness_processor.data_processing.processors.hands_processor import HandsProcessor
+from app.drowsiness_processor.data_processing.eyes.eyes_processor import EyesProcessor
+from app.drowsiness_processor.data_processing.hands.first_hand.first_hand_processor import FirstHandProcessor
+from app.drowsiness_processor.data_processing.hands.second_hand.second_hand_processor import SecondHandProcessor
+from app.drowsiness_processor.data_processing.head.head_processor import HeadProcessor
+from app.drowsiness_processor.data_processing.mouth.mouth_processor import MouthProcessor
 
 
 class PointsProcessing:

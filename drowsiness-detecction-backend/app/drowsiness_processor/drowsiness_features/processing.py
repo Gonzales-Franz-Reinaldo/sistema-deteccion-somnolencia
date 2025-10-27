@@ -1,8 +1,9 @@
-from drowsiness_processor.drowsiness_features.processor import DrowsinessProcessor
-from drowsiness_processor.drowsiness_features.eye_rub.processing import EyeRubEstimator
-from drowsiness_processor.drowsiness_features.flicker_and_microsleep.processing import FlickerEstimator
-from drowsiness_processor.drowsiness_features.pitch.processing import PitchEstimator
-from drowsiness_processor.drowsiness_features.yawn.processing import YawnEstimator
+# Imports absolutos
+from app.drowsiness_processor.drowsiness_features.processor import DrowsinessProcessor
+from app.drowsiness_processor.drowsiness_features.eye_rub.processing import EyeRubEstimator
+from app.drowsiness_processor.drowsiness_features.flicker_and_microsleep.processing import FlickerEstimator
+from app.drowsiness_processor.drowsiness_features.pitch.processing import PitchEstimator
+from app.drowsiness_processor.drowsiness_features.yawn.processing import YawnEstimator
 
 
 class FeaturesDrowsinessProcessing:

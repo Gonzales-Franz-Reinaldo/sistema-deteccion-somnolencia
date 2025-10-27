@@ -5,6 +5,7 @@ from fastapi.openapi.utils import get_openapi
 from app.core.config import settings
 from app.core.middleware import setup_middlewares
 from app.api.v1.routers import auth, empresas, users
+from app.api.v1.routers import monitoring  
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -65,6 +66,7 @@ app = FastAPI(
     * **Autenticación JWT** - Tokens de acceso (30 min) y refresh (7 días)
     * **Control de Roles** - Admin con permisos completos, Chofer con permisos limitados
     * **CRUD Completo** - Gestión de choferes y empresas (solo admin)
+    * **Monitoreo en Tiempo Real** - WebSocket para detección de somnolencia (choferes)
     * **Seguridad** - Bloqueo por intentos fallidos, tokens en blacklist
     * **Documentación** - Swagger UI interactivo y ReDoc
     
@@ -142,6 +144,13 @@ app.include_router(
     tags=["🏢 Gestión de Empresas (Solo Admin)"]
 )
 
+# ←  ROUTER DE MONITOREO
+app.include_router(
+    monitoring.router,
+    prefix=f"{settings.API_V1_PREFIX}/monitoring",
+    tags=["📹 Monitoreo en Tiempo Real (Choferes)"]
+)
+
 
 @app.get("/", tags=["ℹ️ Info"])
 def root():
@@ -158,7 +167,7 @@ def root():
         "status": "🟢 Operativo",
         "roles": {
             "admin": "Gestión completa del sistema",
-            "chofer": "Solo login y monitoreo personal"
+            "chofer": "Login, monitoreo personal y reportes"
         }
     }
 
