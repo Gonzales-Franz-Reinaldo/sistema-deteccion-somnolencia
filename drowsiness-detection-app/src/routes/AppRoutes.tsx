@@ -5,7 +5,7 @@ import { useAuth } from '../features/auth/hooks/useAuth';
 // Pages
 import WelcomePage from '../pages/WelcomePage';
 import LoginPage from '../pages/LoginPage';
-import AdminDashboardPage from '../pages/admin/DashboardPage';
+import { AdminDashboardPage, GestionChoferesPage } from '../pages/admin';
 import ChoferDashboardPage from '../pages/chofer/DashboardPage';
 
 // Layouts
@@ -60,15 +60,7 @@ export const AppRoutes = () => {
         }
       >
         <Route path="dashboard" element={<AdminDashboardPage />} />
-        <Route
-          path="choferes"
-          element={
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold text-gray-900">Gestión de Choferes</h2>
-              <p className="text-gray-600 mt-2">Módulo en desarrollo</p>
-            </div>
-          }
-        />
+        <Route path="choferes" element={<GestionChoferesPage />} />
         <Route
           path="empresas"
           element={
