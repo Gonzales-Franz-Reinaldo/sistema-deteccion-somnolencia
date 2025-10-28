@@ -4,23 +4,7 @@ const CAMERA_CONFIG = {
     width: 640,
     height: 480,
     facingMode: 'user' as const,
-};
-
-// Helper function to convert Blob to Base64 asynchronously
-const blobToBase64 = (blob: Blob): Promise<string | null> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-                // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-                resolve(reader.result.split(',')[1] || null);
-            } else {
-                resolve(null);
-            }
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
+    frameRate: 30,
 };
 
 export const useCamera = () => {
@@ -32,17 +16,56 @@ export const useCamera = () => {
 
     const startCamera = useCallback(async () => {
         try {
+
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach((track) => track.stop());
+                streamRef.current = null;
+            }
+
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: CAMERA_CONFIG.width },
                     height: { ideal: CAMERA_CONFIG.height },
                     facingMode: CAMERA_CONFIG.facingMode,
+                    frameRate: { ideal: CAMERA_CONFIG.frameRate },
                 },
                 audio: false,
             });
 
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
+
+                await new Promise<void>((resolve, reject) => {
+                    if (!videoRef.current) {
+                        reject(new Error('Video ref no disponible'));
+                        return;
+                    }
+
+                    const video = videoRef.current;
+
+                    video.onloadedmetadata = () => {
+                        video.play()
+                            .then(() => {
+                                // Verificar que el video tenga dimensiones válidas
+                                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                                    resolve();
+                                } else {
+                                    reject(new Error('Video sin dimensiones válidas'));
+                                }
+                            })
+                            .catch(reject);
+                    };
+
+                    video.onerror = () => {
+                        reject(new Error('Error al cargar video'));
+                    };
+
+                    // Timeout de seguridad
+                    setTimeout(() => {
+                        reject(new Error('Timeout al iniciar video'));
+                    }, 5000);
+                });
+
                 streamRef.current = stream;
                 setIsCameraActive(true);
                 setError(null);
@@ -51,54 +74,74 @@ export const useCamera = () => {
             console.error('Error al acceder a la cámara:', err);
             setError('No se pudo acceder a la cámara. Verifica los permisos.');
             setIsCameraActive(false);
+
+            // Limpiar en caso de error
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach((track) => track.stop());
+                streamRef.current = null;
+            }
         }
     }, []);
 
     const stopCamera = useCallback(() => {
+        // Detener todos los tracks
         if (streamRef.current) {
-            streamRef.current.getTracks().forEach((track) => track.stop());
+            streamRef.current.getTracks().forEach((track) => {
+                console.log(`Deteniendo track: ${track.kind}`);
+                track.stop();
+            });
             streamRef.current = null;
         }
+
+        // Limpiar video element completamente
         if (videoRef.current) {
+            videoRef.current.pause();
             videoRef.current.srcObject = null;
+            videoRef.current.load(); // ← CRÍTICO: Resetear el elemento video
         }
+
+        // Limpiar canvas
+        if (canvasRef.current) {
+            const ctx = canvasRef.current.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+            }
+        }
+
         setIsCameraActive(false);
     }, []);
 
-    // ASYNCHRONOUS frame capture and encoding
-    const captureFrame = useCallback(async (): Promise<string | null> => {
-        if (!videoRef.current || !canvasRef.current || videoRef.current.readyState < videoRef.current.HAVE_ENOUGH_DATA) {
-            return null;
-        }
-
-        const canvas = canvasRef.current;
+    const captureFrame = useCallback((): string | null => {
         const video = videoRef.current;
-        const ctx = canvas.getContext('2d');
+        const canvas = canvasRef.current;
+
+        // Validaciones estrictas
+        if (!video || !canvas) return null;
+        if (!streamRef.current) return null; // Verificar que hay stream activo
+        if (video.readyState !== video.HAVE_ENOUGH_DATA) return null;
+        if (video.videoWidth === 0 || video.videoHeight === 0) return null;
+
+        const ctx = canvas.getContext('2d', {
+            alpha: false,
+            willReadFrequently: false,
+        });
+
         if (!ctx) return null;
 
-        // Ensure canvas dimensions match video or desired capture size
+        // Asegurar dimensiones correctas
         if (canvas.width !== CAMERA_CONFIG.width || canvas.height !== CAMERA_CONFIG.height) {
             canvas.width = CAMERA_CONFIG.width;
             canvas.height = CAMERA_CONFIG.height;
         }
 
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Convert canvas to Blob asynchronously
-        return new Promise<string | null>((resolve) => {
-            canvas.toBlob(
-                async (blob) => {
-                    if (blob) {
-                        const base64 = await blobToBase64(blob);
-                        resolve(base64);
-                    } else {
-                        resolve(null);
-                    }
-                },
-                'image/jpeg', // MIME type
-                0.7 // Quality (adjust as needed, lower might be faster)
-            );
-        });
+        try {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            return dataUrl.split(',')[1];
+        } catch (err) {
+            console.error('Error al capturar frame:', err);
+            return null;
+        }
     }, []);
 
     useEffect(() => {
