@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useRef } from 'react';
 
 interface VideoDisplayProps {
     imageBase64: string | null;
@@ -6,17 +6,39 @@ interface VideoDisplayProps {
 }
 
 export const VideoDisplay = memo<VideoDisplayProps>(({ imageBase64, title }) => {
+    const imgRef = useRef<HTMLImageElement | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    useEffect(() => {
+        if (!imageBase64 || !canvasRef.current) return;
+
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d', {
+            alpha: false,
+            desynchronized: true // ← Clave para mejor performance
+        });
+
+        if (!ctx) return;
+
+        const img = new Image();
+        img.onload = () => {
+            // Dibujar en canvas evita re-renders del DOM
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+
+        img.src = `data:image/jpeg;base64,${imageBase64}`;
+    }, [imageBase64]);
+
     return (
         <div className="flex flex-col items-center space-y-4">
             <h3 className="text-xl font-bold text-purple-900">{title}</h3>
             <div className="border-4 border-white/30 rounded-lg overflow-hidden shadow-2xl bg-gray-900">
                 {imageBase64 ? (
-                    <img
-                        src={`data:image/jpeg;base64,${imageBase64}`}
-                        alt={title}
-                        className="w-[640px] h-[480px] object-cover"
-                        loading="eager"
-                        decoding="async"
+                    <canvas
+                        ref={canvasRef}
+                        width={640}
+                        height={480}
+                        className="block w-[640px] h-[480px] [image-rendering:crisp-edges]"
                     />
                 ) : (
                     <div className="w-[640px] h-[480px] flex items-center justify-center text-gray-500">
@@ -41,6 +63,8 @@ export const VideoDisplay = memo<VideoDisplayProps>(({ imageBase64, title }) => 
             </div>
         </div>
     );
+}, (prevProps, nextProps) => {
+    return prevProps.imageBase64 === nextProps.imageBase64 && prevProps.title === nextProps.title;
 });
 
 VideoDisplay.displayName = 'VideoDisplay';

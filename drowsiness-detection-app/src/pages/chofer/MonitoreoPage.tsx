@@ -17,9 +17,16 @@ export const MonitoreoPage = () => {
     const animationFrameRef = useRef<number | undefined>(undefined);
     const frameCountRef = useRef<number>(0);
     const fpsUpdateTimeRef = useRef<number>(0);
-
     const isRunningRef = useRef<boolean>(false);
     const isConnectedRef = useRef<boolean>(false);
+    const isProcessingRef = useRef<boolean>(false);
+
+
+    // Buffer para imágenes pendientes
+    const pendingImageRef = useRef<{ original: string | null, sketch: string | null }>({
+        original: null,
+        sketch: null
+    });
 
     // Sincronizar refs con estado
     useEffect(() => {
@@ -30,32 +37,24 @@ export const MonitoreoPage = () => {
         isConnectedRef.current = isConnected;
     }, [isConnected]);
 
-    const FRAME_INTERVAL_MS = 100; // ~10 FPS
-    const lastFrameTime = useRef(0);
-
-    const processFrame = useCallback(async () => {
-        const now = performance.now();
+    const processFrame = useCallback(() => {
         if (!isRunningRef.current || !isConnectedRef.current) {
-            // Still schedule next frame if not running/connected to allow restart
             animationFrameRef.current = requestAnimationFrame(processFrame);
             return;
         }
 
-        // Throttling Logic
-        if (now - lastFrameTime.current < FRAME_INTERVAL_MS) {
-            // Not enough time passed, schedule next check and skip processing/sending
+        if (isProcessingRef.current) {
             animationFrameRef.current = requestAnimationFrame(processFrame);
             return;
         }
-        lastFrameTime.current = now;
 
-        // Await the asynchronous frame capture and encoding
-        const frameBase64 = await captureFrame();
+        isProcessingRef.current = true;
+
+        const frameBase64 = captureFrame();
 
         if (frameBase64) {
             sendFrame(frameBase64);
 
-            // Contar FPS
             frameCountRef.current++;
             const currentTime = performance.now();
             const fpsElapsed = currentTime - fpsUpdateTimeRef.current;
@@ -66,27 +65,27 @@ export const MonitoreoPage = () => {
             }
         }
 
-        // Schedule the next frame processing
-        if (isRunningRef.current) {
-            animationFrameRef.current = requestAnimationFrame(processFrame);
-        }
-    }, [captureFrame, sendFrame, FRAME_INTERVAL_MS]);
+        animationFrameRef.current = requestAnimationFrame(processFrame);
+    }, [captureFrame, sendFrame]);
 
     const handleStart = async () => {
         try {
+
+            setOriginalImage(null);
+            setSketchImage(null);
+            setFps(0);
+            frameCountRef.current = 0;
+            fpsUpdateTimeRef.current = performance.now();
+
             await startCamera();
+
             connect();
             setIsRunning(true);
             isRunningRef.current = true;
-            fpsUpdateTimeRef.current = performance.now();
 
-            // Wait a bit for the video to potentially stabilize
-            setTimeout(() => {
-                // Initial call to start the async loop
-                if (isRunningRef.current) {
-                    processFrame();
-                }
-            }, 500);
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            animationFrameRef.current = requestAnimationFrame(processFrame);
         } catch (err) {
             console.error('Error al iniciar:', err);
         }
@@ -95,24 +94,66 @@ export const MonitoreoPage = () => {
     const handleStop = () => {
         setIsRunning(false);
         isRunningRef.current = false;
+        isProcessingRef.current = false;
+
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = undefined;
         }
+
         stopCamera();
         disconnect();
+
         setOriginalImage(null);
         setSketchImage(null);
         setFps(0);
+        frameCountRef.current = 0;
+
     };
+
+    // Usar requestAnimationFrame para actualizar UI
+    useEffect(() => {
+        let rafId: number;
+
+        const updateUI = () => {
+            const pending = pendingImageRef.current;
+
+            if (pending.original) {
+                setOriginalImage(pending.original);
+                pending.original = null;
+            }
+
+            if (pending.sketch) {
+                setSketchImage(pending.sketch);
+                pending.sketch = null;
+            }
+
+            rafId = requestAnimationFrame(updateUI);
+        };
+
+        if (isRunning) {
+            rafId = requestAnimationFrame(updateUI);
+        }
+
+        return () => {
+            if (rafId) cancelAnimationFrame(rafId);
+        };
+    }, [isRunning]);
 
     useEffect(() => {
         if (lastMessage) {
+            isProcessingRef.current = false;
+
             if (lastMessage.error) {
                 console.error('Error del servidor:', lastMessage.error);
             } else {
-                setOriginalImage(lastMessage.original_image);
-                setSketchImage(lastMessage.sketch_image);
+                // Guardar en buffer en lugar de setState directo
+                if (lastMessage.original_image && lastMessage.original_image !== originalImage) {
+                    pendingImageRef.current.original = lastMessage.original_image;
+                }
+                if (lastMessage.sketch_image && lastMessage.sketch_image !== sketchImage) {
+                    pendingImageRef.current.sketch = lastMessage.sketch_image;
+                }
             }
         }
     }, [lastMessage]);
@@ -143,14 +184,14 @@ export const MonitoreoPage = () => {
             {/* Breadcrumb con enlace de regreso */}
             <div className="max-w-7xl mx-auto w-full mb-6">
                 <nav className="flex items-center text-sm text-gray-600 mb-4">
-                    <Link 
-                        to="/chofer/dashboard" 
+                    <Link
+                        to="/chofer/dashboard"
                         className="flex items-center gap-1 hover:text-purple-600 transition-colors group"
                     >
-                        <svg 
-                            className="w-4 h-4 group-hover:-translate-x-1 transition-transform" 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
+                        <svg
+                            className="w-4 h-4 group-hover:-translate-x-1 transition-transform"
+                            fill="none"
+                            viewBox="0 0 24 24"
                             stroke="currentColor"
                         >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -165,9 +206,7 @@ export const MonitoreoPage = () => {
             {/* Resto del contenido */}
             <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="text-center mb-8">
-                    {/* <h1 className="text-5xl font-bold text-purple-900 mb-2">
-                        Sistema de Detección de Somnolencia
-                    </h1> */}
+
                     <p className="text-gray-900">
                         Procesamiento en tiempo real con IA {isRunning && `• ${fps} FPS`}
                     </p>
@@ -189,8 +228,8 @@ export const MonitoreoPage = () => {
                         onClick={handleStart}
                         disabled={isRunning}
                         className={`px-8 py-3 rounded-lg font-bold text-white text-lg transition-all transform hover:scale-105 ${isRunning
-                                ? 'bg-gray-600 cursor-not-allowed'
-                                : 'bg-green-600 hover:bg-green-700 shadow-lg'
+                            ? 'bg-gray-600 cursor-not-allowed'
+                            : 'bg-green-600 hover:bg-green-700 shadow-lg'
                             }`}
                     >
                         {isRunning ? '🔴 Procesando...' : '▶️ Iniciar Detección'}
@@ -200,8 +239,8 @@ export const MonitoreoPage = () => {
                         onClick={handleStop}
                         disabled={!isRunning}
                         className={`px-8 py-3 rounded-lg font-bold text-white text-lg transition-all transform hover:scale-105 ${!isRunning
-                                ? 'bg-gray-600 cursor-not-allowed'
-                                : 'bg-red-600 hover:bg-red-700 shadow-lg'
+                            ? 'bg-gray-600 cursor-not-allowed'
+                            : 'bg-red-600 hover:bg-red-700 shadow-lg'
                             }`}
                     >
                         ⏹️ Detener
