@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1800px;
+            max-width: 1920px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -73,13 +73,10 @@
         }
 
         @keyframes pulse {
-
-            0%,
-            100% {
+            0%, 100% {
                 opacity: 1;
                 box-shadow: 0 0 15px #48bb78;
             }
-
             50% {
                 opacity: 0.5;
             }
@@ -132,7 +129,6 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -144,7 +140,7 @@
         ============================================ */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -164,10 +160,6 @@
 
         .stat-box.orange {
             background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-        }
-
-        .stat-box.red {
-            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
         }
 
         .stat-value {
@@ -197,7 +189,7 @@
 
         .drivers-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
             gap: 25px;
         }
 
@@ -239,7 +231,7 @@
         }
 
         .driver-info h3 {
-            font-size: 1.5rem;
+            font-size: 1.7rem;
             color: #2d3748;
             margin-bottom: 5px;
         }
@@ -274,26 +266,26 @@
 
         .driver-stats {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
             margin-bottom: 20px;
         }
 
         .stat-item {
             background: #f7fafc;
-            padding: 12px;
+            padding: 12px 8px;
             border-radius: 10px;
             text-align: center;
         }
 
         .stat-item-label {
-            font-size: 0.85rem;
-            color: #718096;
+            font-size: 1.2rem;
+            color: #5d697b;
             margin-bottom: 5px;
         }
 
         .stat-item-value {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: bold;
             color: #2d3748;
         }
@@ -305,7 +297,7 @@
             color: white;
             border: none;
             border-radius: 10px;
-            font-size: 1rem;
+            font-size: 1.5rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -344,92 +336,141 @@
             box-shadow: 0 6px 20px rgba(74, 85, 104, 0.4);
         }
 
-        .map-container {
-            display: grid;
-            grid-template-columns: 380px 1fr 320px;
-            gap: 0;
-            height: calc(100vh - 250px);
-            min-height: 650px;
-            background: white;
+        /* TRIP INFO - Origen y Destino */
+        .trip-info-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            color: white;
         }
 
-        /* PANEL IZQUIERDO - PERFIL DEL CHOFER */
-        .profile-panel {
-            background: #f7fafc;
-            padding: 25px;
+        .trip-point {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .trip-icon {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .trip-arrow {
+            font-size: 2rem;
+            opacity: 0.7;
+        }
+
+        .trip-location {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trip-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 2px;
+        }
+
+        .trip-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        /* MAIN CONTENT - Grid Layout */
+        .map-view-content {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 20px;
+            height: calc(100vh - 400px);
+            min-height: 600px;
+        }
+
+        /* PANEL IZQUIERDO - Información del Chofer + Eventos */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
             overflow-y: auto;
-            border-right: 3px solid #e0e7ff;
+            width: 500px;
+        }
+
+        /* PERFIL DEL CHOFER */
+        .profile-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e0e7ff;
         }
 
         .profile-header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             padding-bottom: 20px;
             border-bottom: 2px solid #e0e7ff;
         }
 
         .profile-avatar {
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
+            font-size: 2.5rem;
             color: white;
-            margin: 0 auto 15px;
+            margin: 0 auto 12px;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .profile-name {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: bold;
             color: #2d3748;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .profile-company {
-            font-size: 1rem;
-            color: #718096;
-            margin-bottom: 10px;
-        }
-
-        .profile-status {
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 20px;
             font-size: 0.95rem;
-            font-weight: 700;
+            color: #718096;
         }
 
         .info-section {
-            background: white;
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 20px;
-            border: 2px solid #e0e7ff;
+            margin-bottom: 15px;
         }
 
         .info-section-title {
-            font-size: 1.1rem;
+            font-size: 1.3rem;
             font-weight: 700;
             color: #667eea;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #e0e7ff;
         }
 
         .info-item {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px dashed #e0e7ff;
         }
 
@@ -438,20 +479,155 @@
         }
 
         .info-label {
-            color: #718096;
-            font-size: 0.95rem;
+            color: #535d6c;
+            font-size: 1.2rem;
         }
 
         .info-value {
             color: #2d3748;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1.2rem;
+            text-align: right;
         }
 
-        /* PANEL CENTRAL - MAPA */
+        /* PANEL DE EVENTOS */
+        .events-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e0e7ff;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .events-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e0e7ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .events-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+        }
+
+        .event-item {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 12px 15px;
+            border-left: 4px solid;
+            transition: all 0.3s;
+        }
+
+        .event-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-item.high {
+            border-left-color: #f56565;
+            background: linear-gradient(to right, #fff5f5 0%, #f7fafc 30%);
+        }
+
+        .event-item.medium {
+            border-left-color: #ed8936;
+            background: linear-gradient(to right, #fffaf0 0%, #f7fafc 30%);
+        }
+
+        .event-item.low {
+            border-left-color: #48bb78;
+            background: linear-gradient(to right, #f0fff4 0%, #f7fafc 30%);
+        }
+
+        .event-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .event-type {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #2d3748;
+        }
+
+        .event-time {
+            font-size: 0.8rem;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .event-bottom {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+
+        .event-duration {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .risk-indicator {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e7ff;
+        }
+
+        .risk-label {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .risk-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .risk-value.critical {
+            color: #f56565;
+        }
+
+        .risk-value.warning {
+            color: #ed8936;
+        }
+
+        .risk-value.normal {
+            color: #48bb78;
+        }
+
+        .risk-message {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        /* PANEL DERECHO - MAPA */
         .map-panel {
             position: relative;
             background: #e5e3df;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-left: 100px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .map-iframe {
@@ -465,7 +641,7 @@
             top: 20px;
             left: 20px;
             background: rgba(255, 255, 255, 0.95);
-            padding: 15px 20px;
+            padding: 12px 18px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
@@ -475,9 +651,9 @@
         .map-overlay-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: 8px 0;
-            font-size: 1rem;
+            gap: 8px;
+            margin: 6px 0;
+            font-size: 0.95rem;
             font-weight: 600;
             color: #2d3748;
         }
@@ -487,10 +663,10 @@
             bottom: 30px;
             right: 30px;
             background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
+            padding: 18px;
             border-radius: 50%;
-            width: 130px;
-            height: 130px;
+            width: 120px;
+            height: 120px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -501,15 +677,16 @@
         }
 
         .speed-value {
-            font-size: 2.5rem;
+            font-size: 2.3rem;
             font-weight: bold;
             color: #667eea;
+            line-height: 1;
         }
 
         .speed-unit {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: #718096;
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
         .route-badge {
@@ -517,12 +694,12 @@
             bottom: 30px;
             left: 30px;
             background: rgba(255, 255, 255, 0.95);
-            padding: 15px 25px;
+            padding: 12px 20px;
             border-radius: 12px;
             box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
             z-index: 100;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
             color: #2d3748;
         }
@@ -533,130 +710,75 @@
             right: 20px;
             background: rgba(239, 68, 68, 0.95);
             color: white;
-            padding: 12px 25px;
+            padding: 10px 20px;
             border-radius: 25px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 1.1rem;
+            gap: 8px;
+            font-size: 1rem;
             font-weight: 700;
             box-shadow: 0 6px 25px rgba(239, 68, 68, 0.5);
             z-index: 100;
         }
 
         .live-pulse {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             background: white;
             border-radius: 50%;
             animation: pulse 1.5s infinite;
         }
 
-        /* PANEL DERECHO - EVENTOS EN TIEMPO REAL */
-        .events-panel {
-            background: #f7fafc;
-            padding: 25px;
-            overflow-y: auto;
-            border-left: 3px solid #e0e7ff;
+        /* ============================================
+           SCROLLBAR CUSTOM
+        ============================================ */
+        .left-panel::-webkit-scrollbar,
+        .events-list::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .events-header {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e0e7ff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .events-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        .left-panel::-webkit-scrollbar-track,
+        .events-list::-webkit-scrollbar-track {
             background: #e0e7ff;
-        }
-
-        .event-card {
-            background: white;
             border-radius: 10px;
-            padding: 15px;
-            width: 200px;
         }
 
-        .event-card.high {
-            border-left-color: #f56565;
-            background: linear-gradient(to right, #fff5f5 0%, white 20%);
+        .left-panel::-webkit-scrollbar-thumb,
+        .events-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
         }
 
-        .event-card.medium {
-            border-left-color: #ed8936;
-            background: linear-gradient(to right, #fffaf0 0%, white 20%);
-        }
-
-        .event-card.low {
-            border-left-color: #48bb78;
-            background: linear-gradient(to right, #f0fff4 0%, white 20%);
-        }
-
-        .event-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .event-type {
-            font-weight: 700;
-            font-size: 1.05rem;
-            color: #2d3748;
-        }
-
-        .event-time {
-            font-size: 0.85rem;
-            color: #718096;
-        }
-
-        .event-details {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            color: #4a5568;
-        }
-
-        .event-duration {
-            font-weight: 600;
-            color: #667eea;
-        }
-
-        .no-events {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
+        .update-info {
+            margin-top: 20px;
             text-align: center;
             color: #718096;
-            border: 2px dashed #e0e7ff;
-        }
-
-        .no-events-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
+            font-size: 1rem;
+            font-style: italic;
         }
 
         /* ============================================
            RESPONSIVE
         ============================================ */
         @media (max-width: 1400px) {
-            .map-container {
+            .map-view-content {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto 1fr auto;
+                grid-template-rows: auto 1fr;
+                height: auto;
             }
 
-            .profile-panel,
-            .events-panel {
-                max-height: 400px;
+            .left-panel {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .profile-card,
+            .events-card {
+                min-width: 400px;
+            }
+
+            .map-panel {
+                height: 600px;
             }
         }
 
@@ -668,34 +790,15 @@
             .stats-row {
                 grid-template-columns: 1fr;
             }
-        }
 
-        /* ============================================
-           SCROLLBAR CUSTOM
-        ============================================ */
-        .profile-panel::-webkit-scrollbar,
-        .events-panel::-webkit-scrollbar {
-            width: 6px;
-        }
+            .trip-info-container {
+                flex-direction: column;
+                gap: 15px;
+            }
 
-        .profile-panel::-webkit-scrollbar-track,
-        .events-panel::-webkit-scrollbar-track {
-            background: #e0e7ff;
-            border-radius: 10px;
-        }
-
-        .profile-panel::-webkit-scrollbar-thumb,
-        .events-panel::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 10px;
-        }
-
-        .update-info {
-            margin-top: 20px;
-            text-align: center;
-            color: #718096;
-            font-size: 1rem;
-            font-style: italic;
+            .driver-stats {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -724,9 +827,9 @@
             <div class="tab active" onclick="switchTab('monitoring')">
                 📺 Monitoreo en Tiempo Real
             </div>
-            <div class="tab" onclick="switchTab('reports')">
+            <!-- <div class="tab" onclick="switchTab('reports')">
                 📊 Reportes y Estadísticas
-            </div>
+            </div> -->
         </div>
 
         <!-- ============================================
@@ -758,28 +861,28 @@
             <div class="drivers-grid">
                 <!-- CHOFER 1 - CRÍTICO -->
                 <div class="driver-card status-critical"
-                    onclick="showMapView('Roberto Silva', 'Individual', 'critico', '3h 18min', '12', '85', 'Ruta 25 - Km 45', 'roberto_silva')">
+                    onclick="showMapView('Roberto Silva', 'Individual', 'critico', '3h 18min', '12', '85', 'Ruta 25 - Km 45', 'La Paz, Bolivia', 'Oruro, Bolivia')">
                     <div class="driver-header">
                         <div class="driver-info">
                             <h3>Roberto Silva</h3>
-                            <p>Individual</p>
+                            <p style="font-size: 1.3rem;">Individual</p>
                         </div>
+                        <span class="status-badge critical">🛑 CRÍTICO</span>
                     </div>
 
                     <div class="driver-stats">
                         <div class="stat-item">
-                            <div class="stat-item-label">⏱️ Tiempo en Viaje</div>
+                            <div class="stat-item-label">⏱️ Tiempo</div>
                             <div class="stat-item-value">3h 18min</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-item-label">🚨 Total Alertas</div>
+                            <div class="stat-item-label">🚨 Alertas</div>
                             <div class="stat-item-value" style="color: #f56565;">12</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-item-label">🕐 Última Alerta</div>
+                            <div class="stat-item-label">🕐 Última</div>
                             <div class="stat-item-value">30s</div>
                         </div>
-
                     </div>
 
                     <button class="btn-view-map">
@@ -790,26 +893,26 @@
 
                 <!-- CHOFER 2 - ALERTA -->
                 <div class="driver-card status-warning"
-                    onclick="showMapView('Carlos Gómez', 'FleetPro', 'alerta', '2h 45min', '5', '92', 'Autopista Norte', 'carlos_gomez')">
+                    onclick="showMapView('Carlos Gómez', 'FleetPro', 'alerta', '2h 45min', '5', '92', 'Autopista Norte', 'Cochabamba, Bolivia', 'Santa Cruz, Bolivia')">
                     <div class="driver-header">
                         <div class="driver-info">
                             <h3>Carlos Gómez</h3>
-                            <p>FleetPro</p>
+                            <p style="font-size: 1.3rem;">FleetPro</p>
                         </div>
                         <span class="status-badge warning">⚠️ ALERTA</span>
                     </div>
 
                     <div class="driver-stats">
                         <div class="stat-item">
-                            <div class="stat-item-label">⏱️ Tiempo en Viaje</div>
+                            <div class="stat-item-label">⏱️ Tiempo</div>
                             <div class="stat-item-value">2h 45min</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-item-label">🚨 Total Alertas</div>
+                            <div class="stat-item-label">🚨 Alertas</div>
                             <div class="stat-item-value" style="color: #ed8936;">5</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-item-label">🕐 Última Alerta</div>
+                            <div class="stat-item-label">🕐 Última</div>
                             <div class="stat-item-value">2min</div>
                         </div>
                     </div>
@@ -822,26 +925,26 @@
 
                 <!-- CHOFER 3 - NORMAL -->
                 <div class="driver-card status-normal"
-                    onclick="showMapView('Juan Pérez', 'TransCorp', 'normal', '1h 23min', '0', '65', 'Centro Ciudad', 'juan_perez')">
+                    onclick="showMapView('Juan Pérez', 'TransCorp', 'normal', '1h 23min', '0', '65', 'Centro Ciudad', 'Sucre, Bolivia', 'Potosí, Bolivia')">
                     <div class="driver-header">
                         <div class="driver-info">
                             <h3>Juan Pérez</h3>
-                            <p>TransCorp</p>
+                            <p style="font-size: 1.3rem;">TransCorp</p>
                         </div>
                         <span class="status-badge normal">✅ NORMAL</span>
                     </div>
 
                     <div class="driver-stats">
                         <div class="stat-item">
-                            <div class="stat-item-label">⏱️ Tiempo en Viaje</div>
+                            <div class="stat-item-label">⏱️ Tiempo</div>
                             <div class="stat-item-value">1h 23min</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-item-label">🚨 Total Alertas</div>
+                            <div class="stat-item-label">🚨 Alertas</div>
                             <div class="stat-item-value" style="color: #48bb78;">0</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-item-label">🕐 Última Alerta</div>
+                            <div class="stat-item-label">🕐 Última</div>
                             <div class="stat-item-value">-</div>
                         </div>
                     </div>
@@ -866,142 +969,192 @@
                 ← Volver a Monitoreo
             </button>
 
-            <div class="map-container">
-                <!-- PANEL IZQUIERDO: PERFIL DEL CHOFER -->
-                <div class="profile-panel">
-                    <div class="profile-header">
-                        <div class="profile-avatar">
-                            <span id="profile-avatar-letter">R</span>
+            <!-- INFORMACIÓN DE ORIGEN Y DESTINO -->
+            <div class="trip-info-container">
+                <div class="trip-point">
+                    <div class="trip-icon">📍</div>
+                    <div class="trip-location">
+                        <div class="trip-label">Origen</div>
+                        <div class="trip-name" id="trip-origin">La Paz, Bolivia</div>
+                    </div>
+                </div>
+                <div class="trip-arrow">→</div>
+                <div class="trip-point">
+                    <div class="trip-icon">🎯</div>
+                    <div class="trip-location">
+                        <div class="trip-label">Destino</div>
+                        <div class="trip-name" id="trip-destination">Oruro, Bolivia</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENIDO PRINCIPAL -->
+            <div class="map-view-content">
+                <!-- PANEL IZQUIERDO: PERFIL + EVENTOS -->
+                <div class="left-panel">
+                    <!-- PERFIL DEL CHOFER -->
+                    <div class="profile-card">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <span id="profile-avatar-letter">R</span>
+                            </div>
+                            <div class="profile-name" id="profile-name">Roberto Silva</div>
+                            <div class="profile-company" id="profile-company">Individual</div>
                         </div>
-                        <div class="profile-name" id="profile-name">Roberto Silva</div>
-                        <div class="profile-company" id="profile-company">Individual</div>
-                        <!-- <span class="profile-status critical" id="profile-status">🛑 CRÍTICO</span> -->
+
+                        <!-- Información Personal -->
+                        <div class="info-section">
+                            <div class="info-section-title">
+                                <span>👤</span>
+                                <span>Información Personal</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">DNI/CI:</span>
+                                <span class="info-value">12345678</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Teléfono:</span>
+                                <span class="info-value">+591 70123456</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Email:</span>
+                                <span class="info-value">roberto@email.com</span>
+                            </div>
+                        </div>
+
+                        <!-- Licencia -->
+                        <div class="info-section">
+                            <div class="info-section-title">
+                                <span>🪪</span>
+                                <span>Licencia de Conducir</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Número:</span>
+                                <span class="info-value">LIC-123456</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Categoría:</span>
+                                <span class="info-value">Categoría C</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Vigencia:</span>
+                                <span class="info-value">Hasta 2026</span>
+                            </div>
+                        </div>
+
+                    
                     </div>
 
-                    <!-- Información Personal -->
-                    <div class="info-section">
-                        <div class="info-section-title">
-                            <span>👤</span>
-                            <span>Información Personal</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">DNI/CI:</span>
-                            <span class="info-value">12345678</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Teléfono:</span>
-                            <span class="info-value">+591 70123456</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Email:</span>
-                            <span class="info-value">roberto@email.com</span>
-                        </div>
-                    </div>
-
-                    <!-- Licencia -->
-                    <div class="info-section">
-                        <div class="info-section-title">
-                            <span>🪪</span>
-                            <span>Licencia de Conducir</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Número:</span>
-                            <span class="info-value">LIC-123456</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Categoría:</span>
-                            <span class="info-value">Categoría C</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Vigencia:</span>
-                            <span class="info-value">Hasta 2026</span>
-                        </div>
-                    </div>
-
-                    <!-- PANEL DERECHO: EVENTOS EN TIEMPO REAL -->
-                    <div class="events-panel">
+                    <!-- EVENTOS EN TIEMPO REAL -->
+                    <div class="events-card">
                         <div class="events-header">
                             <span>🚨</span>
                             <span>Eventos en Tiempo Real</span>
                         </div>
 
                         <div class="events-list" id="events-list">
-                            <!-- Evento 1 - Crítico -->
-                            <div class="event-card high">
-                                <div class="event-header">
+                            <!-- Evento 1 -->
+                            <div class="event-item high">
+                                <div class="event-top">
                                     <span class="event-type">😴 Microsueño</span>
                                     <span class="event-time">22:34:50</span>
                                 </div>
-                                <div class="event-details">
+                                <div class="event-bottom">
                                     <span>Severidad: CRÍTICO</span>
                                     <span class="event-duration">4.2s</span>
                                 </div>
                             </div>
 
-                            <!-- Evento 3 - Medio -->
-                            <div class="event-card medium">
-                                <div class="event-header">
+                            <!-- Evento 2 -->
+                            <div class="event-item high">
+                                <div class="event-top">
+                                    <span class="event-type">😴 Microsueño</span>
+                                    <span class="event-time">22:33:15</span>
+                                </div>
+                                <div class="event-bottom">
+                                    <span>Severidad: GRAVE</span>
+                                    <span class="event-duration">3.1s</span>
+                                </div>
+                            </div>
+
+                            <!-- Evento 3 -->
+                            <div class="event-item medium">
+                                <div class="event-top">
                                     <span class="event-type">🥱 Bostezo Prolongado</span>
                                     <span class="event-time">22:32:40</span>
                                 </div>
-                                <div class="event-details">
+                                <div class="event-bottom">
                                     <span>Severidad: MODERADO</span>
                                     <span class="event-duration">5.8s</span>
                                 </div>
                             </div>
 
-                            <!-- Evento 4 - Medio -->
-                            <div class="event-card medium">
-                                <div class="event-header">
+                            <!-- Evento 4 -->
+                            <div class="event-item medium">
+                                <div class="event-top">
                                     <span class="event-type">👁️ Parpadeo Excesivo</span>
                                     <span class="event-time">22:31:22</span>
                                 </div>
-                                <div class="event-details">
+                                <div class="event-bottom">
                                     <span>Severidad: LEVE</span>
                                     <span class="event-duration">38/min</span>
                                 </div>
                             </div>
 
-                            <!-- Evento 5 - Medio -->
-                            <div class="event-card medium">
-                                <div class="event-header">
+                            <!-- Evento 5 -->
+                            <div class="event-item medium">
+                                <div class="event-top">
                                     <span class="event-type">😫 Cabeceo</span>
                                     <span class="event-time">22:30:05</span>
                                 </div>
-                                <div class="event-details">
+                                <div class="event-bottom">
                                     <span>Severidad: MODERADO</span>
                                     <span class="event-duration">2.1s</span>
                                 </div>
                             </div>
 
-                            <!-- Evento 6 - Bajo -->
-                            <div class="event-card low">
-                                <div class="event-header">
+                            <!-- Evento 6 -->
+                            <div class="event-item low">
+                                <div class="event-top">
                                     <span class="event-type">👋 Frotamiento Ojos</span>
                                     <span class="event-time">22:28:44</span>
                                 </div>
-                                <div class="event-details">
+                                <div class="event-bottom">
                                     <span>Severidad: LEVE</span>
                                     <span class="event-duration">1.5s</span>
                                 </div>
                             </div>
 
+                            <!-- Evento 7 -->
+                            <div class="event-item medium">
+                                <div class="event-top">
+                                    <span class="event-type">🥱 Bostezo</span>
+                                    <span class="event-time">22:27:10</span>
+                                </div>
+                                <div class="event-bottom">
+                                    <span>Severidad: LEVE</span>
+                                    <span class="event-duration">3.2s</span>
+                                </div>
+                            </div>
+
+                            <!-- Evento 8 -->
+                            <div class="event-item high">
+                                <div class="event-top">
+                                    <span class="event-type">😴 Ojos Cerrados</span>
+                                    <span class="event-time">22:25:33</span>
+                                </div>
+                                <div class="event-bottom">
+                                    <span>Severidad: CRÍTICO</span>
+                                    <span class="event-duration">5.1s</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div
-                            style="margin-top: 20px; padding: 15px; background: white; border-radius: 10px; text-align: center; border: 2px solid #e0e7ff;">
-                            <div style="font-size: 0.9rem; color: #718096; margin-bottom: 5px;">Nivel de Riesgo Actual
-                            </div>
-                            <div style="font-size: 1.8rem; font-weight: 700; color: #f56565;">🛑 CRÍTICO</div>
-                            <div style="font-size: 0.85rem; color: #718096; margin-top: 8px;">Se recomienda parada
-                                inmediata</div>
-                        </div>
+                        
                     </div>
                 </div>
 
-
-
-                <!-- PANEL CENTRAL: MAPA GPS -->
+                <!-- PANEL DERECHO: MAPA GPS -->
                 <div class="map-panel">
                     <iframe id="main-map-iframe" class="map-iframe"
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15150.045621846385!2d-65.26242343022461!3d-19.04533!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTnCsDAyJzQzLjIiUyA2NcKwMTUnMzMuNyJX!5e0!3m2!1ses!2sbo!4v1234567890"
@@ -1041,7 +1194,6 @@
                         <span>📍 <strong id="current-route">Ruta 25 - Km 45</strong></span>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -1066,7 +1218,6 @@
         // FUNCIÓN PARA CAMBIAR DE TAB
         // ============================================
         function switchTab(tabName) {
-            // Ocultar todos los tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
@@ -1074,7 +1225,6 @@
                 tab.classList.remove('active');
             });
 
-            // Activar el tab seleccionado
             if (tabName === 'monitoring') {
                 document.getElementById('tab-monitoring').classList.add('active');
                 document.querySelectorAll('.tab')[0].classList.add('active');
@@ -1085,21 +1235,30 @@
                 document.getElementById('tab-map-view').classList.add('active');
             }
 
-            // Scroll al inicio
             window.scrollTo(0, 0);
         }
 
         // ============================================
         // FUNCIÓN PARA MOSTRAR VISTA DE MAPA
         // ============================================
-        function showMapView(name, company, status, duration, alerts, speed, route, driverId) {
+        function showMapView(name, company, status, duration, alerts, speed, route, origin, destination) {
             // Actualizar información del chofer
             document.getElementById('profile-name').textContent = name;
             document.getElementById('profile-company').textContent = company;
             document.getElementById('profile-avatar-letter').textContent = name.charAt(0).toUpperCase();
 
+        
 
-            // Cambiar a vista de mapa
+            // Actualizar velocidad y ruta
+            document.getElementById('current-speed').textContent = speed;
+            document.getElementById('current-route').textContent = route;
+
+            // Actualizar origen y destino
+            document.getElementById('trip-origin').textContent = origin;
+            document.getElementById('trip-destination').textContent = destination;
+
+            // Actualizar nivel de riesgo
+
             switchTab('map-view');
         }
     </script>

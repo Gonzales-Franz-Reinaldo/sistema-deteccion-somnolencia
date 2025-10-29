@@ -17,7 +17,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     { path: '/admin/choferes', label: 'Gestión de Choferes', icon: '👥' },
     // { path: '/admin/empresas', label: 'Gestión de Empresas', icon: '🏢' },
     { path: '/admin/reportes', label: 'Reportes', icon: '📈' },
-    { path: '/admin/configuracion', label: 'Configuración', icon: '⚙️' },
+    // { path: '/admin/configuracion', label: 'Configuración', icon: '⚙️' },
   ];
 
   const handleLogout = async () => {
