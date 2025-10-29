@@ -4,6 +4,7 @@
 // ============================================
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface ChoferesFiltersProps {
   onSearch: (query: string) => void;
@@ -15,6 +16,7 @@ interface ChoferesFiltersProps {
  * Incluye búsqueda manual (click en lupa o Enter) y botón de registro (deshabilitado)
  */
 export const ChoferesFilters = ({ onSearch, loading = false }: ChoferesFiltersProps) => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   /**
@@ -109,11 +111,11 @@ export const ChoferesFilters = ({ onSearch, loading = false }: ChoferesFiltersPr
         )}
       </div>
 
-      {/* Botón registrar (deshabilitado) */}
+      {/* Botón registrar */}
       <button
-        disabled
-        title="Próximamente - Funcionalidad en desarrollo"
-        className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium opacity-50 cursor-not-allowed transition-all whitespace-nowrap"
+        onClick={() => navigate('/admin/choferes/nuevo')}
+        className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors whitespace-nowrap"
+        title="Registrar un nuevo chofer en el sistema"
       >
         <span className="text-lg">✨</span>
         <span className="hidden sm:inline">Registrar Nuevo Chofer</span>

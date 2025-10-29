@@ -4,7 +4,7 @@ import { useAuth } from '../features/auth/hooks/useAuth';
 // Pages
 import WelcomePage from '../pages/WelcomePage';
 import LoginPage from '../pages/LoginPage';
-import { AdminDashboardPage, GestionChoferesPage } from '../pages/admin';
+import { AdminDashboardPage, GestionChoferesPage, RegistroChoferPage, EdicionChoferPage } from '../pages/admin';
 import ChoferDashboardPage from '../pages/chofer/DashboardPage';
 import MonitoreoPage from '../pages/chofer/MonitoreoPage'; 
 
@@ -61,6 +61,8 @@ export const AppRoutes = () => {
       >
         <Route path="dashboard" element={<AdminDashboardPage />} />
         <Route path="choferes" element={<GestionChoferesPage />} />
+        <Route path="choferes/nuevo" element={<RegistroChoferPage />} />
+        <Route path="choferes/:id/editar" element={<EdicionChoferPage />} />
         <Route
           path="empresas"
           element={
