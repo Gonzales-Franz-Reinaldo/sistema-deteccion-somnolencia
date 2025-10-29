@@ -87,6 +87,38 @@ class CRUDUser(CRUDBase[Usuario, UserCreate, UserUpdate]):
         db.refresh(db_obj)
         return db_obj
     
+    def update(self, db: Session, *, db_obj: Usuario, obj_in: UserUpdate) -> Usuario:
+        """
+        Actualizar usuario (con manejo especial de password)
+        
+        Args:
+            db: Sesión de BD
+            db_obj: Instancia actual del usuario
+            obj_in: Schema con datos a actualizar
+            
+        Returns:
+            Instancia de Usuario actualizada
+        """
+        # Obtener solo los campos que fueron proporcionados
+        update_data = obj_in.dict(exclude_unset=True)
+        
+        # Manejar password de forma especial
+        if "password" in update_data:
+            if update_data["password"]:  # Solo si no es None o vacío
+                # Hashear la nueva contraseña y guardarla en password_hash
+                update_data["password_hash"] = get_password_hash(update_data["password"])
+            # Eliminar 'password' del dict (usamos 'password_hash')
+            del update_data["password"]
+        
+        # Actualizar los campos del objeto
+        for field, value in update_data.items():
+            setattr(db_obj, field, value)
+        
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+    
     def authenticate(
         self, 
         db: Session, 

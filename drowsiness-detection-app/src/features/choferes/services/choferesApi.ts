@@ -4,7 +4,7 @@
 // ============================================
 
 import apiClient from '../../../lib/api/client';
-import type { ChoferesListResponse, Chofer, ChoferesFilters } from '../types';
+import type { ChoferesListResponse, Chofer, ChoferesFilters, ChoferCreateData, ChoferUpdateData } from '../types';
 
 /**
  * API Service para gestión de choferes
@@ -100,6 +100,55 @@ export const choferesApi = {
       return response.data;
     } catch (error) {
       console.error(`Error al obtener chofer ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Crea un nuevo chofer en el sistema
+   * 
+   * @param data - Datos del chofer a crear
+   * @returns Promise con los datos del chofer creado
+   * 
+   * @example
+   * const nuevoChofer = await choferesApi.create({
+   *   usuario: 'jperez',
+   *   password: 'chofer123',
+   *   email: 'jperez@email.com',
+   *   nombre_completo: 'Juan Pérez García',
+   *   // ... más campos
+   * });
+   */
+  create: async (data: ChoferCreateData): Promise<Chofer> => {
+    try {
+      const response = await apiClient.post<Chofer>('/users', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error al crear chofer:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Actualiza un chofer existente
+   * 
+   * @param id - ID del chofer a actualizar
+   * @param data - Datos a actualizar (solo campos modificados)
+   * @returns Promise con los datos del chofer actualizado
+   * 
+   * @example
+   * const choferActualizado = await choferesApi.update(5, {
+   *   telefono: '+591 70999999',
+   *   direccion: 'Nueva dirección',
+   *   activo: true
+   * });
+   */
+  update: async (id: number, data: ChoferUpdateData): Promise<Chofer> => {
+    try {
+      const response = await apiClient.put<Chofer>(`/users/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al actualizar chofer ${id}:`, error);
       throw error;
     }
   },

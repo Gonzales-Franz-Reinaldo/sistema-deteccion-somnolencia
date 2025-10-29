@@ -105,6 +105,21 @@ def create_user(
             detail="DNI/CI ya registrado"
         )
     
+    # Validar que la empresa existe si es tipo empresa
+    if user_in.tipo_chofer == "empresa":
+        if not user_in.id_empresa:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Chofer de empresa debe tener id_empresa"
+            )
+        
+        from app.crud.empresa import empresa as empresa_crud
+        if not empresa_crud.get(db, id=user_in.id_empresa):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La empresa especificada no existe"
+            )
+    
     user = user_crud.create(db, obj_in=user_in)
     return user
 
@@ -238,6 +253,42 @@ def update_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Solo se pueden editar usuarios con rol 'chofer'"
         )
+    
+    # Validar usuario único (si se está cambiando)
+    if user_in.usuario and user_in.usuario != user.usuario:
+        existing = user_crud.get_by_usuario(db, usuario=user_in.usuario)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El usuario ya existe"
+            )
+    
+    # Validar email único (si se está cambiando)
+    if user_in.email and user_in.email != user.email:
+        existing = user_crud.get_by_email(db, email=user_in.email)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El email ya está registrado"
+            )
+    
+    # Validar DNI único (si se está cambiando)
+    if user_in.dni_ci and user_in.dni_ci != user.dni_ci:
+        existing = user_crud.get_by_dni(db, dni_ci=user_in.dni_ci)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El DNI/CI ya está registrado"
+            )
+    
+    # Validar empresa si se cambia y es tipo empresa
+    if user_in.id_empresa and user_in.id_empresa != user.id_empresa:
+        from app.crud.empresa import empresa as empresa_crud
+        if not empresa_crud.get(db, id=user_in.id_empresa):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La empresa especificada no existe"
+            )
     
     user = user_crud.update(db, db_obj=user, obj_in=user_in)
     return user

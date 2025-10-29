@@ -3,6 +3,7 @@
 // Muestra lista de choferes con información completa
 // ============================================
 
+import { useNavigate } from 'react-router-dom';
 import type { Chofer } from '../types';
 import { formatDate } from '../../../lib/utils/formatDate';
 
@@ -31,6 +32,7 @@ export const ChoferesTable = ({
   totalPages,
   onPageChange
 }: ChoferesTableProps) => {
+  const navigate = useNavigate();
   
   /**
    * Estado de carga
@@ -96,15 +98,10 @@ export const ChoferesTable = ({
 
   /**
    * Maneja el click en el botón editar
+   * Navega a la página de edición del chofer
    */
   const handleEdit = (chofer: Chofer) => {
-    console.log('🔧 Editar chofer:', {
-      id: chofer.id_usuario,
-      nombre: chofer.nombre_completo,
-      email: chofer.email,
-    });
-    // TODO: Implementar modal o navegación a formulario de edición
-    alert(`Función de edición próximamente.\nChofer: ${chofer.nombre_completo}`);
+    navigate(`/admin/choferes/${chofer.id_usuario}/editar`);
   };
 
   /**

@@ -58,3 +58,120 @@ export interface PaginationParams {
   skip: number;
   limit: number;
 }
+
+/**
+ * Datos necesarios para crear un nuevo chofer (enviar al backend)
+ */
+export interface ChoferCreateData {
+  // Credenciales
+  usuario: string;
+  password: string;
+  email: string;
+  rol: 'chofer';
+  
+  // Datos personales
+  nombre_completo: string;
+  dni_ci: string;
+  genero: 'masculino' | 'femenino' | 'otro';
+  nacionalidad?: string;
+  
+  // Contacto
+  telefono: string;
+  direccion?: string;
+  ciudad?: string;
+  codigo_postal?: string;
+  
+  // Laboral
+  tipo_chofer: 'individual' | 'empresa';
+  id_empresa?: number;
+  numero_licencia: string;
+  categoria_licencia: string;
+  
+  // Estado
+  activo: boolean;
+}
+
+/**
+ * Datos para actualizar un chofer existente (enviar al backend)
+ * Similar a ChoferCreateData pero con campos opcionales
+ */
+export interface ChoferUpdateData {
+  // Credenciales (usuario no se cambia, password es opcional)
+  usuario?: string;
+  password?: string; // Solo si se cambia
+  email?: string;
+  
+  // Datos personales
+  nombre_completo?: string;
+  dni_ci?: string;
+  genero?: 'masculino' | 'femenino' | 'otro';
+  nacionalidad?: string;
+  
+  // Contacto
+  telefono?: string;
+  direccion?: string;
+  ciudad?: string;
+  codigo_postal?: string;
+  
+  // Laboral
+  tipo_chofer?: 'individual' | 'empresa';
+  id_empresa?: number;
+  numero_licencia?: string;
+  categoria_licencia?: string;
+  
+  // Estado
+  activo?: boolean;
+}
+
+/**
+ * Datos del formulario (incluye campos adicionales)
+ */
+export interface ChoferFormData {
+  // Datos personales (separados para el form)
+  nombres: string;
+  apellidos: string;
+  dni_ci: string;
+  genero: 'masculino' | 'femenino' | 'otro' | '';
+  nacionalidad: string;
+  
+  // Contacto
+  email: string;
+  telefono: string;
+  direccion: string;
+  ciudad: string;
+  codigo_postal: string;
+  
+  // Laboral
+  tipo_chofer: 'individual' | 'empresa' | '';
+  id_empresa: string; // String en el form, se convierte a number
+  numero_licencia: string;
+  categoria_licencia: 'a' | 'b' | 'c' | 'd' | '';
+  
+  // Credenciales
+  usuario: string;
+  password: string;
+  password_confirm: string;
+  
+  // Configuración
+  activo: boolean;
+}
+
+/**
+ * Errores de validación del formulario
+ */
+export interface ChoferFormErrors {
+  nombres?: string;
+  apellidos?: string;
+  dni_ci?: string;
+  genero?: string;
+  email?: string;
+  telefono?: string;
+  tipo_chofer?: string;
+  id_empresa?: string;
+  numero_licencia?: string;
+  categoria_licencia?: string;
+  usuario?: string;
+  password?: string;
+  password_confirm?: string;
+}
+
