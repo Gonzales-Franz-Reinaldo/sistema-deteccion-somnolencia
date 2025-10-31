@@ -1,5 +1,4 @@
-# Deteccion de somnolencia:
-Hola, chicos en este repositorio encontrarán la programación para que puedan crear su sistema de deteccion de somnolencia en tiempo real.
+# Sistema de Deteccion de Somnolencia en Tiempo Real.
 
 ## Conceptos introductorios:
 - Este repositorio contiene el código fuente en Python para ejecutar y utilizar nuestro sistema de etiquetado automatico con el fin de entrenar modelos de detección de objetos.
