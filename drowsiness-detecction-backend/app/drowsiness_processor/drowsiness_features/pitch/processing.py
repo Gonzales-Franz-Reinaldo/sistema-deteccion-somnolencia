@@ -1,117 +1,121 @@
 import time
 from typing import Tuple, Dict, Any
 from abc import ABC, abstractmethod
-from app.drowsiness_processor.drowsiness_features.processor import DrowsinessProcessor
+from app.drowsiness_processor.drowsiness_features.processor import ProcesadorSomnolencia
 
 
 class Detector(ABC):
     @abstractmethod
-    def detect(self, head_distances: dict) -> Tuple[bool, str]:
+    def detectar(self, distancias_cabeza: dict) -> Tuple[bool, str]:
         raise NotImplemented
 
 
-class PitchDetection(Detector):
+class DeteccionInclinacion(Detector):
     def __init__(self):
-        self.start_time: float = 0
-        self.end_time: float = 0
-        self.flag: bool = False
-        self.head_down: bool = False
-        self.head_position: str = ''
+        self.tiempo_inicio: float = 0
+        self.tiempo_fin: float = 0
+        self.bandera: bool = False
+        self.cabeza_abajo: bool = False
+        self.posicion_cabeza: str = ''
 
-    def check_head_down(self, head_distances: dict) -> Tuple[bool, str]:
-        nose_mouth_distance = head_distances['nose_mouth_distance']
-        nose_front_distance = head_distances['nose_head_distance']
-        nose_point = head_distances['nose_point'][1]
-        right_cheek_point = head_distances['right_cheek_point'][1]
-        left_cheek_point = head_distances['left_cheek_point'][1]
+    def verificar_cabeza_abajo(self, distancias_cabeza: dict) -> Tuple[bool, str]:
+        distancia_nariz_boca = distancias_cabeza['distancia_nariz_boca']
+        distancia_frente_nariz = distancias_cabeza['distancia_nariz_cabeza']
+        punto_nariz = distancias_cabeza['punto_nariz'][1]
+        punto_mejilla_derecha = distancias_cabeza['punto_mejilla_derecha'][1]
+        punto_mejilla_izquierda = distancias_cabeza['punto_mejilla_izquierda'][1]
 
-        if right_cheek_point > nose_point > left_cheek_point and nose_mouth_distance < nose_front_distance:
-            self.head_down = True
-            self.head_position = 'head down right'
-        elif left_cheek_point > nose_point > right_cheek_point and nose_mouth_distance < nose_front_distance:
-            self.head_down = True
-            self.head_position = 'head down left'
-        elif nose_point < right_cheek_point and nose_point < left_cheek_point and nose_mouth_distance > nose_front_distance:
-            self.head_down = False
-            self.head_position = 'head up'
-        return self.head_down, self.head_position
+        if (punto_mejilla_derecha > punto_nariz > punto_mejilla_izquierda and 
+            distancia_nariz_boca < distancia_frente_nariz):
+            self.cabeza_abajo = True
+            self.posicion_cabeza = 'cabeza abajo derecha'
+        elif (punto_mejilla_izquierda > punto_nariz > punto_mejilla_derecha and 
+              distancia_nariz_boca < distancia_frente_nariz):
+            self.cabeza_abajo = True
+            self.posicion_cabeza = 'cabeza abajo izquierda'
+        elif (punto_nariz < punto_mejilla_derecha and 
+              punto_nariz < punto_mejilla_izquierda and 
+              distancia_nariz_boca > distancia_frente_nariz):
+            self.cabeza_abajo = False
+            self.posicion_cabeza = 'cabeza arriba'
+        return self.cabeza_abajo, self.posicion_cabeza
 
-    def detect(self, head_down: bool) -> Tuple[bool, float]:
-        if head_down and not self.flag:
-            self.start_time = time.time()
-            self.flag = True
-        elif not head_down and self.flag:
-            self.end_time = time.time()
-            pitch_duration = round(self.end_time - self.start_time, 0)
-            self.flag = False
-            if pitch_duration >= 3.0:
-                self.start_time = 0
-                self.end_time = 0
-                return True, pitch_duration
+    def detectar(self, cabeza_abajo: bool) -> Tuple[bool, float]:
+        if cabeza_abajo and not self.bandera:
+            self.tiempo_inicio = time.time()
+            self.bandera = True
+        elif not cabeza_abajo and self.bandera:
+            self.tiempo_fin = time.time()
+            duracion_inclinacion = round(self.tiempo_fin - self.tiempo_inicio, 0)
+            self.bandera = False
+            if duracion_inclinacion >= 3.0:
+                self.tiempo_inicio = 0
+                self.tiempo_fin = 0
+                return True, duracion_inclinacion
         return False, 0.0
 
 
-class PitchCounter:
+class ContadorInclinacion:
     def __init__(self):
-        self.pitch_count: int = 0
-        self.pitch_durations = []
+        self.conteo_inclinacion: int = 0
+        self.duraciones_inclinacion = []
 
-    def increment(self, duration: float):
-        self.pitch_count += 1
-        self.pitch_durations.append(f"{self.pitch_count} pitch: {duration} seconds")
+    def incrementar(self, duracion: float):
+        self.conteo_inclinacion += 1
+        self.duraciones_inclinacion.append(f"{self.conteo_inclinacion} inclinación: {duracion} segundos")
 
-    def reset(self):
-        self.pitch_count = 0
+    def reiniciar(self):
+        self.conteo_inclinacion = 0
 
-    def get_durations(self):
-        return self.pitch_durations
+    def obtener_duraciones(self):
+        return self.duraciones_inclinacion
 
 
-class ReportGenerator(ABC):
+class GeneradorReporte(ABC):
     @abstractmethod
-    def generate_report(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def generar_reporte(self, datos: Dict[str, Any]) -> Dict[str, Any]:
         raise NotImplemented
 
 
-class PitchReportGenerator(ReportGenerator):
-    def generate_report(self, data: Dict[str, Any]) -> dict[str, Any]:
-        pitch_count = data.get("pitch_count", 0)
-        pitch_durations = data.get("pitch_durations", [])
-        head_down = data.get("head_down", False)
-        pitch_report = data.get("pitch_report", False)
+class GeneradorReporteInclinacion(GeneradorReporte):
+    def generar_reporte(self, datos: Dict[str, Any]) -> dict[str, Any]:
+        conteo_inclinacion = datos.get("conteo_inclinacion", 0)
+        duraciones_inclinacion = datos.get("duraciones_inclinacion", [])
+        cabeza_abajo = datos.get("cabeza_abajo", False)
+        reporte_inclinacion = datos.get("reporte_inclinacion", False)
 
         return {
-            'pitch_count': pitch_count,
-            'pitch_durations': pitch_durations,
-            'head_down': head_down,
-            'pitch_report': pitch_report
+            'conteo_inclinacion': conteo_inclinacion,
+            'duraciones_inclinacion': duraciones_inclinacion,
+            'cabeza_abajo': cabeza_abajo,
+            'reporte_inclinacion': reporte_inclinacion
         }
 
 
-class PitchEstimator(DrowsinessProcessor):
+class EstimadorInclinacion(ProcesadorSomnolencia):
     def __init__(self):
-        self.pitch_detection = PitchDetection()
-        self.pitch_counter = PitchCounter()
-        self.pitch_report_generator = PitchReportGenerator()
+        self.deteccion_inclinacion = DeteccionInclinacion()
+        self.contador_inclinacion = ContadorInclinacion()
+        self.generador_reporte_inclinacion = GeneradorReporteInclinacion()
 
-    def process(self, head_points: dict):
-        head_down, head_position = self.pitch_detection.check_head_down(head_points)
-        is_pitch, duration_pitch = self.pitch_detection.detect(head_down)
-        if is_pitch:
-            self.pitch_counter.increment(duration_pitch)
+    def procesar(self, puntos_cabeza: dict):
+        cabeza_abajo, posicion_cabeza = self.deteccion_inclinacion.verificar_cabeza_abajo(puntos_cabeza)
+        es_inclinacion, duracion_inclinacion = self.deteccion_inclinacion.detectar(cabeza_abajo)
+        if es_inclinacion:
+            self.contador_inclinacion.incrementar(duracion_inclinacion)
 
-        if is_pitch:
-            pitch_data = {
-                "pitch_count": self.pitch_counter.pitch_count,
-                "pitch_durations": self.pitch_counter.get_durations(),
-                "head_down": head_down,
-                "pitch_report": True
+        if es_inclinacion:
+            datos_inclinacion = {
+                "conteo_inclinacion": self.contador_inclinacion.conteo_inclinacion,
+                "duraciones_inclinacion": self.contador_inclinacion.obtener_duraciones(),
+                "cabeza_abajo": cabeza_abajo,
+                "reporte_inclinacion": True
             }
 
-            return self.pitch_report_generator.generate_report(pitch_data)
+            return self.generador_reporte_inclinacion.generar_reporte(datos_inclinacion)
 
         return {
-            'pitch_count': f'Counting pitches...',
-            'pitch_report': False,
-            'head_down': head_down
+            'conteo_inclinacion': f'Contando inclinaciones...',
+            'reporte_inclinacion': False,
+            'cabeza_abajo': cabeza_abajo
         }

@@ -98,32 +98,6 @@ export const ChoferDashboardPage = () => {
         </div>
       </Card>
 
-      {/* Quick Stats */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <Card className="p-6 border-0 rounded-xl shadow-sm bg-gradient-to-br from-green-50 to-green-100">
-          <div className="text-center">
-            <div className="text-4xl mb-2">✅</div>
-            <p className="text-2xl font-bold text-green-700">0</p>
-            <p className="text-sm text-green-600">Sesiones Completadas</p>
-          </div>
-        </Card>
-
-        <Card className="p-6 border-0 rounded-xl shadow-sm bg-gradient-to-br from-orange-50 to-orange-100">
-          <div className="text-center">
-            <div className="text-4xl mb-2">⚠️</div>
-            <p className="text-2xl font-bold text-orange-700">0</p>
-            <p className="text-sm text-orange-600">Alertas Registradas</p>
-          </div>
-        </Card>
-
-        <Card className="p-6 border-0 rounded-xl shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
-          <div className="text-center">
-            <div className="text-4xl mb-2">⏰</div>
-            <p className="text-2xl font-bold text-blue-700">0h</p>
-            <p className="text-sm text-blue-600">Tiempo Total de Monitoreo</p>
-          </div>
-        </Card>
-      </div> */}
     </div>
   );
 };

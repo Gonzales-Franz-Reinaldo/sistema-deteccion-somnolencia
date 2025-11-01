@@ -1,45 +1,45 @@
-export interface DrowsinessReport {
-    timestamp: string;
-    eye_rub_first_hand: {
-        report: boolean;
-        count: number;
-        durations: string[];
+export interface ReporteSomnolencia {
+    marca_tiempo: string;
+    frotamiento_ojos_primera_mano: {
+        reporte: boolean;
+        conteo: number;
+        duraciones: string[];
     };
-    eye_rub_second_hand: {
-        report: boolean;
-        count: number;
-        durations: string[];
+    frotamiento_ojos_segunda_mano: {
+        reporte: boolean;
+        conteo: number;
+        duraciones: string[];
     };
-    flicker: {
-        report: boolean;
-        count: number;
+    parpadeo: {
+        reporte: boolean;
+        conteo: number;
     };
-    micro_sleep: {
-        report: boolean;
-        count: number;
-        durations: string[];
+    microsueno: {
+        reporte: boolean;
+        conteo: number;
+        duraciones: string[];
     };
-    pitch: {
-        report: boolean;
-        count: number;
-        durations: string[];
+    inclinacion: {
+        reporte: boolean;
+        conteo: number;
+        duraciones: string[];
     };
-    yawn: {
-        report: boolean;
-        count: number;
-        durations: string[];
+    bostezo: {
+        reporte: boolean;
+        conteo: number;
+        duraciones: string[];
     };
 }
 
 export interface WebSocketResponse {
-    json_report: DrowsinessReport;
-    sketch_image: string;
-    original_image: string;
+    reporte_json: ReporteSomnolencia;
+    imagen_bosquejo: string;
+    imagen_original: string;
     error?: string;
 }
 
-export interface CameraConfig {
-    width: number;
+export interface ConfiguracionCamara {
+    with: number;
     height: number;
-    facingMode: 'user' | 'environment';
+    modo_cara: 'user' | 'environment';
 }

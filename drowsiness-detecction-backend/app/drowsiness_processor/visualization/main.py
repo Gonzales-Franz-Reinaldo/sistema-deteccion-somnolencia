@@ -4,190 +4,190 @@ import time
 from typing import Tuple
 
 
-class ReportVisualizer:
+class VisualizadorReporte:
     def __init__(self):
-        self.coordinates = {
-            'eye_rub_first_hand': (10, 20),
-            'eye_rub_second_hand': (10, 100),
-            'flicker': (10, 180),
-            'micro_sleep': (10, 260),
-            'pitch': (10, 340),
-            'yawn': (10, 420),
+        self.coordenadas = {
+            'frotamiento_ojos_primera_mano': (10, 20),
+            'frotamiento_ojos_segunda_mano': (10, 100),
+            'parpadeo': (10, 180),
+            'microsueno': (10, 260),
+            'inclinacion': (10, 340),
+            'bostezo': (10, 420),
         }
-        self.visualize_reports = {
-            'eye_rub_first_hand': {'report': False, 'count': 0, 'durations': []},
-            'eye_rub_second_hand': {'report': False, 'count': 0, 'durations': []},
-            'flicker': {'report': False, 'count': 0},
-            'micro_sleep': {'report': False, 'count': 0, 'durations': []},
-            'pitch': {'report': False, 'count': 0, 'durations': []},
-            'yawn': {'report': False, 'count': 0, 'durations': []}
+        self.visualizar_reportes = {
+            'frotamiento_ojos_primera_mano': {'reporte': False, 'conteo': 0, 'duraciones': []},
+            'frotamiento_ojos_segunda_mano': {'reporte': False, 'conteo': 0, 'duraciones': []},
+            'parpadeo': {'reporte': False, 'conteo': 0},
+            'microsueno': {'reporte': False, 'conteo': 0, 'duraciones': []},
+            'inclinacion': {'reporte': False, 'conteo': 0, 'duraciones': []},
+            'bostezo': {'reporte': False, 'conteo': 0, 'duraciones': []}
         }
-        self.times = {
-            'eye_rub_first_hand': time.time(),
-            'eye_rub_second_hand': time.time(),
-            'flicker': time.time(),
-            'yawn': time.time()
+        self.tiempos = {
+            'frotamiento_ojos_primera_mano': time.time(),
+            'frotamiento_ojos_segunda_mano': time.time(),
+            'parpadeo': time.time(),
+            'bostezo': time.time()
         }
-        self.warnings = {
-            'eye_rub_first_hand': 10,
-            'eye_rub_second_hand': 10,
-            'micro_sleep': 1,
-            'pitch': 1,
-            'flicker': 20,
-            'yawn': 10
+        self.umbrales_advertencia = {
+            'frotamiento_ojos_primera_mano': 10,
+            'frotamiento_ojos_segunda_mano': 10,
+            'microsueno': 1,
+            'inclinacion': 1,
+            'parpadeo': 20,
+            'bostezo': 10
         }
 
-        self.initial_position: int = 20
-        self.spacing: int = 80
-        self.margin: int = 40
+        self.posicion_inicial: int = 20
+        self.espaciado: int = 80
+        self.margen: int = 40
 
-    def draw_rectangle(self, sketch: np.ndarray, top_left: Tuple[int, int], bottom_right: Tuple[int, int], color: Tuple[int, int, int]):
-        cv2.rectangle(sketch, top_left, bottom_right, color, 2)
+    def dibujar_rectangulo(self, bosquejo: np.ndarray, superior_izquierda: Tuple[int, int], inferior_derecha: Tuple[int, int], color: Tuple[int, int, int]):
+        cv2.rectangle(bosquejo, superior_izquierda, inferior_derecha, color, 2)
 
-    def get_color(self, report_status: str) -> Tuple[int, int, int]:
-        if report_status == 'waiting':
+    def obtener_color(self, estado_reporte: str) -> Tuple[int, int, int]:
+        if estado_reporte == 'esperando':
             return 180, 180, 180
-        elif report_status == 'warning':
+        elif estado_reporte == 'advertencia':
             return 0, 255, 255
-        elif report_status == 'alarm':
+        elif estado_reporte == 'alarma':
             return 0, 0, 255
-        elif report_status == 'normal':
+        elif estado_reporte == 'normal':
             return 0, 255, 0
 
-    def draw_report_text(self, sketch: np.ndarray, text: str, position: Tuple[int, int], color: Tuple[int, int, int]):
-        cv2.putText(sketch, text, position, cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 1)
+    def dibujar_texto_reporte(self, bosquejo: np.ndarray, texto: str, posicion: Tuple[int, int], color: Tuple[int, int, int]):
+        cv2.putText(bosquejo, texto, posicion, cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 1)
 
-    def draw_warnings_general(self, sketch: np.ndarray, feature: str):
-        position = self.coordinates[feature]
-        color = self.get_color('waiting')
-        if feature == 'micro_sleep' or feature == 'pitch':
-            if feature == 'micro_sleep':
-                self.draw_report_text(sketch, f"evaluating: {feature.replace('_', ' ')}: stay alert", position, color)
+    def dibujar_advertencias_general(self, bosquejo: np.ndarray, caracteristica: str):
+        posicion = self.coordenadas[caracteristica]
+        color = self.obtener_color('esperando')
+        if caracteristica == 'microsueno' or caracteristica == 'inclinacion':
+            if caracteristica == 'microsueno':
+                self.dibujar_texto_reporte(bosquejo, f"evaluando: {caracteristica.replace('_', ' ')}: manténgase alerta", posicion, color)
 
-            if feature == 'pitch':
-                self.draw_report_text(sketch, f"evaluating: {feature.replace('_', ' ')}: stay alert", position, color)
+            if caracteristica == 'inclinacion':
+                self.dibujar_texto_reporte(bosquejo, f"evaluando: {caracteristica.replace('_', ' ')}: manténgase alerta", posicion, color)
         else:
-            current_time = time.time()
-            start_time_feature = self.times[feature]
-            elapsed_time = round(current_time - start_time_feature, 0)
+            tiempo_actual = time.time()
+            tiempo_inicio_caracteristica = self.tiempos[caracteristica]
+            tiempo_transcurrido = round(tiempo_actual - tiempo_inicio_caracteristica, 0)
 
-            if feature == 'eye_rub_first_hand' or feature == 'eye_rub_second_hand':
-                self.draw_report_text(sketch, f"counting: {feature.replace('_', ' ')}: {300 - elapsed_time} seconds remaining", position, color)
+            if caracteristica == 'frotamiento_ojos_primera_mano' or caracteristica == 'frotamiento_ojos_segunda_mano':
+                self.dibujar_texto_reporte(bosquejo, f"contando: {caracteristica.replace('_', ' ')}: {300 - tiempo_transcurrido} segundos restantes", posicion, color)
 
-            if feature == 'flicker':
-                self.draw_report_text(sketch, f"counting: {feature.replace('_', ' ')}: {60 - elapsed_time} seconds remaining", position, color)
+            if caracteristica == 'parpadeo':
+                self.dibujar_texto_reporte(bosquejo, f"contando: {caracteristica.replace('_', ' ')}: {60 - tiempo_transcurrido} segundos restantes", posicion, color)
 
-            if feature == 'yawn':
-                self.draw_report_text(sketch, f"counting: {feature.replace('_', ' ')}: {180 - elapsed_time} seconds remaining", position, color)
+            if caracteristica == 'bostezo':
+                self.dibujar_texto_reporte(bosquejo, f"contando: {caracteristica.replace('_', ' ')}: {180 - tiempo_transcurrido} segundos restantes", posicion, color)
 
-    def draw_warnings_report(self, sketch: np.ndarray, feature: str):
-        position = self.coordinates[feature]
-        feature_count = self.visualize_reports[feature]['count']
-        warning_threshold = self.warnings[feature]
+    def dibujar_advertencias_reporte(self, bosquejo: np.ndarray, caracteristica: str):
+        posicion = self.coordenadas[caracteristica]
+        conteo_caracteristica = self.visualizar_reportes[caracteristica]['conteo']
+        umbral_advertencia = self.umbrales_advertencia[caracteristica]
 
-        if feature == 'micro_sleep' or feature == 'pitch':
-            if feature_count >= warning_threshold:
-                color = self.get_color('alarm')
+        if caracteristica == 'microsueno' or caracteristica == 'inclinacion':
+            if conteo_caracteristica >= umbral_advertencia:
+                color = self.obtener_color('alarma')
         else:
-            if feature_count > warning_threshold:
-                color = self.get_color('warning')
+            if conteo_caracteristica > umbral_advertencia:
+                color = self.obtener_color('advertencia')
             else:
-                color = self.get_color('normal')
+                color = self.obtener_color('normal')
 
-        self.draw_report_text(sketch, f"{feature.replace('_', ' ')} {feature}: {feature_count}", position, color)
+        self.dibujar_texto_reporte(bosquejo, f"{caracteristica.replace('_', ' ')} {caracteristica}: {conteo_caracteristica}", posicion, color)
 
-        if feature == 'flicker':
-            text = f"{feature.replace('_', ' ')} {feature}: {feature_count}"
-            text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
-            text_width, text_height = text_size
-            top_left = (position[0] - 10, position[1] - 20)
-            bottom_right = (position[0] + text_width + 20, position[1] + text_height + 20)
-            self.draw_rectangle(sketch, top_left, bottom_right, color)
-            self.update_coordinates(feature, (10, bottom_right[1]))
+        if caracteristica == 'parpadeo':
+            texto = f"{caracteristica.replace('_', ' ')} {caracteristica}: {conteo_caracteristica}"
+            tamano_texto, _ = cv2.getTextSize(texto, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+            ancho_texto, alto_texto = tamano_texto
+            superior_izquierda = (posicion[0] - 10, posicion[1] - 20)
+            inferior_derecha = (posicion[0] + ancho_texto + 20, posicion[1] + alto_texto + 20)
+            self.dibujar_rectangulo(bosquejo, superior_izquierda, inferior_derecha, color)
+            self.actualizar_coordenadas(caracteristica, (10, inferior_derecha[1]))
 
-        if feature != 'flicker':
-            feature_durations = self.visualize_reports[feature]['durations']
+        if caracteristica != 'parpadeo':
+            duraciones_caracteristica = self.visualizar_reportes[caracteristica]['duraciones']
 
-            y_offset = position[1] + 30
-            for i, duration in enumerate(feature_durations):
-                self.draw_report_text(sketch, f"#{i + 1}: {duration} sec", (position[0], y_offset), color)
-                y_offset += 20
+            desplazamiento_y = posicion[1] + 30
+            for i, duracion in enumerate(duraciones_caracteristica):
+                self.dibujar_texto_reporte(bosquejo, f"#{i + 1}: {duracion} seg", (posicion[0], desplazamiento_y), color)
+                desplazamiento_y += 20
 
-                text = f"#{i + 1}: {duration} sec"
+                texto = f"#{i + 1}: {duracion} seg"
 
-                text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
-                text_width, text_height = text_size
-                top_left = (position[0] - 10, position[1] - 20)
-                bottom_right = (position[0] + text_width + 20, position[1] + text_height + 20 * (len(feature_durations) + 1))
-                self.draw_rectangle(sketch, top_left, bottom_right, color)
-                self.update_coordinates(feature, (10, bottom_right[1]))
+                tamano_texto, _ = cv2.getTextSize(texto, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+                ancho_texto, alto_texto = tamano_texto
+                superior_izquierda = (posicion[0] - 10, posicion[1] - 20)
+                inferior_derecha = (posicion[0] + ancho_texto + 20, posicion[1] + alto_texto + 20 * (len(duraciones_caracteristica) + 1))
+                self.dibujar_rectangulo(bosquejo, superior_izquierda, inferior_derecha, color)
+                self.actualizar_coordenadas(caracteristica, (10, inferior_derecha[1]))
 
-    def update_coordinates(self, feature: str, new_coordinates: tuple[int, int]):
-        keys = list(self.coordinates.keys())
-        coordinates = list(self.coordinates.values())
-        position = keys.index(feature)
-        x, y = new_coordinates
-        y = y + self.margin
-        if position == 5:
+    def actualizar_coordenadas(self, caracteristica: str, nuevas_coordenadas: tuple[int, int]):
+        claves = list(self.coordenadas.keys())
+        coordenadas = list(self.coordenadas.values())
+        posicion = claves.index(caracteristica)
+        x, y = nuevas_coordenadas
+        y = y + self.margen
+        if posicion == 5:
             pass
         else:
-            coordinates[position+1] = (x, y)
-            self.coordinates = dict(zip(keys, coordinates))
+            coordenadas[posicion+1] = (x, y)
+            self.coordenadas = dict(zip(claves, coordenadas))
 
-    def update_report(self, feature: str, data: dict):
-        base_feature = feature.replace('_first_hand', '').replace('_second_hand', '')
-        report = data[f'{base_feature}_report']
+    def actualizar_reporte(self, caracteristica: str, datos: dict):
+        caracteristica_base = caracteristica.replace('_primera_mano', '').replace('_segunda_mano', '')
+        reporte = datos[f'reporte_{caracteristica_base}']
 
-        if report:
-            counter = data[f'{base_feature}_count']
-            self.visualize_reports[feature]['report'] = report
-            self.visualize_reports[feature]['count'] = counter
+        if reporte:
+            contador = datos[f'conteo_{caracteristica_base}']
+            self.visualizar_reportes[caracteristica]['reporte'] = reporte
+            self.visualizar_reportes[caracteristica]['conteo'] = contador
 
-        if feature != 'flicker':
-            if report:
-                durations = data[f'{base_feature}_durations']
-                self.visualize_reports[feature]['durations'] = durations
+        if caracteristica != 'parpadeo':
+            if reporte:
+                duraciones = datos[f'duraciones_{caracteristica_base}']
+                self.visualizar_reportes[caracteristica]['duraciones'] = duraciones
 
-    def visualize_all_reports(self, sketch: np.ndarray, report_data: dict):
-        # first hand
-        self.update_report('eye_rub_first_hand', report_data['eye_rub_first_hand'])
-        if self.visualize_reports['eye_rub_first_hand']['report']:
-            self.draw_warnings_report(sketch, 'eye_rub_first_hand')
+    def visualizar_todos_reportes(self, bosquejo: np.ndarray, datos_reporte: dict):
+        # primera mano
+        self.actualizar_reporte('frotamiento_ojos_primera_mano', datos_reporte['frotamiento_ojos_primera_mano'])
+        if self.visualizar_reportes['frotamiento_ojos_primera_mano']['reporte']:
+            self.dibujar_advertencias_reporte(bosquejo, 'frotamiento_ojos_primera_mano')
         else:
-            self.draw_warnings_general(sketch, 'eye_rub_first_hand')
+            self.dibujar_advertencias_general(bosquejo, 'frotamiento_ojos_primera_mano')
 
-        # second hand
-        self.update_report('eye_rub_second_hand', report_data['eye_rub_second_hand'])
-        if self.visualize_reports['eye_rub_second_hand']['report']:
-            self.draw_warnings_report(sketch, 'eye_rub_second_hand')
+        # segunda mano
+        self.actualizar_reporte('frotamiento_ojos_segunda_mano', datos_reporte['frotamiento_ojos_segunda_mano'])
+        if self.visualizar_reportes['frotamiento_ojos_segunda_mano']['reporte']:
+            self.dibujar_advertencias_reporte(bosquejo, 'frotamiento_ojos_segunda_mano')
         else:
-            self.draw_warnings_general(sketch, 'eye_rub_second_hand')
+            self.dibujar_advertencias_general(bosquejo, 'frotamiento_ojos_segunda_mano')
 
-        # flicker
-        self.update_report('flicker', report_data['flicker_and_micro_sleep'])
-        if self.visualize_reports['flicker']['report']:
-            self.draw_warnings_report(sketch, 'flicker')
+        # parpadeo
+        self.actualizar_reporte('parpadeo', datos_reporte['parpadeo_y_microsueno'])
+        if self.visualizar_reportes['parpadeo']['reporte']:
+            self.dibujar_advertencias_reporte(bosquejo, 'parpadeo')
         else:
-            self.draw_warnings_general(sketch, 'flicker')
+            self.dibujar_advertencias_general(bosquejo, 'parpadeo')
 
-        # micro sleep
-        self.update_report('micro_sleep', report_data['flicker_and_micro_sleep'])
-        if self.visualize_reports['micro_sleep']['report']:
-            self.draw_warnings_report(sketch, 'micro_sleep')
+        # microsueño
+        self.actualizar_reporte('microsueno', datos_reporte['parpadeo_y_microsueno'])
+        if self.visualizar_reportes['microsueno']['reporte']:
+            self.dibujar_advertencias_reporte(bosquejo, 'microsueno')
         else:
-            self.draw_warnings_general(sketch, 'micro_sleep')
+            self.dibujar_advertencias_general(bosquejo, 'microsueno')
 
-        # pitch
-        self.update_report('pitch', report_data['pitch'])
-        if self.visualize_reports['pitch']['report']:
-            self.draw_warnings_report(sketch, 'pitch')
+        # inclinación
+        self.actualizar_reporte('inclinacion', datos_reporte['inclinacion'])
+        if self.visualizar_reportes['inclinacion']['reporte']:
+            self.dibujar_advertencias_reporte(bosquejo, 'inclinacion')
         else:
-            self.draw_warnings_general(sketch, 'pitch')
+            self.dibujar_advertencias_general(bosquejo, 'inclinacion')
 
-        # yawn
-        self.update_report('yawn', report_data['yawn'])
-        if self.visualize_reports['yawn']['report']:
-            self.draw_warnings_report(sketch, 'yawn')
+        # bostezo
+        self.actualizar_reporte('bostezo', datos_reporte['bostezo'])
+        if self.visualizar_reportes['bostezo']['reporte']:
+            self.dibujar_advertencias_reporte(bosquejo, 'bostezo')
         else:
-            self.draw_warnings_general(sketch, 'yawn')
-        return sketch
+            self.dibujar_advertencias_general(bosquejo, 'bostezo')
+        return bosquejo

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class DrowsinessProcessor(ABC):
+class ProcesadorSomnolencia(ABC):
     @abstractmethod
-    def process(self, points: dict):
+    def procesar(self, puntos: dict):
         raise NotImplemented

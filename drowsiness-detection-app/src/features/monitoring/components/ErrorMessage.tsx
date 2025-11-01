@@ -4,7 +4,7 @@ interface ErrorMessageProps {
 
 export const ErrorMessage = ({ message }: ErrorMessageProps) => {
     return (
-        <div className="flex items-center justify-center w-full h-[480px] bg-gray-800 rounded-lg">
+        <div className="flex items-center justify-center w-full h-[100px] bg-gray-800 rounded-lg">
             <div className="text-center p-6">
                 <svg
                     className="mx-auto h-12 w-12 text-red-500 mb-4"

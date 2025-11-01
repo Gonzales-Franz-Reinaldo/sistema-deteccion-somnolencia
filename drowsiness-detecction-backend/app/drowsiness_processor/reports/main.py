@@ -4,93 +4,93 @@ import json
 from datetime import datetime
 
 
-class DrowsinessReports:
-    def __init__(self, file_name: str):
-        self.file_name = file_name
-        self.fields = ['timestamp', 'eye_rub_first_hand_report', 'eye_rub_first_hand_count',
-                       'eye_rub_first_hand_durations', '|',
-                       'eye_rub_second_hand_report', 'eye_rub_second_hand_count', 'eye_rub_second_hand_durations', '|',
-                       'flicker_report', 'flicker_count', '|',
-                       'micro_sleep_report', 'micro_sleep_count', 'micro_sleep_durations', '|',
-                       'pitch_report', 'pitch_count', 'pitch_durations', '|',
-                       'yawn_report', 'yawn_count', 'yawn_durations']
+class ReportesSomnolencia:
+    def __init__(self, nombre_archivo: str):
+        self.nombre_archivo = nombre_archivo
+        self.campos = ['marca_tiempo', 'reporte_frotamiento_ojos_primera_mano', 'conteo_frotamiento_ojos_primera_mano',
+                       'duraciones_frotamiento_ojos_primera_mano', '|',
+                       'reporte_frotamiento_ojos_segunda_mano', 'conteo_frotamiento_ojos_segunda_mano', 'duraciones_frotamiento_ojos_segunda_mano', '|',
+                       'reporte_parpadeo', 'conteo_parpadeo', '|',
+                       'reporte_microsueno', 'conteo_microsueno', 'duraciones_microsueno', '|',
+                       'reporte_inclinacion', 'conteo_inclinacion', 'duraciones_inclinacion', '|',
+                       'reporte_bostezo', 'conteo_bostezo', 'duraciones_bostezo']
 
-        if not os.path.exists(self.file_name):
-            self.create_csv_file()
+        if not os.path.exists(self.nombre_archivo):
+            self.crear_archivo_csv()
 
-    def create_csv_file(self):
-        with open(self.file_name, mode='w', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=self.fields)
-            writer.writeheader()
+    def crear_archivo_csv(self):
+        with open(self.nombre_archivo, mode='w', newline='') as archivo:
+            escritor = csv.DictWriter(archivo, fieldnames=self.campos)
+            escritor.writeheader()
 
-    def main(self, report_data: dict):
-        if (report_data['eye_rub_first_hand']['eye_rub_report'] or
-                report_data['eye_rub_second_hand']['eye_rub_report'] or
-                report_data['flicker_and_micro_sleep']['flicker_report'] or
-                report_data['flicker_and_micro_sleep']['micro_sleep_report'] or
-                report_data['pitch']['pitch_report'] or
-                report_data['yawn']['yawn_report']):
-            row = {
-                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'eye_rub_first_hand_report': report_data.get('eye_rub_first_hand', {}).get('eye_rub_report', False),
-                'eye_rub_first_hand_count': report_data.get('eye_rub_first_hand', {}).get('eye_rub_count', 0),
-                'eye_rub_first_hand_durations': report_data.get('eye_rub_first_hand', {}).get('eye_rub_durations', []),
+    def principal(self, datos_reporte: dict):
+        if (datos_reporte['frotamiento_ojos_primera_mano']['reporte_frotamiento_ojos'] or
+                datos_reporte['frotamiento_ojos_segunda_mano']['reporte_frotamiento_ojos'] or
+                datos_reporte['parpadeo_y_microsueno']['reporte_parpadeo'] or
+                datos_reporte['parpadeo_y_microsueno']['reporte_microsueno'] or
+                datos_reporte['inclinacion']['reporte_inclinacion'] or
+                datos_reporte['bostezo']['reporte_bostezo']):
+            fila = {
+                'marca_tiempo': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'reporte_frotamiento_ojos_primera_mano': datos_reporte.get('frotamiento_ojos_primera_mano', {}).get('reporte_frotamiento_ojos', False),
+                'conteo_frotamiento_ojos_primera_mano': datos_reporte.get('frotamiento_ojos_primera_mano', {}).get('conteo_frotamiento_ojos', 0),
+                'duraciones_frotamiento_ojos_primera_mano': datos_reporte.get('frotamiento_ojos_primera_mano', {}).get('duraciones_frotamiento_ojos', []),
                 '|': '|',
-                'eye_rub_second_hand_report': report_data.get('eye_rub_second_hand', {}).get('eye_rub_report', False),
-                'eye_rub_second_hand_count': report_data.get('eye_rub_second_hand', {}).get('eye_rub_count', 0),
-                'eye_rub_second_hand_durations': report_data.get('eye_rub_second_hand', {}).get('eye_rub_durations', []),
+                'reporte_frotamiento_ojos_segunda_mano': datos_reporte.get('frotamiento_ojos_segunda_mano', {}).get('reporte_frotamiento_ojos', False),
+                'conteo_frotamiento_ojos_segunda_mano': datos_reporte.get('frotamiento_ojos_segunda_mano', {}).get('conteo_frotamiento_ojos', 0),
+                'duraciones_frotamiento_ojos_segunda_mano': datos_reporte.get('frotamiento_ojos_segunda_mano', {}).get('duraciones_frotamiento_ojos', []),
                 '|': '|',
-                'flicker_report': report_data.get('flicker_and_micro_sleep', {}).get('flicker_report', False),
-                'flicker_count': report_data.get('flicker_and_micro_sleep', {}).get('flicker_count', 0),
+                'reporte_parpadeo': datos_reporte.get('parpadeo_y_microsueno', {}).get('reporte_parpadeo', False),
+                'conteo_parpadeo': datos_reporte.get('parpadeo_y_microsueno', {}).get('conteo_parpadeos', 0),
                 '|': '|',
-                'micro_sleep_report': report_data.get('flicker_and_micro_sleep', {}).get('micro_sleep_report', False),
-                'micro_sleep_count': report_data.get('flicker_and_micro_sleep', {}).get('micro_sleep_count', 0),
-                'micro_sleep_durations': report_data.get('flicker_and_micro_sleep', {}).get('micro_sleep_durations', []),
+                'reporte_microsueno': datos_reporte.get('parpadeo_y_microsueno', {}).get('reporte_microsueno', False),
+                'conteo_microsueno': datos_reporte.get('parpadeo_y_microsueno', {}).get('conteo_microsueno', 0),
+                'duraciones_microsueno': datos_reporte.get('parpadeo_y_microsueno', {}).get('duraciones_microsueno', []),
                 '|': '|',
-                'pitch_report': report_data.get('pitch', {}).get('pitch_report', False),
-                'pitch_count': report_data.get('pitch', {}).get('pitch_count', 0),
-                'pitch_durations': report_data.get('pitch', {}).get('pitch_durations', []),
+                'reporte_inclinacion': datos_reporte.get('inclinacion', {}).get('reporte_inclinacion', False),
+                'conteo_inclinacion': datos_reporte.get('inclinacion', {}).get('conteo_inclinacion', 0),
+                'duraciones_inclinacion': datos_reporte.get('inclinacion', {}).get('duraciones_inclinacion', []),
                 '|': '|',
-                'yawn_report': report_data.get('yawn', {}).get('yawn_report', False),
-                'yawn_count': report_data.get('yawn', {}).get('yawn_count', 0),
-                'yawn_durations': report_data.get('yawn', {}).get('yawn_durations', [])
+                'reporte_bostezo': datos_reporte.get('bostezo', {}).get('reporte_bostezo', False),
+                'conteo_bostezo': datos_reporte.get('bostezo', {}).get('conteo_bostezo', 0),
+                'duraciones_bostezo': datos_reporte.get('bostezo', {}).get('duraciones_bostezo', [])
             }
 
-            with open(self.file_name, mode='a', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=self.fields)
-                writer.writerow(row)
+            with open(self.nombre_archivo, mode='a', newline='') as archivo:
+                escritor = csv.DictWriter(archivo, fieldnames=self.campos)
+                escritor.writerow(fila)
 
-    def generate_json_report(self, report_data: dict) -> str:
-        report_json = {
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'eye_rub_first_hand': {
-                'report': report_data.get('eye_rub_first_hand', {}).get('eye_rub_report', False),
-                'count': report_data.get('eye_rub_first_hand', {}).get('eye_rub_count', 0),
-                'durations': report_data.get('eye_rub_first_hand', {}).get('eye_rub_durations', [])
+    def generar_reporte_json(self, datos_reporte: dict) -> str:
+        reporte_json = {
+            'marca_tiempo': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'frotamiento_ojos_primera_mano': {
+                'reporte': datos_reporte.get('frotamiento_ojos_primera_mano', {}).get('reporte_frotamiento_ojos', False),
+                'conteo': datos_reporte.get('frotamiento_ojos_primera_mano', {}).get('conteo_frotamiento_ojos', 0),
+                'duraciones': datos_reporte.get('frotamiento_ojos_primera_mano', {}).get('duraciones_frotamiento_ojos', [])
             },
-            'eye_rub_second_hand': {
-                'report': report_data.get('eye_rub_second_hand', {}).get('eye_rub_report', False),
-                'count': report_data.get('eye_rub_second_hand', {}).get('eye_rub_count', 0),
-                'durations': report_data.get('eye_rub_second_hand', {}).get('eye_rub_durations', [])
+            'frotamiento_ojos_segunda_mano': {
+                'reporte': datos_reporte.get('frotamiento_ojos_segunda_mano', {}).get('reporte_frotamiento_ojos', False),
+                'conteo': datos_reporte.get('frotamiento_ojos_segunda_mano', {}).get('conteo_frotamiento_ojos', 0),
+                'duraciones': datos_reporte.get('frotamiento_ojos_segunda_mano', {}).get('duraciones_frotamiento_ojos', [])
             },
-            'flicker': {
-                'report': report_data.get('flicker_and_micro_sleep', {}).get('flicker_report', False),
-                'count': report_data.get('flicker_and_micro_sleep', {}).get('flicker_count', 0)
+            'parpadeo': {
+                'reporte': datos_reporte.get('parpadeo_y_microsueno', {}).get('reporte_parpadeo', False),
+                'conteo': datos_reporte.get('parpadeo_y_microsueno', {}).get('conteo_parpadeos', 0)
             },
-            'micro_sleep': {
-                'report': report_data.get('flicker_and_micro_sleep', {}).get('micro_sleep_report', False),
-                'count': report_data.get('flicker_and_micro_sleep', {}).get('micro_sleep_count', 0),
-                'durations': report_data.get('flicker_and_micro_sleep', {}).get('micro_sleep_durations', [])
+            'microsueno': {
+                'reporte': datos_reporte.get('parpadeo_y_microsueno', {}).get('reporte_microsueno', False),
+                'conteo': datos_reporte.get('parpadeo_y_microsueno', {}).get('conteo_microsueno', 0),
+                'duraciones': datos_reporte.get('parpadeo_y_microsueno', {}).get('duraciones_microsueno', [])
             },
-            'pitch': {
-                'report': report_data.get('pitch', {}).get('pitch_report', False),
-                'count': report_data.get('pitch', {}).get('pitch_count', 0),
-                'durations': report_data.get('pitch', {}).get('pitch_durations', [])
+            'inclinacion': {
+                'reporte': datos_reporte.get('inclinacion', {}).get('reporte_inclinacion', False),
+                'conteo': datos_reporte.get('inclinacion', {}).get('conteo_inclinacion', 0),
+                'duraciones': datos_reporte.get('inclinacion', {}).get('duraciones_inclinacion', [])
             },
-            'yawn': {
-                'report': report_data.get('yawn', {}).get('yawn_report', False),
-                'count': report_data.get('yawn', {}).get('yawn_count', 0),
-                'durations': report_data.get('yawn', {}).get('yawn_durations', [])
+            'bostezo': {
+                'reporte': datos_reporte.get('bostezo', {}).get('reporte_bostezo', False),
+                'conteo': datos_reporte.get('bostezo', {}).get('conteo_bostezo', 0),
+                'duraciones': datos_reporte.get('bostezo', {}).get('duraciones_bostezo', [])
             }
         }
-        return json.dumps(report_json)
+        return json.dumps(reporte_json)

@@ -1,112 +1,112 @@
 import time
 from typing import Tuple, Dict, Any
 from abc import ABC, abstractmethod
-from app.drowsiness_processor.drowsiness_features.processor import DrowsinessProcessor
+from app.drowsiness_processor.drowsiness_features.processor import ProcesadorSomnolencia
 
 
 class Detector(ABC):
     @abstractmethod
-    def detect(self, mouth_distance: dict) -> bool:
+    def detectar(self, distancia_boca: dict) -> bool:
         raise NotImplemented
 
 
-class YawnDetection(Detector):
+class DeteccionBostezo(Detector):
     def __init__(self):
-        self.start_time: float = 0
-        self.end_time: float = 0
-        self.flag: bool = False
-        self.open_mouth: bool = False
+        self.tiempo_inicio: float = 0
+        self.tiempo_fin: float = 0
+        self.bandera: bool = False
+        self.boca_abierta: bool = False
 
-    def check_open_mouth(self, mouth_distances: dict) -> bool:
-        lips_distance = mouth_distances['lips_distance']
-        chin_distance = mouth_distances['chin_distance']
+    def verificar_boca_abierta(self, distancias_boca: dict) -> bool:
+        distancia_labios = distancias_boca['distancia_labios']
+        distancia_menton = distancias_boca['distancia_menton']
 
-        if lips_distance > chin_distance:
-            self.open_mouth = True
-        elif lips_distance < chin_distance:
-            self.open_mouth = False
-        return self.open_mouth
+        if distancia_labios > distancia_menton:
+            self.boca_abierta = True
+        elif distancia_labios < distancia_menton:
+            self.boca_abierta = False
+        return self.boca_abierta
 
-    def detect(self, open_mouth: bool) -> Tuple[bool, float]:
-        if open_mouth and not self.flag:
-            self.start_time = time.time()
-            self.flag = True
-        elif not open_mouth and self.flag:
-            self.end_time = time.time()
-            yawn_duration = round(self.end_time - self.start_time, 0)
-            self.flag = False
-            if yawn_duration > 4:
-                self.start_time = 0
-                self.end_time = 0
-                return True, yawn_duration
+    def detectar(self, boca_abierta: bool) -> Tuple[bool, float]:
+        if boca_abierta and not self.bandera:
+            self.tiempo_inicio = time.time()
+            self.bandera = True
+        elif not boca_abierta and self.bandera:
+            self.tiempo_fin = time.time()
+            duracion_bostezo = round(self.tiempo_fin - self.tiempo_inicio, 0)
+            self.bandera = False
+            if duracion_bostezo > 4:
+                self.tiempo_inicio = 0
+                self.tiempo_fin = 0
+                return True, duracion_bostezo
         return False, 0.0
 
 
-class YawnCounter:
+class ContadorBostezo:
     def __init__(self):
-        self.yawn_count: int = 0
-        self.yawn_durations = []
+        self.conteo_bostezo: int = 0
+        self.duraciones_bostezo = []
 
-    def increment(self, duration: float):
-        self.yawn_count += 1
-        self.yawn_durations.append(f"{self.yawn_count} yawn: {duration} seconds")
+    def incrementar(self, duracion: float):
+        self.conteo_bostezo += 1
+        self.duraciones_bostezo.append(f"{self.conteo_bostezo} bostezo: {duracion} segundos")
 
-    def reset(self):
-        self.yawn_count = 0
+    def reiniciar(self):
+        self.conteo_bostezo = 0
 
-    def get_durations(self):
-        return self.yawn_durations
+    def obtener_duraciones(self):
+        return self.duraciones_bostezo
 
 
-class ReportGenerator(ABC):
+class GeneradorReporte(ABC):
     @abstractmethod
-    def generate_report(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def generar_reporte(self, datos: Dict[str, Any]) -> Dict[str, Any]:
         raise NotImplemented
 
 
-class YawnReportGenerator(ReportGenerator):
-    def generate_report(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        yawn_count = data.get("yawn_count", 0)
-        yawn_durations = data.get("yawn_durations", [])
-        elapsed_time = data.get("elapsed_time", 0)
-        yawn_report = data.get("yawn_report", False)
+class GeneradorReporteBostezo(GeneradorReporte):
+    def generar_reporte(self, datos: Dict[str, Any]) -> Dict[str, Any]:
+        conteo_bostezo = datos.get("conteo_bostezo", 0)
+        duraciones_bostezo = datos.get("duraciones_bostezo", [])
+        tiempo_transcurrido = datos.get("tiempo_transcurrido", 0)
+        reporte_bostezo = datos.get("reporte_bostezo", False)
 
         return {
-            'yawn_count': yawn_count,
-            'yawn_durations': yawn_durations,
-            'report_message': f'Counting yawns... {180 - elapsed_time} seconds remaining.',
-            'yawn_report': yawn_report
+            'conteo_bostezo': conteo_bostezo,
+            'duraciones_bostezo': duraciones_bostezo,
+            'mensaje_reporte': f'Contando bostezos... {180 - tiempo_transcurrido} segundos restantes.',
+            'reporte_bostezo': reporte_bostezo
         }
 
 
-class YawnEstimator(DrowsinessProcessor):
+class EstimadorBostezo(ProcesadorSomnolencia):
     def __init__(self):
-        self.yawn_detection = YawnDetection()
-        self.yawn_counter = YawnCounter()
-        self.yawn_report_generator = YawnReportGenerator()
-        self.start_report = time.time()
+        self.deteccion_bostezo = DeteccionBostezo()
+        self.contador_bostezo = ContadorBostezo()
+        self.generador_reporte_bostezo = GeneradorReporteBostezo()
+        self.inicio_reporte = time.time()
 
-    def process(self, mouth_points: dict):
-        current_time = time.time()
-        elapsed_time = round(current_time - self.start_report, 0)
+    def procesar(self, puntos_boca: dict):
+        tiempo_actual = time.time()
+        tiempo_transcurrido = round(tiempo_actual - self.inicio_reporte, 0)
 
-        open_mouth = self.yawn_detection.check_open_mouth(mouth_points)
-        is_yawn, duration_yawn = self.yawn_detection.detect(open_mouth)
-        if is_yawn:
-            self.yawn_counter.increment(duration_yawn)
+        boca_abierta = self.deteccion_bostezo.verificar_boca_abierta(puntos_boca)
+        es_bostezo, duracion_bostezo = self.deteccion_bostezo.detectar(boca_abierta)
+        if es_bostezo:
+            self.contador_bostezo.incrementar(duracion_bostezo)
 
-        if elapsed_time >= 180:
-            yawn_data = {
-                "yawn_count": self.yawn_counter.yawn_count,
-                "yawn_durations": self.yawn_counter.get_durations(),
-                "elapsed_time": elapsed_time,
-                "yawn_report": True
+        if tiempo_transcurrido >= 180:
+            datos_bostezo = {
+                "conteo_bostezo": self.contador_bostezo.conteo_bostezo,
+                "duraciones_bostezo": self.contador_bostezo.obtener_duraciones(),
+                "tiempo_transcurrido": tiempo_transcurrido,
+                "reporte_bostezo": True
             }
-            self.yawn_counter.reset()
-            self.start_report = current_time
-            return self.yawn_report_generator.generate_report(yawn_data)
+            self.contador_bostezo.reiniciar()
+            self.inicio_reporte = tiempo_actual
+            return self.generador_reporte_bostezo.generar_reporte(datos_bostezo)
 
         return {
-            'yawn_count': f'Counting yawns... {180 - elapsed_time} seconds remaining.',
-            'yawn_report': False
+            'conteo_bostezo': f'Contando bostezos... {180 - tiempo_transcurrido} segundos restantes.',
+            'reporte_bostezo': False
         }

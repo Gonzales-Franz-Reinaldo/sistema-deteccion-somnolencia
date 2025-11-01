@@ -4,99 +4,104 @@ import cv2
 from typing import Tuple, Any, List, Dict
 
 
-class HandsInference:
-    def __init__(self, min_detection_confidence=0.6, min_tracking_confidence=0.6):
-        self.hands = mp.solutions.hands.Hands(
+class InferenciaManos:
+    def __init__(self, confianza_minima_deteccion=0.6, confianza_minima_seguimiento=0.6):
+        self.manos = mp.solutions.hands.Hands(
             static_image_mode=False,
             max_num_hands=2,
             model_complexity=1,
-            min_detection_confidence=min_detection_confidence,
-            min_tracking_confidence=min_tracking_confidence
+            min_detection_confidence=confianza_minima_deteccion,
+            min_tracking_confidence=confianza_minima_seguimiento
         )
 
-    def process(self, image: np.ndarray) -> Tuple[bool, Any]:
-        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        hands = self.hands.process(rgb_image)
-        return bool(hands.multi_hand_landmarks), hands
+    def procesar(self, imagen: np.ndarray) -> Tuple[bool, Any]:
+        imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+        manos = self.manos.process(imagen_rgb)
+        return bool(manos.multi_hand_landmarks), manos
 
 
-class HandsExtractor:
+class ExtractorManos:
     def __init__(self):
-        self.points: dict = {
-            'fingers': {'distances': []},
+        self.puntos: dict = {
+            'dedos': {'distancias': []},
         }
 
-    def count_hands(self, hands_info):
-        return len(hands_info.multi_hand_landmarks)
+    def contar_manos(self, info_manos):
+        return len(info_manos.multi_hand_landmarks)
 
-    def extract_points(self, face_image: np.ndarray, hands_info: Any, hand_index: int = 0) -> List[List[int]]:
-        h, w, _ = face_image.shape
-        chose_hand = hands_info.multi_hand_landmarks[hand_index]
-        hands_points = [
+    def extraer_puntos(self, imagen_rostro: np.ndarray, info_manos: Any, indice_mano: int = 0) -> List[List[int]]:
+        h, w, _ = imagen_rostro.shape
+        mano_elegida = info_manos.multi_hand_landmarks[indice_mano]
+        puntos_manos = [
             [i, int(pt.x * w), int(pt.y * h)]
-            for hand in hands_info.multi_hand_landmarks
-            for i, pt in enumerate(chose_hand.landmark)
+            for mano in info_manos.multi_hand_landmarks
+            for i, pt in enumerate(mano_elegida.landmark)
         ]
-        return hands_points
+        return puntos_manos
 
-    def extract_feature_points(self, hands_points: List[List[int]], feature_indices: dict):
-        for feature, indices in feature_indices.items():
-            for sub_feature, sub_indices in indices.items():
-                self.points[feature][sub_feature] = [hands_points[i][1:] for i in sub_indices]
+    def extraer_puntos_caracteristicas(self, puntos_manos: List[List[int]], indices_caracteristicas: dict):
+        for caracteristica, indices in indices_caracteristicas.items():
+            for sub_caracteristica, sub_indices in indices.items():
+                self.puntos[caracteristica][sub_caracteristica] = [puntos_manos[i][1:] for i in sub_indices]
 
-    def get_hand_points(self, hands_points: List[List[int]]) -> Dict[str, List[List[int]]]:
-        feature_indices = {
-            'fingers': {
-                'distances': [4, 8, 12, 16, 20],
+    def obtener_puntos_mano(self, puntos_manos: List[List[int]]) -> Dict[str, List[List[int]]]:
+        indices_caracteristicas = {
+            'dedos': {
+                'distancias': [4, 8, 12, 16, 20],
             }
         }
-        self.extract_feature_points(hands_points, feature_indices)
-        return self.points['fingers']
+        self.extraer_puntos_caracteristicas(puntos_manos, indices_caracteristicas)
+        return self.puntos['dedos']
 
 
-class HandsDrawer:
+class DibujadorManos:
     def __init__(self, color: Tuple[int, int, int] = (255, 255, 0)):
-        self.mp_draw = mp.solutions.drawing_utils
-        self.config_draw = self.mp_draw.DrawingSpec(color=color, thickness=1, circle_radius=1)
+        self.mp_dibujar = mp.solutions.drawing_utils
+        self.config_dibujar = self.mp_dibujar.DrawingSpec(color=color, thickness=1, circle_radius=1)
 
-    def draw(self, sketch_image: np.ndarray, hands_info: Any):
-        for hands in hands_info.multi_hand_landmarks:
-            self.mp_draw.draw_landmarks(sketch_image, hands, mp.solutions.hands.HAND_CONNECTIONS,
-                                        self.config_draw, self.config_draw)
+    def dibujar(self, imagen_bosquejo: np.ndarray, info_manos: Any):
+        for manos in info_manos.multi_hand_landmarks:
+            self.mp_dibujar.draw_landmarks(
+                imagen_bosquejo, 
+                manos, 
+                mp.solutions.hands.HAND_CONNECTIONS,
+                self.config_dibujar, 
+                self.config_dibujar
+            )
 
-        return sketch_image
+        return imagen_bosquejo
 
 
-class HandsProcessor:
+class ProcesadorManos:
     def __init__(self):
-        self.inference = HandsInference()
-        self.extractor = HandsExtractor()
-        self.drawer = HandsDrawer()
-        self.points: dict = {
-            'first_hand': {'distances': []},
-            'second_hand': {'distances': []},
+        self.inferencia = InferenciaManos()
+        self.extractor = ExtractorManos()
+        self.dibujador = DibujadorManos()
+        self.puntos: dict = {
+            'primera_mano': {'distancias': []},
+            'segunda_mano': {'distancias': []},
         }
 
-    def process(self, hand_image: np.ndarray, sketch_image: np.ndarray, draw: bool = False) -> Tuple[dict, bool, np.ndarray]:
-        success, hands_info = self.inference.process(hand_image)
-        if not success:
-            return self.points, success, sketch_image
+    def procesar(self, imagen_mano: np.ndarray, imagen_bosquejo: np.ndarray, dibujar: bool = False) -> Tuple[dict, bool, np.ndarray]:
+        exito, info_manos = self.inferencia.procesar(imagen_mano)
+        if not exito:
+            return self.puntos, exito, imagen_bosquejo
 
-        num_hands = self.extractor.count_hands(hands_info)
-        if num_hands >= 2:
-            first_hand_points = self.extractor.extract_points(hand_image, hands_info, hand_index=0)
-            second_hand_points = self.extractor.extract_points(hand_image, hands_info, hand_index=1)
-            points = {
-                'first_hand': self.extractor.get_hand_points(first_hand_points),
-                'second_hand': self.extractor.get_hand_points(second_hand_points),
+        num_manos = self.extractor.contar_manos(info_manos)
+        if num_manos >= 2:
+            puntos_primera_mano = self.extractor.extraer_puntos(imagen_mano, info_manos, indice_mano=0)
+            puntos_segunda_mano = self.extractor.extraer_puntos(imagen_mano, info_manos, indice_mano=1)
+            puntos = {
+                'primera_mano': self.extractor.obtener_puntos_mano(puntos_primera_mano),
+                'segunda_mano': self.extractor.obtener_puntos_mano(puntos_segunda_mano),
             }
         else:
-            first_hand_points = self.extractor.extract_points(hand_image, hands_info, hand_index=0)
-            points = {
-                'first_hand': self.extractor.get_hand_points(first_hand_points),
+            puntos_primera_mano = self.extractor.extraer_puntos(imagen_mano, info_manos, indice_mano=0)
+            puntos = {
+                'primera_mano': self.extractor.obtener_puntos_mano(puntos_primera_mano),
             }
 
-        if draw:
-            sketch_image = self.drawer.draw(sketch_image, hands_info)
-            return points, success, sketch_image
-        return points, success, sketch_image
+        if dibujar:
+            imagen_bosquejo = self.dibujador.dibujar(imagen_bosquejo, info_manos)
+            return puntos, exito, imagen_bosquejo
+        return puntos, exito, imagen_bosquejo
