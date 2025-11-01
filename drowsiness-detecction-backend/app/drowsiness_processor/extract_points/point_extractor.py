@@ -2,31 +2,31 @@ import numpy as np
 from typing import Tuple
 import logging as log
 
-from app.drowsiness_processor.extract_points.face_mesh.face_mesh_processor import FaceMeshProcessor
-from app.drowsiness_processor.extract_points.hands.hands_processor import HandsProcessor
+from app.drowsiness_processor.extract_points.face_mesh.face_mesh_processor import ProcesadorRostroMalla
+from app.drowsiness_processor.extract_points.hands.hands_processor import ProcesadorManos
 
 
 log.basicConfig(level=log.INFO)
 logger = log.getLogger(__name__)
 
 
-class PointsExtractor:
+class ExtractorPuntos:
     def __init__(self):
-        self.face_mesh = FaceMeshProcessor()
-        self.hands = HandsProcessor()
+        self.malla_rostro = ProcesadorRostroMalla()
+        self.manos = ProcesadorManos()
 
-    def process(self, face_image: np.ndarray) -> Tuple[dict, bool, np.ndarray]:
-        face_points, mesh_success, draw_sketch = self.face_mesh.process(face_image, draw=True)
-        if mesh_success:
-            hands_points, hands_success, draw_sketch = self.hands.process(face_image, draw_sketch, draw=True)
-            if hands_success:
-                merged_points = self.merge_points(face_points, hands_points)
-                return merged_points, True, draw_sketch
+    def procesar(self, imagen_rostro: np.ndarray) -> Tuple[dict, bool, np.ndarray]:
+        puntos_rostro, exito_malla, dibujar_bosquejo = self.malla_rostro.procesar(imagen_rostro, dibujar=True)
+        if exito_malla:
+            puntos_manos, exito_manos, dibujar_bosquejo = self.manos.procesar(imagen_rostro, dibujar_bosquejo, dibujar=True)
+            if exito_manos:
+                puntos_fusionados = self.fusionar_puntos(puntos_rostro, puntos_manos)
+                return puntos_fusionados, True, dibujar_bosquejo
             else:
-                return face_points, True, draw_sketch
+                return puntos_rostro, True, dibujar_bosquejo
         else:
-            return face_points, False, draw_sketch
+            return puntos_rostro, False, dibujar_bosquejo
 
-    def merge_points(self, face_points: dict, hands_points: dict) -> dict:
-        merged_points = {**face_points, **hands_points}
-        return merged_points
+    def fusionar_puntos(self, puntos_rostro: dict, puntos_manos: dict) -> dict:
+        puntos_fusionados = {**puntos_rostro, **puntos_manos}
+        return puntos_fusionados

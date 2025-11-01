@@ -1,11 +1,14 @@
-from app.drowsiness_processor.data_processing.processors.face_processor import FaceProcessor
-from app.drowsiness_processor.data_processing.head.head_processing import (EuclideanDistanceCalculator, HeadPointsProcessing)
+from app.drowsiness_processor.data_processing.processors.face_processor import ProcesadorRostro
+from app.drowsiness_processor.data_processing.head.head_processing import (
+    CalculadoraDistanciaEuclidiana, 
+    ProcesamientoPuntosCabeza
+)
 
 
-class HeadProcessor(FaceProcessor):
+class ProcesadorCabeza(ProcesadorRostro):
     def __init__(self):
-        distance_calculator = EuclideanDistanceCalculator()
-        self.processor = HeadPointsProcessing(distance_calculator)
+        calculadora_distancia = CalculadoraDistanciaEuclidiana()
+        self.procesador = ProcesamientoPuntosCabeza(calculadora_distancia)
 
-    def process(self, points: dict):
-        return self.processor.main(points)
+    def procesar(self, puntos: dict):
+        return self.procesador.principal(puntos)

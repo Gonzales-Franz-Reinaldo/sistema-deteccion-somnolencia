@@ -148,11 +148,11 @@ export const MonitoreoPage = () => {
                 console.error('Error del servidor:', lastMessage.error);
             } else {
                 // Guardar en buffer en lugar de setState directo
-                if (lastMessage.original_image && lastMessage.original_image !== originalImage) {
-                    pendingImageRef.current.original = lastMessage.original_image;
+                if (lastMessage.imagen_original && lastMessage.imagen_original !== originalImage) {
+                    pendingImageRef.current.original = lastMessage.imagen_original;
                 }
-                if (lastMessage.sketch_image && lastMessage.sketch_image !== sketchImage) {
-                    pendingImageRef.current.sketch = lastMessage.sketch_image;
+                if (lastMessage.imagen_bosquejo && lastMessage.imagen_bosquejo !== sketchImage) {
+                    pendingImageRef.current.sketch = lastMessage.imagen_bosquejo;
                 }
             }
         }
@@ -270,14 +270,14 @@ export const MonitoreoPage = () => {
                     )}
                 </div>
 
-                {lastMessage?.json_report && (
+                {lastMessage?.reporte_json&& (
                     <details className="mt-8 w-full max-w-4xl">
                         <summary className="cursor-pointer bg-black/50 text-white px-4 py-2 rounded-lg hover:bg-black/70">
                             📊 Ver Reporte en Tiempo Real (JSON)
                         </summary>
                         <div className="mt-2 bg-black/80 rounded-lg p-4 text-white">
                             <pre className="text-xs overflow-auto max-h-64">
-                                {JSON.stringify(lastMessage.json_report, null, 2)}
+                                {JSON.stringify(lastMessage.reporte_json, null, 2)}
                             </pre>
                         </div>
                     </details>

@@ -1,177 +1,185 @@
 import time
 from typing import Tuple, Dict, Any
 from abc import ABC, abstractmethod
-from app.drowsiness_processor.drowsiness_features.processor import DrowsinessProcessor
+from app.drowsiness_processor.drowsiness_features.processor import ProcesadorSomnolencia
 
 
 class Detector(ABC):
     @abstractmethod
-    def detect(self, eyes_distance: dict) -> bool:
+    def detectar(self, distancia_ojos: dict) -> bool:
         raise NotImplemented
 
 
-class FlickerDetection(Detector):
+class DeteccionParpadeo(Detector):
     def __init__(self):
-        self.is_flicker: bool = False
+        self.es_parpadeo: bool = False
 
-    def detect(self, eyes_distance: dict) -> bool:
-        right_eyelid_upper = eyes_distance['right_upper_eyelid_distance']
-        right_eyelid_lower = eyes_distance['right_lower_eyelid_distance']
-        left_eyelid_upper = eyes_distance['left_upper_eyelid_distance']
-        left_eyelid_lower = eyes_distance['left_lower_eyelid_distance']
+    def detectar(self, distancia_ojos: dict) -> bool:
+        parpado_superior_derecho = distancia_ojos['distancia_parpado_superior_derecho']
+        parpado_inferior_derecho = distancia_ojos['distancia_parpado_inferior_derecho']
+        parpado_superior_izquierdo = distancia_ojos['distancia_parpado_superior_izquierdo']
+        parpado_inferior_izquierdo = distancia_ojos['distancia_parpado_inferior_izquierdo']
 
-        if right_eyelid_upper < right_eyelid_lower and left_eyelid_upper < left_eyelid_lower and not self.is_flicker:
-            self.is_flicker = True
+        if (parpado_superior_derecho < parpado_inferior_derecho and 
+            parpado_superior_izquierdo < parpado_inferior_izquierdo and 
+            not self.es_parpadeo):
+            self.es_parpadeo = True
             return True
-        elif right_eyelid_upper > right_eyelid_lower and left_eyelid_upper > left_eyelid_lower and self.is_flicker:
-            self.is_flicker = False
+        elif (parpado_superior_derecho > parpado_inferior_derecho and 
+              parpado_superior_izquierdo > parpado_inferior_izquierdo and 
+              self.es_parpadeo):
+            self.es_parpadeo = False
         return False
 
 
-class MicroSleepDetection(Detector):
+class DeteccionMicrosueno(Detector):
     def __init__(self):
-        self.start_time: float = 0
-        self.end_time: float = 0
-        self.flag: bool = False
-        self.close_eyes: bool = False
+        self.tiempo_inicio: float = 0
+        self.tiempo_fin: float = 0
+        self.bandera: bool = False
+        self.ojos_cerrados: bool = False
 
-    def closed_eyes(self, eyes_distance: dict) -> bool:
-        right_eyelid_upper = eyes_distance['right_upper_eyelid_distance']
-        right_eyelid_lower = eyes_distance['right_lower_eyelid_distance']
-        left_eyelid_upper = eyes_distance['left_upper_eyelid_distance']
-        left_eyelid_lower = eyes_distance['left_lower_eyelid_distance']
+    def ojos_estan_cerrados(self, distancia_ojos: dict) -> bool:
+        parpado_superior_derecho = distancia_ojos['distancia_parpado_superior_derecho']
+        parpado_inferior_derecho = distancia_ojos['distancia_parpado_inferior_derecho']
+        parpado_superior_izquierdo = distancia_ojos['distancia_parpado_superior_izquierdo']
+        parpado_inferior_izquierdo = distancia_ojos['distancia_parpado_inferior_izquierdo']
 
-        if right_eyelid_upper < right_eyelid_lower and left_eyelid_upper < left_eyelid_lower and not self.close_eyes:
-            self.close_eyes = True
-        elif right_eyelid_upper > right_eyelid_lower and left_eyelid_upper > left_eyelid_lower and self.close_eyes:
-            self.close_eyes = False
-        return self.close_eyes
+        if (parpado_superior_derecho < parpado_inferior_derecho and 
+            parpado_superior_izquierdo < parpado_inferior_izquierdo and 
+            not self.ojos_cerrados):
+            self.ojos_cerrados = True
+        elif (parpado_superior_derecho > parpado_inferior_derecho and 
+              parpado_superior_izquierdo > parpado_inferior_izquierdo and 
+              self.ojos_cerrados):
+            self.ojos_cerrados = False
+        return self.ojos_cerrados
 
-    def detect(self, is_eyes_closed: bool) -> Tuple[bool, float]:
-        if is_eyes_closed and not self.flag:
-            self.start_time = time.time()
-            self.flag = True
-        elif not is_eyes_closed and self.flag:
-            self.end_time = time.time()
-            flicker_duration = round(self.end_time - self.start_time, 0)
-            self.flag = False
-            if flicker_duration >= 2:
-                self.start_time = 0
-                self.end_time = 0
-                return True, flicker_duration
+    def detectar(self, estan_ojos_cerrados: bool) -> Tuple[bool, float]:
+        if estan_ojos_cerrados and not self.bandera:
+            self.tiempo_inicio = time.time()
+            self.bandera = True
+        elif not estan_ojos_cerrados and self.bandera:
+            self.tiempo_fin = time.time()
+            duracion_parpadeo = round(self.tiempo_fin - self.tiempo_inicio, 0)
+            self.bandera = False
+            if duracion_parpadeo >= 2:
+                self.tiempo_inicio = 0
+                self.tiempo_fin = 0
+                return True, duracion_parpadeo
         return False, 0.0
 
 
-class FlickerCounter:
+class ContadorParpadeos:
     def __init__(self):
-        self.flicker_count: int = 0
+        self.conteo_parpadeo: int = 0
 
-    def increment(self):
-        self.flicker_count += 1
+    def incrementar(self):
+        self.conteo_parpadeo += 1
 
-    def reset(self):
-        self.flicker_count = 0
+    def reiniciar(self):
+        self.conteo_parpadeo = 0
 
 
-class MicroSleepCounter:
+class ContadorMicrosueno:
     def __init__(self):
-        self.micro_sleep_count: int = 0
-        self.micro_sleep_durations = []
+        self.conteo_microsueno: int = 0
+        self.duraciones_microsueno = []
 
-    def increment(self, duration: float):
-        self.micro_sleep_count += 1
-        self.micro_sleep_durations.append(f"{self.micro_sleep_count} micro sleep: {duration} seconds")
+    def incrementar(self, duracion: float):
+        self.conteo_microsueno += 1
+        self.duraciones_microsueno.append(f"{self.conteo_microsueno} microsueño: {duracion} segundos")
 
-    def reset(self):
-        self.micro_sleep_count = 0
+    def reiniciar(self):
+        self.conteo_microsueno = 0
 
-    def get_durations(self):
-        return self.micro_sleep_durations
+    def obtener_duraciones(self):
+        return self.duraciones_microsueno
 
 
-class ReportGenerator(ABC):
+class GeneradorReporte(ABC):
     @abstractmethod
-    def generate_report(self, data: dict[str, bool | int | list]) -> Dict[str, Any]:
+    def generar_reporte(self, datos: dict[str, bool | int | list]) -> Dict[str, Any]:
         raise NotImplemented
 
 
-class FlickerReportGenerator(ReportGenerator):
-    def generate_report(self, data: dict[str, bool | int | list]) -> Dict[str, Any]:
-        flicker_count = data.get("flicker_count", 0)
-        elapsed_time = data.get("elapsed_time", 0)
-        flicker_report = data.get("flicker_report", False)
-        micro_sleep_report = data.get("micro_sleep_Report", False)
+class GeneradorReporteParpadeos(GeneradorReporte):
+    def generar_reporte(self, datos: dict[str, bool | int | list]) -> Dict[str, Any]:
+        conteo_parpadeo = datos.get("conteo_parpadeo", 0)
+        tiempo_transcurrido = datos.get("tiempo_transcurrido", 0)
+        reporte_parpadeo = datos.get("reporte_parpadeo", False)
+        reporte_microsueno = datos.get("reporte_microsueno", False)
 
         return {
-            'flicker_count': flicker_count,
-            'report_message': f'Counting flickers... {60 - elapsed_time} seconds remaining.',
-            'flicker_report': flicker_report,
-            'micro_sleep_report': micro_sleep_report
+            'conteo_parpadeo': conteo_parpadeo,
+            'mensaje_reporte': f'Contando parpadeos... {60 - tiempo_transcurrido} segundos restantes.',
+            'reporte_parpadeo': reporte_parpadeo,
+            'reporte_microsueno': reporte_microsueno
         }
 
 
-class MicroSleepReportGenerator(ReportGenerator):
-    def generate_report(self, data: dict[str, bool | int | list]) -> Dict[str, Any]:
-        micro_sleep_count = data.get("micro_sleep_count", 0)
-        micro_sleep_durations = data.get("micro_sleep_durations", [])
-        micro_sleep_report = data.get("micro_sleep_report", False)
-        flicker_report = data.get("flicker_report", False)
+class GeneradorReporteMicrosueno(GeneradorReporte):
+    def generar_reporte(self, datos: dict[str, bool | int | list]) -> Dict[str, Any]:
+        conteo_microsueno = datos.get("conteo_microsueno", 0)
+        duraciones_microsueno = datos.get("duraciones_microsueno", [])
+        reporte_microsueno = datos.get("reporte_microsueno", False)
+        reporte_parpadeo = datos.get("reporte_parpadeo", False)
 
         return {
-            'micro_sleep_count': micro_sleep_count,
-            'micro_sleep_durations': micro_sleep_durations,
-            'micro_sleep_report': micro_sleep_report,
-            'flicker_report': flicker_report
+            'conteo_microsueno': conteo_microsueno,
+            'duraciones_microsueno': duraciones_microsueno,
+            'reporte_microsueno': reporte_microsueno,
+            'reporte_parpadeo': reporte_parpadeo
         }
 
 
-class FlickerEstimator(DrowsinessProcessor):
+class EstimadorParpadeos(ProcesadorSomnolencia):
     def __init__(self):
-        self.flicker_detector = FlickerDetection()
-        self.micro_sleep_detector = MicroSleepDetection()
-        self.flicker_counter = FlickerCounter()
-        self.micro_sleep_counter = MicroSleepCounter()
-        self.flicker_report_generator = FlickerReportGenerator()
-        self.micro_sleep_report_generator = MicroSleepReportGenerator()
-        self.start_report = time.time()
+        self.detector_parpadeo = DeteccionParpadeo()
+        self.detector_microsueno = DeteccionMicrosueno()
+        self.contador_parpadeo = ContadorParpadeos()
+        self.contador_microsueno = ContadorMicrosueno()
+        self.generador_reporte_parpadeo = GeneradorReporteParpadeos()
+        self.generador_reporte_microsueno = GeneradorReporteMicrosueno()
+        self.inicio_reporte = time.time()
 
-    def process(self, eyes_distance: dict):
-        current_time = time.time()
-        elapsed_time = round(current_time - self.start_report, 0)
+    def procesar(self, distancia_ojos: dict):
+        tiempo_actual = time.time()
+        tiempo_transcurrido = round(tiempo_actual - self.inicio_reporte, 0)
 
-        is_flicker = self.flicker_detector.detect(eyes_distance)
-        if is_flicker:
-            self.flicker_counter.increment()
+        es_parpadeo = self.detector_parpadeo.detectar(distancia_ojos)
+        if es_parpadeo:
+            self.contador_parpadeo.incrementar()
 
-        closed_eyes = self.micro_sleep_detector.closed_eyes(eyes_distance)
-        is_micro_sleep, duration_micro_sleep = self.micro_sleep_detector.detect(closed_eyes)
-        if is_micro_sleep:
-            self.micro_sleep_counter.increment(duration_micro_sleep)
+        ojos_cerrados = self.detector_microsueno.ojos_estan_cerrados(distancia_ojos)
+        es_microsueno, duracion_microsueno = self.detector_microsueno.detectar(ojos_cerrados)
+        if es_microsueno:
+            self.contador_microsueno.incrementar(duracion_microsueno)
 
-        micro_sleep = self.micro_sleep_counter.micro_sleep_count
+        microsueno = self.contador_microsueno.conteo_microsueno
 
-        if elapsed_time >= 60:
-            flicker_data = {
-                "flicker_count": self.flicker_counter.flicker_count,
-                "elapsed_time": elapsed_time,
-                "flicker_report": True,
-                "micro_sleep_report": False,
+        if tiempo_transcurrido >= 60:
+            datos_parpadeos = {
+                "conteo_parpadeo": self.contador_parpadeo.conteo_parpadeo,
+                "tiempo_transcurrido": tiempo_transcurrido,
+                "reporte_parpadeo": True,
+                "reporte_microsueno": False,
             }
-            self.flicker_counter.reset()
-            self.start_report = current_time
-            return self.flicker_report_generator.generate_report(flicker_data)
+            self.contador_parpadeo.reiniciar()
+            self.inicio_reporte = tiempo_actual
+            return self.generador_reporte_parpadeo.generar_reporte(datos_parpadeos)
 
-        if is_micro_sleep:
-            micro_sleep_data = {
-                "micro_sleep_count": self.micro_sleep_counter.micro_sleep_count,
-                "micro_sleep_durations": self.micro_sleep_counter.get_durations(),
-                "micro_sleep_report": True,
-                "flicker_report": False
+        if es_microsueno:
+            datos_microsueno = {
+                "conteo_microsueno": self.contador_microsueno.conteo_microsueno,
+                "duraciones_microsueno": self.contador_microsueno.obtener_duraciones(),
+                "reporte_microsueno": True,
+                "reporte_parpadeo": False
             }
-            return self.micro_sleep_report_generator.generate_report(micro_sleep_data)
+            return self.generador_reporte_microsueno.generar_reporte(datos_microsueno)
 
         return {
-            'flicker_count': f'Counting flickers... {60 - elapsed_time} seconds remaining.',
-            'flicker_report': False,
-            'micro_sleep_report': False
+            'conteo_parpadeo': f'Contando parpadeos... {60 - tiempo_transcurrido} segundos restantes.',
+            'reporte_parpadeo': False,
+            'reporte_microsueno': False
         }

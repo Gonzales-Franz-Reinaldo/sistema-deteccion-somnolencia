@@ -1,11 +1,14 @@
-from app.drowsiness_processor.data_processing.processors.hands_processor import HandsProcessor
-from app.drowsiness_processor.data_processing.hands.second_hand.second_hand_processing import (EuclideanDistanceCalculator, SecondHandPointsProcessing)
+from app.drowsiness_processor.data_processing.processors.hands_processor import ProcesadorManos
+from app.drowsiness_processor.data_processing.hands.second_hand.second_hand_processing import (
+    CalculadoraDistanciaEuclidiana, 
+    ProcesamientoPuntosSegundaMano
+)
 
 
-class SecondHandProcessor(HandsProcessor):
+class ProcesadorSegundaMano(ProcesadorManos):
     def __init__(self):
-        distance_calculator = EuclideanDistanceCalculator()
-        self.processor = SecondHandPointsProcessing(distance_calculator)
+        calculadora_distancia = CalculadoraDistanciaEuclidiana()
+        self.procesador = ProcesamientoPuntosSegundaMano(calculadora_distancia)
 
-    def process(self, hand_points: dict, eyes_points: dict):
-        return self.processor.main(hand_points, eyes_points)
+    def procesar(self, puntos_mano: dict, puntos_ojos: dict):
+        return self.procesador.principal(puntos_mano, puntos_ojos)

@@ -1,37 +1,41 @@
 # Imports absolutos
-from app.drowsiness_processor.data_processing.processors.face_processor import FaceProcessor
-from app.drowsiness_processor.data_processing.processors.hands_processor import HandsProcessor
-from app.drowsiness_processor.data_processing.eyes.eyes_processor import EyesProcessor
-from app.drowsiness_processor.data_processing.hands.first_hand.first_hand_processor import FirstHandProcessor
-from app.drowsiness_processor.data_processing.hands.second_hand.second_hand_processor import SecondHandProcessor
-from app.drowsiness_processor.data_processing.head.head_processor import HeadProcessor
-from app.drowsiness_processor.data_processing.mouth.mouth_processor import MouthProcessor
+from app.drowsiness_processor.data_processing.processors.face_processor import ProcesadorRostro
+from app.drowsiness_processor.data_processing.processors.hands_processor import ProcesadorManos
+from app.drowsiness_processor.data_processing.eyes.eyes_processor import ProcesadorOjos
+from app.drowsiness_processor.data_processing.hands.first_hand.first_hand_processor import ProcesadorPrimeraMano
+from app.drowsiness_processor.data_processing.hands.second_hand.second_hand_processor import ProcesadorSegundaMano
+from app.drowsiness_processor.data_processing.head.head_processor import ProcesadorCabeza
+from app.drowsiness_processor.data_processing.mouth.mouth_processor import ProcesadorBoca
 
 
-class PointsProcessing:
+class ProcesamientoPuntos:
     def __init__(self):
-        self.face_processors: dict[str, FaceProcessor] = {
-            'eyes': EyesProcessor(),
-            'head': HeadProcessor(),
-            'mouth': MouthProcessor()
+        self.procesadores_rostro: dict[str, ProcesadorRostro] = {
+            'ojos': ProcesadorOjos(),
+            'cabeza': ProcesadorCabeza(),
+            'boca': ProcesadorBoca()
         }
-        self.hands_processors: dict[str, HandsProcessor] = {
-            'first_hand': FirstHandProcessor(),
-            'second_hand': SecondHandProcessor(),
+        self.procesadores_manos: dict[str, ProcesadorManos] = {
+            'primera_mano': ProcesadorPrimeraMano(),
+            'segunda_mano': ProcesadorSegundaMano(),
         }
-        self.processed_points: dict = {}
+        self.puntos_procesados: dict = {}
 
-    def main(self, points: dict):
-        self.processed_points = {}
-        self.processed_points['eyes'] = self.face_processors['eyes'].process(points.get('eyes', {}))
+    def principal(self, puntos: dict):
+        self.puntos_procesados = {}
+        self.puntos_procesados['ojos'] = self.procesadores_rostro['ojos'].procesar(puntos.get('ojos', {}))
 
-        if 'first_hand' in points:
-            self.processed_points['first_hand'] = (self.hands_processors['first_hand'].process(points['first_hand'], points.get('eyes', {})))
+        if 'primera_mano' in puntos:
+            self.puntos_procesados['primera_mano'] = (
+                self.procesadores_manos['primera_mano'].procesar(puntos['primera_mano'], puntos.get('ojos', {}))
+            )
 
-        if 'second_hand' in points:
-            self.processed_points['second_hand'] = (self.hands_processors['second_hand'].process(points['second_hand'], points.get('eyes', {})))
+        if 'segunda_mano' in puntos:
+            self.puntos_procesados['segunda_mano'] = (
+                self.procesadores_manos['segunda_mano'].procesar(puntos['segunda_mano'], puntos.get('ojos', {}))
+            )
 
-        self.processed_points['head'] = self.face_processors['head'].process(points.get('head', {}))
-        self.processed_points['mouth'] = self.face_processors['mouth'].process(points.get('mouth', {}))
+        self.puntos_procesados['cabeza'] = self.procesadores_rostro['cabeza'].procesar(puntos.get('cabeza', {}))
+        self.puntos_procesados['boca'] = self.procesadores_rostro['boca'].procesar(puntos.get('boca', {}))
 
-        return self.processed_points
+        return self.puntos_procesados

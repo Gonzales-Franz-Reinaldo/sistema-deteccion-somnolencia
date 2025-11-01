@@ -4,116 +4,121 @@ import cv2
 from typing import Tuple, Any, List, Dict
 
 
-class FaceMeshInference:
-    def __init__(self, min_detection_confidence=0.6, min_tracking_confidence=0.6):
-        self.face_mesh = mp.solutions.face_mesh.FaceMesh(
+class InferenciaRostroMalla:
+    def __init__(self, confianza_minima_deteccion=0.6, confianza_minima_seguimiento=0.6):
+        self.malla_rostro = mp.solutions.face_mesh.FaceMesh(
             static_image_mode=False,
             max_num_faces=1,
             refine_landmarks=True,
-            min_detection_confidence=min_detection_confidence,
-            min_tracking_confidence=min_tracking_confidence
+            min_detection_confidence=confianza_minima_deteccion,
+            min_tracking_confidence=confianza_minima_seguimiento
         )
 
-    def process(self, image: np.ndarray) -> Tuple[bool, Any]:
-        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        face_mesh = self.face_mesh.process(rgb_image)
-        return bool(face_mesh.multi_face_landmarks), face_mesh
+    def procesar(self, imagen: np.ndarray) -> Tuple[bool, Any]:
+        imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+        malla_rostro = self.malla_rostro.process(imagen_rgb)
+        return bool(malla_rostro.multi_face_landmarks), malla_rostro
 
 
-class FaceMeshExtractor:
+class ExtractorRostroMalla:
     def __init__(self):
-        self.points: dict = {
-            'eyes': {'distances': []},
-            'mouth': {'distances': []},
-            'head': {'distances': []},
+        self.puntos: dict = {
+            'ojos': {'distancias': []},
+            'boca': {'distancias': []},
+            'cabeza': {'distancias': []},
         }
 
-    def extract_points(self, face_image: np.ndarray, face_mesh_info: Any) -> List[List[int]]:
-        h, w, _ = face_image.shape
-        mesh_points = [
+    def extraer_puntos(self, imagen_rostro: np.ndarray, info_malla_rostro: Any) -> List[List[int]]:
+        h, w, _ = imagen_rostro.shape
+        puntos_malla = [
             [i, int(pt.x * w), int(pt.y * h)]
-            for face in face_mesh_info.multi_face_landmarks
-            for i, pt in enumerate(face.landmark)
+            for rostro in info_malla_rostro.multi_face_landmarks
+            for i, pt in enumerate(rostro.landmark)
         ]
-        return mesh_points
+        return puntos_malla
 
-    def extract_feature_points(self, face_points: List[List[int]], feature_indices: dict):
-        for feature, indices in feature_indices.items():
-            for sub_feature, sub_indices in indices.items():
-                self.points[feature][sub_feature] = [face_points[i][1:] for i in sub_indices]
+    def extraer_puntos_caracteristicas(self, puntos_rostro: List[List[int]], indices_caracteristicas: dict):
+        for caracteristica, indices in indices_caracteristicas.items():
+            for sub_caracteristica, sub_indices in indices.items():
+                self.puntos[caracteristica][sub_caracteristica] = [puntos_rostro[i][1:] for i in sub_indices]
 
-    def get_eyes_points(self, face_points: List[List[int]]) -> Dict[str, List[List[int]]]:
-        feature_indices = {
-            'eyes': {
-                'distances': [159, 145, 385, 374, 468, 472, 473, 477, 468, 473],
+    def obtener_puntos_ojos(self, puntos_rostro: List[List[int]]) -> Dict[str, List[List[int]]]:
+        indices_caracteristicas = {
+            'ojos': {
+                'distancias': [159, 145, 385, 374, 468, 472, 473, 477, 468, 473],
             }
         }
-        self.extract_feature_points(face_points, feature_indices)
-        return self.points['eyes']
+        self.extraer_puntos_caracteristicas(puntos_rostro, indices_caracteristicas)
+        return self.puntos['ojos']
 
-    def get_mouth_points(self, face_points: List[List[int]]) -> Dict[str, List[List[int]]]:
-        feature_indices = {
-            'mouth': {
-                'distances': [13, 14, 17, 199]
+    def obtener_puntos_boca(self, puntos_rostro: List[List[int]]) -> Dict[str, List[List[int]]]:
+        indices_caracteristicas = {
+            'boca': {
+                'distancias': [13, 14, 17, 199]
             }
         }
-        self.extract_feature_points(face_points, feature_indices)
-        return self.points['mouth']
+        self.extraer_puntos_caracteristicas(puntos_rostro, indices_caracteristicas)
+        return self.puntos['boca']
 
-    def get_head_points(self, face_points: List[List[int]]) -> Dict[str, List[List[int]]]:
-        feature_indices = {
-            'head': {
-                'distances': [1, 0, 1, 5, 4, 205, 425]
+    def obtener_puntos_cabeza(self, puntos_rostro: List[List[int]]) -> Dict[str, List[List[int]]]:
+        indices_caracteristicas = {
+            'cabeza': {
+                'distancias': [1, 0, 1, 5, 4, 205, 425]
             }
         }
-        self.extract_feature_points(face_points, feature_indices)
-        return self.points['head']
+        self.extraer_puntos_caracteristicas(puntos_rostro, indices_caracteristicas)
+        return self.puntos['cabeza']
 
 
-class FaceMeshDrawer:
+class DibujadorRostroMalla:
     def __init__(self, color: Tuple[int, int, int] = (255, 255, 0)):
-        self.mp_draw = mp.solutions.drawing_utils
-        self.config_draw = self.mp_draw.DrawingSpec(color=color, thickness=1, circle_radius=1)
+        self.mp_dibujar = mp.solutions.drawing_utils
+        self.config_dibujar = self.mp_dibujar.DrawingSpec(color=color, thickness=1, circle_radius=1)
 
-    def draw(self, face_image: np.ndarray, face_mesh_info: Any):
-        for face_mesh in face_mesh_info.multi_face_landmarks:
-            self.mp_draw.draw_landmarks(face_image, face_mesh, mp.solutions.face_mesh.FACEMESH_TESSELATION,
-                                        self.config_draw, self.config_draw)
+    def dibujar(self, imagen_rostro: np.ndarray, info_malla_rostro: Any):
+        for malla_rostro in info_malla_rostro.multi_face_landmarks:
+            self.mp_dibujar.draw_landmarks(
+                imagen_rostro, 
+                malla_rostro, 
+                mp.solutions.face_mesh.FACEMESH_TESSELATION,
+                self.config_dibujar, 
+                self.config_dibujar
+            )
 
-    def draw_sketch(self, face_image: np.ndarray, face_mesh_info: Any):
-        h, w, _ = face_image.shape
-        black_image = np.zeros((h, w, 3), dtype=np.uint8)
-        for face_mesh in face_mesh_info.multi_face_landmarks:
-            for pt in face_mesh.landmark:
+    def dibujar_bosquejo(self, imagen_rostro: np.ndarray, info_malla_rostro: Any):
+        h, w, _ = imagen_rostro.shape
+        imagen_negra = np.zeros((h, w, 3), dtype=np.uint8)
+        for malla_rostro in info_malla_rostro.multi_face_landmarks:
+            for pt in malla_rostro.landmark:
                 x = int(pt.x * w)
                 y = int(pt.y * h)
                 z = int(pt.z * 50)
-                cv2.circle(black_image, (x, y), 1, (255 - z, 255 - z, 0 - z), -1)
-        return black_image
+                cv2.circle(imagen_negra, (x, y), 1, (255 - z, 255 - z, 0 - z), -1)
+        return imagen_negra
 
 
-class FaceMeshProcessor:
+class ProcesadorRostroMalla:
     def __init__(self):
-        self.inference = FaceMeshInference()
-        self.extractor = FaceMeshExtractor()
-        self.drawer = FaceMeshDrawer()
+        self.inferencia = InferenciaRostroMalla()
+        self.extractor = ExtractorRostroMalla()
+        self.dibujador = DibujadorRostroMalla()
 
-    def process(self, face_image: np.ndarray, draw: bool = True) -> Tuple[dict, bool, np.ndarray]:
-        h, w, _ = face_image.shape
-        sketch = np.zeros((h, w, 3), dtype=np.uint8)
-        success, face_mesh_info = self.inference.process(face_image)
-        if not success:
-            return {}, success, sketch
+    def procesar(self, imagen_rostro: np.ndarray, dibujar: bool = True) -> Tuple[dict, bool, np.ndarray]:
+        h, w, _ = imagen_rostro.shape
+        bosquejo = np.zeros((h, w, 3), dtype=np.uint8)
+        exito, info_malla_rostro = self.inferencia.procesar(imagen_rostro)
+        if not exito:
+            return {}, exito, bosquejo
 
-        face_points = self.extractor.extract_points(face_image, face_mesh_info)
-        points = {
-            'eyes': self.extractor.get_eyes_points(face_points),
-            'mouth': self.extractor.get_mouth_points(face_points),
-            'head': self.extractor.get_head_points(face_points),
+        puntos_rostro = self.extractor.extraer_puntos(imagen_rostro, info_malla_rostro)
+        puntos = {
+            'ojos': self.extractor.obtener_puntos_ojos(puntos_rostro),
+            'boca': self.extractor.obtener_puntos_boca(puntos_rostro),
+            'cabeza': self.extractor.obtener_puntos_cabeza(puntos_rostro),
         }
 
-        if draw:
-            sketch = self.drawer.draw_sketch(face_image, face_mesh_info)
-            return points, success, sketch
+        if dibujar:
+            bosquejo = self.dibujador.dibujar_bosquejo(imagen_rostro, info_malla_rostro)
+            return puntos, exito, bosquejo
 
-        return points, success, sketch
+        return puntos, exito, bosquejo

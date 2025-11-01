@@ -1,116 +1,135 @@
 import time
 from typing import Tuple, Dict, Any
 from abc import ABC, abstractmethod
-from app.drowsiness_processor.drowsiness_features.processor import DrowsinessProcessor
+from app.drowsiness_processor.drowsiness_features.processor import ProcesadorSomnolencia
 
 
 class Detector(ABC):
     @abstractmethod
-    def detect(self, eyes_distance: dict) -> bool:
+    def detectar(self, distancia_ojos: dict) -> bool:
         raise NotImplemented
 
 
-class EyeRubDetection(Detector):
+class DeteccionFrotamientoOjos(Detector):
     def __init__(self):
-        self.start_time: float = 0
-        self.end_time: float = 0
-        self.flag: bool = False
-        self.eye_rub: bool = False
+        self.tiempo_inicio: float = 0
+        self.tiempo_fin: float = 0
+        self.bandera: bool = False
+        self.frotamiento_ojos: bool = False
 
-    def check_eye_rub(self, eye_distance: dict) -> bool:
-        distances = [eye_distance.get(finger, float('inf')) for finger in ['thumb', 'index_finger', 'middle_finger', 'ring_finger', 'little_finger']]
-        self.eye_rub = any(distance < 40 for distance in distances)
-        return self.eye_rub
+    def verificar_frotamiento_ojos(self, distancia_ojo: dict) -> bool:
+        distancias = [
+            distancia_ojo.get(dedo, float('inf')) 
+            for dedo in ['pulgar', 'dedo_indice', 'dedo_medio', 'dedo_anular', 'dedo_menique']
+        ]
+        self.frotamiento_ojos = any(distancia < 40 for distancia in distancias)
+        return self.frotamiento_ojos
 
-    def detect(self, eye_rub: bool) -> Tuple[bool, float]:
-        if eye_rub and not self.flag:
-            self.start_time = time.time()
-            self.flag = True
-        elif not eye_rub and self.flag:
-            self.end_time = time.time()
-            eye_rub_duration = round(self.end_time - self.start_time, 0)
-            self.flag = False
-            if eye_rub_duration > 1:
-                self.start_time = 0
-                self.end_time = 0
-                return True, eye_rub_duration
+    def detectar(self, frotamiento_ojos: bool) -> Tuple[bool, float]:
+        if frotamiento_ojos and not self.bandera:
+            self.tiempo_inicio = time.time()
+            self.bandera = True
+        elif not frotamiento_ojos and self.bandera:
+            self.tiempo_fin = time.time()
+            duracion_frotamiento_ojos = round(self.tiempo_fin - self.tiempo_inicio, 0)
+            self.bandera = False
+            if duracion_frotamiento_ojos > 1:
+                self.tiempo_inicio = 0
+                self.tiempo_fin = 0
+                return True, duracion_frotamiento_ojos
         return False, 0.0
 
 
-class EyeRubCounter:
+class ContadorFrotamientoOjos:
     def __init__(self):
-        self.eye_rub_count: int = 0
-        self.eye_rub_durations = []
+        self.conteo_frotamiento_ojos: int = 0
+        self.duraciones_frotamiento_ojos = []
 
-    def increment(self, duration: float, side: str):
-        self.eye_rub_count += 1
-        self.eye_rub_durations.append(f"{self.eye_rub_count} {side} eye rub: {duration} seconds")
+    def incrementar(self, duracion: float, lado: str):
+        self.conteo_frotamiento_ojos += 1
+        self.duraciones_frotamiento_ojos.append(
+            f"{self.conteo_frotamiento_ojos} frotamiento ojo {lado}: {duracion} segundos"
+        )
 
-    def reset(self):
-        self.eye_rub_count = 0
+    def reiniciar(self):
+        self.conteo_frotamiento_ojos = 0
 
-    def get_durations(self):
-        return self.eye_rub_durations
+    def obtener_duraciones(self):
+        return self.duraciones_frotamiento_ojos
 
 
-class ReportGenerator(ABC):
+class GeneradorReporte(ABC):
     @abstractmethod
-    def generate_report(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def generar_reporte(self, datos: Dict[str, Any]) -> Dict[str, Any]:
         raise NotImplemented
 
 
-class EyeRubReportGenerator(ReportGenerator):
-    def generate_report(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        eye_rub_count = data.get("eye_rub_count", 0)
-        eye_rub_durations = data.get("eye_rub_durations", [])
-        elapsed_time = data.get("elapsed_time", 0)
-        eye_rub_report = data.get("eye_rub_report", False)
+class GeneradorReporteFrotamientoOjos(GeneradorReporte):
+    def generar_reporte(self, datos: Dict[str, Any]) -> Dict[str, Any]:
+        conteo_frotamiento_ojos = datos.get("conteo_frotamiento_ojos", 0)
+        duraciones_frotamiento_ojos = datos.get("duraciones_frotamiento_ojos", [])
+        tiempo_transcurrido = datos.get("tiempo_transcurrido", 0)
+        reporte_frotamiento_ojos = datos.get("reporte_frotamiento_ojos", False)
 
         return {
-            'eye_rub_count': eye_rub_count,
-            'eye_rub_durations': eye_rub_durations,
-            'report_message': f'Counting yawns... {300 - elapsed_time} seconds remaining.',
-            'eye_rub_report': eye_rub_report
+            'conteo_frotamiento_ojos': conteo_frotamiento_ojos,
+            'duraciones_frotamiento_ojos': duraciones_frotamiento_ojos,
+            'mensaje_reporte': f'Contando frotamiento de ojos... {300 - tiempo_transcurrido} segundos restantes.',
+            'reporte_frotamiento_ojos': reporte_frotamiento_ojos
         }
 
 
-class EyeRubEstimator(DrowsinessProcessor):
+class EstimadorFrotamientoOjos(ProcesadorSomnolencia):
     def __init__(self):
-        self.eye_rub_detection_right = EyeRubDetection()
-        self.eye_rub_detection_left = EyeRubDetection()
-        self.eye_rub_counter_right = EyeRubCounter()
-        self.eye_rub_counter_left = EyeRubCounter()
-        self.eye_rub_report_generator = EyeRubReportGenerator()
-        self.start_report = time.time()
+        self.deteccion_frotamiento_ojos_derecho = DeteccionFrotamientoOjos()
+        self.deteccion_frotamiento_ojos_izquierdo = DeteccionFrotamientoOjos()
+        self.contador_frotamiento_ojos_derecho = ContadorFrotamientoOjos()
+        self.contador_frotamiento_ojos_izquierdo = ContadorFrotamientoOjos()
+        self.generador_reporte_frotamiento_ojos = GeneradorReporteFrotamientoOjos()
+        self.inicio_reporte = time.time()
 
-    def process(self, hands_points: dict):
-        current_time = time.time()
-        elapsed_time = round(current_time - self.start_report, 0)
+    def procesar(self, puntos_manos: dict):
+        tiempo_actual = time.time()
+        tiempo_transcurrido = round(tiempo_actual - self.inicio_reporte, 0)
 
-        eye_rub_right = self.eye_rub_detection_right.check_eye_rub(hands_points.get('hand_to_right_eye', {}))
-        eye_rub_left = self.eye_rub_detection_left.check_eye_rub(hands_points.get('hand_to_left_eye', {}))
+        frotamiento_ojos_derecho = self.deteccion_frotamiento_ojos_derecho.verificar_frotamiento_ojos(
+            puntos_manos.get('mano_a_ojo_derecho', {})
+        )
+        frotamiento_ojos_izquierdo = self.deteccion_frotamiento_ojos_izquierdo.verificar_frotamiento_ojos(
+            puntos_manos.get('mano_a_ojo_izquierdo', {})
+        )
 
-        is_eye_rub_right, duration_eye_rub_right = self.eye_rub_detection_right.detect(eye_rub_right)
-        is_eye_rub_left, duration_eye_rub_left = self.eye_rub_detection_left.detect(eye_rub_left)
+        es_frotamiento_ojos_derecho, duracion_frotamiento_ojos_derecho = (
+            self.deteccion_frotamiento_ojos_derecho.detectar(frotamiento_ojos_derecho)
+        )
+        es_frotamiento_ojos_izquierdo, duracion_frotamiento_ojos_izquierdo = (
+            self.deteccion_frotamiento_ojos_izquierdo.detectar(frotamiento_ojos_izquierdo)
+        )
 
-        if is_eye_rub_right:
-            self.eye_rub_counter_right.increment(duration_eye_rub_right, 'right')
-        if is_eye_rub_left:
-            self.eye_rub_counter_left.increment(duration_eye_rub_left, 'left')
+        if es_frotamiento_ojos_derecho:
+            self.contador_frotamiento_ojos_derecho.incrementar(duracion_frotamiento_ojos_derecho, 'derecho')
+        if es_frotamiento_ojos_izquierdo:
+            self.contador_frotamiento_ojos_izquierdo.incrementar(duracion_frotamiento_ojos_izquierdo, 'izquierdo')
 
-        if elapsed_time >= 300:
-            eye_rub_data = {
-                "eye_rub_count": self.eye_rub_counter_right.eye_rub_count + self.eye_rub_counter_left.eye_rub_count,
-                "eye_rub_durations": self.eye_rub_counter_right.get_durations() + self.eye_rub_counter_left.get_durations(),
-                "elapsed_time": elapsed_time,
-                "eye_rub_report": True
+        if tiempo_transcurrido >= 300:
+            datos_frotamiento_ojos = {
+                "conteo_frotamiento_ojos": (
+                    self.contador_frotamiento_ojos_derecho.conteo_frotamiento_ojos + 
+                    self.contador_frotamiento_ojos_izquierdo.conteo_frotamiento_ojos
+                ),
+                "duraciones_frotamiento_ojos": (
+                    self.contador_frotamiento_ojos_derecho.obtener_duraciones() + 
+                    self.contador_frotamiento_ojos_izquierdo.obtener_duraciones()
+                ),
+                "tiempo_transcurrido": tiempo_transcurrido,
+                "reporte_frotamiento_ojos": True
             }
-            self.eye_rub_counter_right.reset()
-            self.eye_rub_counter_left.reset()
-            self.start_report = current_time
-            return self.eye_rub_report_generator.generate_report(eye_rub_data)
+            self.contador_frotamiento_ojos_derecho.reiniciar()
+            self.contador_frotamiento_ojos_izquierdo.reiniciar()
+            self.inicio_reporte = tiempo_actual
+            return self.generador_reporte_frotamiento_ojos.generar_reporte(datos_frotamiento_ojos)
 
         return {
-            'report_message': f'Counting eye rubs... {300 - elapsed_time} seconds remaining.',
-            'eye_rub_report': False,
+            'mensaje_reporte': f'Contando frotamiento de ojos... {300 - tiempo_transcurrido} segundos restantes.',
+            'reporte_frotamiento_ojos': False,
         }

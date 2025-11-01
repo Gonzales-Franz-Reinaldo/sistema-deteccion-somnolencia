@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class HandsProcessor(ABC):
+class ProcesadorManos(ABC):
     @abstractmethod
-    def process(self, hand_points: dict, eyes_points: dict):
+    def procesar(self, puntos_mano: dict, puntos_ojos: dict):
         raise NotImplemented

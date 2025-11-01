@@ -2,35 +2,54 @@ import numpy as np
 from abc import ABC, abstractmethod
 
 
-class DistanceCalculator(ABC):
+class CalculadoraDistancia(ABC):
     @abstractmethod
-    def calculate_distance(self, point1, point2):
+    def calcular_distancia(self, punto1, punto2):
         pass
 
 
-class EuclideanDistanceCalculator(DistanceCalculator):
-    def calculate_distance(self, point1, point2):
-        point1 = point1[1]
-        point2 = point2[1]
-        return np.linalg.norm(point1 - point2)
+class CalculadoraDistanciaEuclidiana(CalculadoraDistancia):
+    def calcular_distancia(self, punto1, punto2):
+        punto1 = punto1[1]
+        punto2 = punto2[1]
+        return np.linalg.norm(punto1 - punto2)
 
 
-class EyesPointsProcessing:
-    def __init__(self, distance_calculator: DistanceCalculator):
-        self.distance_calculator = distance_calculator
-        self.eyes: dict = {}
+class ProcesamientoPuntosOjos:
+    def __init__(self, calculadora_distancia: CalculadoraDistancia):
+        self.calculadora_distancia = calculadora_distancia
+        self.ojos: dict = {}
 
-    def calculate_distances(self, eyes_points: dict):
-        right_upper_eyelid = self.distance_calculator.calculate_distance(eyes_points['distances'][0], eyes_points['distances'][1])
-        left_upper_eyelid = self.distance_calculator.calculate_distance(eyes_points['distances'][2], eyes_points['distances'][3])
-        right_lower_eyelid = self.distance_calculator.calculate_distance(eyes_points['distances'][4], eyes_points['distances'][5])
-        left_lower_eyelid = self.distance_calculator.calculate_distance(eyes_points['distances'][6], eyes_points['distances'][7])
-        return right_upper_eyelid, left_upper_eyelid, right_lower_eyelid, left_lower_eyelid
+    def calcular_distancias(self, puntos_ojos: dict):
+        parpado_superior_derecho = self.calculadora_distancia.calcular_distancia(
+            puntos_ojos['distancias'][0], puntos_ojos['distancias'][1]
+        )
+        parpado_superior_izquierdo = self.calculadora_distancia.calcular_distancia(
+            puntos_ojos['distancias'][2], puntos_ojos['distancias'][3]
+        )
+        parpado_inferior_derecho = self.calculadora_distancia.calcular_distancia(
+            puntos_ojos['distancias'][4], puntos_ojos['distancias'][5]
+        )
+        parpado_inferior_izquierdo = self.calculadora_distancia.calcular_distancia(
+            puntos_ojos['distancias'][6], puntos_ojos['distancias'][7]
+        )
+        return (
+            parpado_superior_derecho, 
+            parpado_superior_izquierdo, 
+            parpado_inferior_derecho, 
+            parpado_inferior_izquierdo
+        )
 
-    def main(self, eyes_points: dict):
-        (right_upper_eyelid_distance, left_upper_eyelid_distance, right_lower_eyelid_distance, left_lower_eyelid_distance) = self.calculate_distances(eyes_points)
-        self.eyes['right_upper_eyelid_distance'] = right_upper_eyelid_distance
-        self.eyes['left_upper_eyelid_distance'] = left_upper_eyelid_distance
-        self.eyes['right_lower_eyelid_distance'] = right_lower_eyelid_distance
-        self.eyes['left_lower_eyelid_distance'] = left_lower_eyelid_distance
-        return self.eyes
+    def principal(self, puntos_ojos: dict):
+        (
+            distancia_parpado_superior_derecho, 
+            distancia_parpado_superior_izquierdo, 
+            distancia_parpado_inferior_derecho, 
+            distancia_parpado_inferior_izquierdo
+        ) = self.calcular_distancias(puntos_ojos)
+        
+        self.ojos['distancia_parpado_superior_derecho'] = distancia_parpado_superior_derecho
+        self.ojos['distancia_parpado_superior_izquierdo'] = distancia_parpado_superior_izquierdo
+        self.ojos['distancia_parpado_inferior_derecho'] = distancia_parpado_inferior_derecho
+        self.ojos['distancia_parpado_inferior_izquierdo'] = distancia_parpado_inferior_izquierdo
+        return self.ojos

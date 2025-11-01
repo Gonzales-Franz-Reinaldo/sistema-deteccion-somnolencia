@@ -2,38 +2,44 @@ import numpy as np
 from abc import ABC, abstractmethod
 
 
-class DistanceCalculator(ABC):
+class CalculadoraDistancia(ABC):
     @abstractmethod
-    def calculate_distance(self, point1, point2):
+    def calcular_distancia(self, punto1, punto2):
         pass
 
 
-class EuclideanDistanceCalculator(DistanceCalculator):
-    def calculate_distance(self, point1, point2):
-        return np.linalg.norm(np.array(point1) - np.array(point2))
+class CalculadoraDistanciaEuclidiana(CalculadoraDistancia):
+    def calcular_distancia(self, punto1, punto2):
+        return np.linalg.norm(np.array(punto1) - np.array(punto2))
 
 
-class FingerEyeDistanceCalculator:
-    def __init__(self, distance_calculator: DistanceCalculator):
-        self.distance_calculator = distance_calculator
+class CalculadoraDistanciaDedoOjo:
+    def __init__(self, calculadora_distancia: CalculadoraDistancia):
+        self.calculadora_distancia = calculadora_distancia
 
-    def calculate_finger_eye_distances(self, finger_points: dict, eye_point: list) -> dict:
+    def calcular_distancias_dedo_ojo(self, puntos_dedos: dict, punto_ojo: list) -> dict:
         return {
-            'thumb': self.distance_calculator.calculate_distance(finger_points[0], eye_point),
-            'index_finger': self.distance_calculator.calculate_distance(finger_points[1], eye_point),
-            'middle_finger': self.distance_calculator.calculate_distance(finger_points[2], eye_point),
-            'ring_finger': self.distance_calculator.calculate_distance(finger_points[3], eye_point),
-            'little_finger': self.distance_calculator.calculate_distance(finger_points[4], eye_point),
+            'pulgar': self.calculadora_distancia.calcular_distancia(puntos_dedos[0], punto_ojo),
+            'dedo_indice': self.calculadora_distancia.calcular_distancia(puntos_dedos[1], punto_ojo),
+            'dedo_medio': self.calculadora_distancia.calcular_distancia(puntos_dedos[2], punto_ojo),
+            'dedo_anular': self.calculadora_distancia.calcular_distancia(puntos_dedos[3], punto_ojo),
+            'dedo_menique': self.calculadora_distancia.calcular_distancia(puntos_dedos[4], punto_ojo),
         }
 
 
-class FirstHandPointsProcessing:
-    def __init__(self, distance_calculator: DistanceCalculator):
-        self.distance_calculator = distance_calculator
-        self.finger_eye_calculator = FingerEyeDistanceCalculator(distance_calculator)
-        self.hands: dict = {}
+class ProcesamientoPuntosPrimeraMano:
+    def __init__(self, calculadora_distancia: CalculadoraDistancia):
+        self.calculadora_distancia = calculadora_distancia
+        self.calculadora_dedo_ojo = CalculadoraDistanciaDedoOjo(calculadora_distancia)
+        self.manos: dict = {}
 
-    def main(self, hand_points: dict, eyes_points: dict):
-        self.hands['hand_to_right_eye'] = self.finger_eye_calculator.calculate_finger_eye_distances(hand_points['distances'], eyes_points['distances'][8])
-        self.hands['hand_to_left_eye'] = self.finger_eye_calculator.calculate_finger_eye_distances(hand_points['distances'], eyes_points['distances'][9])
-        return self.hands
+    def principal(self, puntos_mano: dict, puntos_ojos: dict):
+        self.manos['mano_a_ojo_derecho'] = self.calculadora_dedo_ojo.calcular_distancias_dedo_ojo(
+            puntos_mano['distancias'], 
+            puntos_ojos['distancias'][8]
+        )
+        self.manos['mano_a_ojo_izquierdo'] = self.calculadora_dedo_ojo.calcular_distancias_dedo_ojo(
+            puntos_mano['distancias'], 
+            puntos_ojos['distancias'][9]
+        )
+        return self.manos

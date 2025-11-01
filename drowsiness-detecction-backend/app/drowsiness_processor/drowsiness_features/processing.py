@@ -1,42 +1,57 @@
 # Imports absolutos
-from app.drowsiness_processor.drowsiness_features.processor import DrowsinessProcessor
-from app.drowsiness_processor.drowsiness_features.eye_rub.processing import EyeRubEstimator
-from app.drowsiness_processor.drowsiness_features.flicker_and_microsleep.processing import FlickerEstimator
-from app.drowsiness_processor.drowsiness_features.pitch.processing import PitchEstimator
-from app.drowsiness_processor.drowsiness_features.yawn.processing import YawnEstimator
+from app.drowsiness_processor.drowsiness_features.processor import ProcesadorSomnolencia
+from app.drowsiness_processor.drowsiness_features.eye_rub.processing import EstimadorFrotamientoOjos
+from app.drowsiness_processor.drowsiness_features.flicker_and_microsleep.processing import EstimadorParpadeos
+from app.drowsiness_processor.drowsiness_features.pitch.processing import EstimadorInclinacion
+from app.drowsiness_processor.drowsiness_features.yawn.processing import EstimadorBostezo
 
 
-class FeaturesDrowsinessProcessing:
+class ProcesamientoCaracteristicasSomnolencia:
     def __init__(self):
-        self.features_drowsiness: dict[str, DrowsinessProcessor] = {
-            'eye_rub_first_hand': EyeRubEstimator(),
-            'eye_rub_second_hand': EyeRubEstimator(),
-            'flicker_and_micro_sleep': FlickerEstimator(),
-            'pitch': PitchEstimator(),
-            'yawn': YawnEstimator(),
+        self.caracteristicas_somnolencia: dict[str, ProcesadorSomnolencia] = {
+            'frotamiento_ojos_primera_mano': EstimadorFrotamientoOjos(),
+            'frotamiento_ojos_segunda_mano': EstimadorFrotamientoOjos(),
+            'parpadeo_y_microsueno': EstimadorParpadeos(),
+            'inclinacion': EstimadorInclinacion(),
+            'bostezo': EstimadorBostezo(),
         }
-        self.processed_feature: dict = {
-            'eye_rub_first_hand': None,
-            'eye_rub_second_hand': None,
-            'flicker_and_micro_sleep': None,
-            'pitch': None,
-            'yawn': None
+        self.caracteristica_procesada: dict = {
+            'frotamiento_ojos_primera_mano': None,
+            'frotamiento_ojos_segunda_mano': None,
+            'parpadeo_y_microsueno': None,
+            'inclinacion': None,
+            'bostezo': None
         }
 
-    def main(self, distances: dict):
-        self.processed_feature['eye_rub_first_hand'] = None
-        self.processed_feature['eye_rub_second_hand'] = None
-        if 'first_hand' in distances:
-            self.processed_feature['eye_rub_first_hand'] = (self.features_drowsiness['eye_rub_first_hand'].process(distances['first_hand']))
+    def principal(self, distancias: dict):
+        self.caracteristica_procesada['frotamiento_ojos_primera_mano'] = None
+        self.caracteristica_procesada['frotamiento_ojos_segunda_mano'] = None
+        
+        if 'primera_mano' in distancias:
+            self.caracteristica_procesada['frotamiento_ojos_primera_mano'] = (
+                self.caracteristicas_somnolencia['frotamiento_ojos_primera_mano'].procesar(distancias['primera_mano'])
+            )
         else:
-            self.processed_feature['eye_rub_first_hand'] = self.features_drowsiness['eye_rub_first_hand'].process({})
+            self.caracteristica_procesada['frotamiento_ojos_primera_mano'] = (
+                self.caracteristicas_somnolencia['frotamiento_ojos_primera_mano'].procesar({})
+            )
 
-        if 'second_hand' in distances:
-            self.processed_feature['eye_rub_second_hand'] = (self.features_drowsiness['eye_rub_second_hand'].process(distances['second_hand']))
+        if 'segunda_mano' in distancias:
+            self.caracteristica_procesada['frotamiento_ojos_segunda_mano'] = (
+                self.caracteristicas_somnolencia['frotamiento_ojos_segunda_mano'].procesar(distancias['segunda_mano'])
+            )
         else:
-            self.processed_feature['eye_rub_second_hand'] = self.features_drowsiness['eye_rub_second_hand'].process({})
+            self.caracteristica_procesada['frotamiento_ojos_segunda_mano'] = (
+                self.caracteristicas_somnolencia['frotamiento_ojos_segunda_mano'].procesar({})
+            )
 
-        self.processed_feature['flicker_and_micro_sleep'] = (self.features_drowsiness['flicker_and_micro_sleep'].process(distances.get('eyes', {})))
-        self.processed_feature['pitch'] = self.features_drowsiness['pitch'].process(distances.get('head', {}))
-        self.processed_feature['yawn'] = self.features_drowsiness['yawn'].process(distances.get('mouth', {}))
-        return self.processed_feature
+        self.caracteristica_procesada['parpadeo_y_microsueno'] = (
+            self.caracteristicas_somnolencia['parpadeo_y_microsueno'].procesar(distancias.get('ojos', {}))
+        )
+        self.caracteristica_procesada['inclinacion'] = (
+            self.caracteristicas_somnolencia['inclinacion'].procesar(distancias.get('cabeza', {}))
+        )
+        self.caracteristica_procesada['bostezo'] = (
+            self.caracteristicas_somnolencia['bostezo'].procesar(distancias.get('boca', {}))
+        )
+        return self.caracteristica_procesada
