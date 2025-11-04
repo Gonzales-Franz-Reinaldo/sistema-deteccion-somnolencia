@@ -84,17 +84,7 @@ export const ChoferesTable = ({
     );
   }
 
-  /**
-   * Obtiene el nombre de la empresa o "Individual"
-   */
-  const getEmpresaDisplay = (chofer: Chofer): string => {
-    if (chofer.tipo_chofer === 'individual') {
-      return 'Individual';
-    }
-    // TODO: Obtener nombre real de empresa desde relación
-    // Por ahora retornamos un placeholder
-    return chofer.id_empresa ? `Empresa #${chofer.id_empresa}` : 'Sin empresa';
-  };
+
 
   /**
    * Maneja el click en el botón editar
@@ -114,25 +104,28 @@ export const ChoferesTable = ({
           {/* Header de la tabla */}
           <thead className="bg-blue-600">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Nombre Completo
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Empresa
+              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                DNI/CI
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Teléfono
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Empresa
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                 Estado
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Última Sesión
               </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+              <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
@@ -145,21 +138,16 @@ export const ChoferesTable = ({
                 key={chofer.id_usuario} 
                 className="hover:bg-gray-50 transition-colors"
               >
-                {/* ID */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                  {chofer.id_usuario.toString().padStart(3, '0')}
-                </td>
-
-                {/* Nombre Completo */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                {/* Nombre Completo con Avatar */}
+                <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold">
+                    <div className="flex-shrink-0 h-9 w-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
+                      <span className="text-white font-bold text-sm">
                         {chofer.nombre_completo.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
+                    <div className="ml-3">
+                      <div className="text-sm font-semibold text-gray-900">
                         {chofer.nombre_completo}
                       </div>
                       <div className="text-xs text-gray-500">
@@ -169,29 +157,51 @@ export const ChoferesTable = ({
                   </div>
                 </td>
 
-                {/* Empresa */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    chofer.tipo_chofer === 'individual' 
-                      ? 'bg-purple-100 text-purple-800'
-                      : 'bg-blue-100 text-blue-800'
-                  }`}>
-                    {getEmpresaDisplay(chofer)}
-                  </span>
+                {/* DNI/CI */}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-400">🪪</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {chofer.dni_ci || <span className="text-gray-400 italic">N/A</span>}
+                    </span>
+                  </div>
                 </td>
 
                 {/* Email */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {chofer.email}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-400">✉️</span>
+                    <span className="text-sm text-gray-600">
+                      {chofer.email}
+                    </span>
+                  </div>
+                </td>
+
+                {/* Teléfono */}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-400">📱</span>
+                    <span className="text-sm text-gray-600">
+                      {chofer.telefono || <span className="text-gray-400 italic">N/A</span>}
+                    </span>
+                  </div>
+                </td>
+
+                {/* Empresa */}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                    <span>🏢</span>
+                    <span>{chofer.nombre_empresa || 'Sin empresa'}</span>
+                  </span>
                 </td>
 
                 {/* Estado (Activo/Inactivo) */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 whitespace-nowrap text-center">
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
                       chofer.activo
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-green-100 text-green-700 border border-green-300'
+                        : 'bg-red-100 text-red-700 border border-red-300'
                     }`}
                   >
                     {chofer.activo ? '✓ ACTIVO' : '✗ INACTIVO'}
@@ -199,19 +209,24 @@ export const ChoferesTable = ({
                 </td>
 
                 {/* Última Sesión */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(chofer.ultima_sesion)}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-400">🕒</span>
+                    <span className="text-sm text-gray-600">
+                      {formatDate(chofer.ultima_sesion)}
+                    </span>
+                  </div>
                 </td>
 
                 {/* Acciones */}
-                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                <td className="px-4 py-3 whitespace-nowrap text-center">
                   <button
                     onClick={() => handleEdit(chofer)}
-                    className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-md hover:bg-yellow-200 transition-colors"
+                    className="inline-flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition-all duration-200 border border-yellow-200 font-medium text-xs shadow-sm hover:shadow"
                     title="Editar chofer"
                   >
                     <svg
-                      className="w-4 h-4"
+                      className="w-3.5 h-3.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

@@ -44,6 +44,14 @@ export const AdminDashboardPage = () => {
           </Card>
         </Link>
 
+        <Link to="/admin/viajes" className="group">
+          <Card className="hover:shadow-lg transition-shadow border-0 h-48 flex flex-col items-center justify-center text-center p-6 group-hover:bg-indigo-50">
+            <div className="text-4xl mb-4 text-indigo-600 group-hover:text-indigo-700">🚗</div>
+            <h3 className="font-semibold text-gray-900 mb-2">Asignación de Viajes</h3>
+            <p className="text-sm text-gray-600">Gestionar rutas y asignaciones</p>
+          </Card>
+        </Link>
+
         <Link to="/admin/monitoreo" className="group">
           <Card className="hover:shadow-lg transition-shadow border-0 h-48 flex flex-col items-center justify-center text-center p-6 group-hover:bg-green-50">
             <div className="text-4xl mb-4 text-green-600 group-hover:text-green-700">📹</div>

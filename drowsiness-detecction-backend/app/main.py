@@ -4,7 +4,7 @@ from fastapi.openapi.utils import get_openapi
 
 from app.core.config import settings
 from app.core.middleware import setup_middlewares
-from app.api.v1.routers import auth, empresas, users
+from app.api.v1.routers import auth, empresas, users, viajes
 from app.api.v1.routers import monitoring  
 
 # Crear aplicación FastAPI
@@ -142,6 +142,12 @@ app.include_router(
     empresas.router,
     prefix=f"{settings.API_V1_PREFIX}/empresas",
     tags=["🏢 Gestión de Empresas (Solo Admin)"]
+)
+
+app.include_router(
+    viajes.router,
+    prefix=f"{settings.API_V1_PREFIX}/viajes",
+    tags=["Gestión de Viajes (Solo Admin)"]
 )
 
 # ←  ROUTER DE MONITOREO

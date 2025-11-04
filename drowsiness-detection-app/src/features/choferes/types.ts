@@ -19,9 +19,9 @@ export interface Chofer {
   fecha_nacimiento: string | null;
   direccion: string | null;
   ciudad: string | null;
-  codigo_postal: string | null;
   tipo_chofer: 'individual' | 'empresa' | null;
   id_empresa: number | null;
+  nombre_empresa: string | null; // Nombre de la empresa (JOIN)
   numero_licencia: string | null;
   categoria_licencia: string | null;
   activo: boolean;
@@ -79,7 +79,6 @@ export interface ChoferCreateData {
   telefono: string;
   direccion?: string;
   ciudad?: string;
-  codigo_postal?: string;
   
   // Laboral
   tipo_chofer: 'individual' | 'empresa';
@@ -111,7 +110,6 @@ export interface ChoferUpdateData {
   telefono?: string;
   direccion?: string;
   ciudad?: string;
-  codigo_postal?: string;
   
   // Laboral
   tipo_chofer?: 'individual' | 'empresa';
@@ -139,10 +137,8 @@ export interface ChoferFormData {
   telefono: string;
   direccion: string;
   ciudad: string;
-  codigo_postal: string;
   
-  // Laboral
-  tipo_chofer: 'individual' | 'empresa' | '';
+  // Laboral (tipo_chofer removido del form - hardcoded como 'empresa')
   id_empresa: string; // String en el form, se convierte a number
   numero_licencia: string;
   categoria_licencia: 'a' | 'b' | 'c' | 'd' | '';
@@ -154,6 +150,7 @@ export interface ChoferFormData {
   
   // Configuración
   activo: boolean;
+  enviar_email: boolean; // Solo para creación, enviar credenciales por email
 }
 
 /**

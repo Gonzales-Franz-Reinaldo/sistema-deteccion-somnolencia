@@ -258,6 +258,41 @@ CREATE TABLE reportes (
 );
 
 -- ============================================
+-- 9. TABLA: viajes
+-- Asignación de viajes/rutas a choferes
+-- ============================================
+CREATE TABLE viajes (
+    id_viaje SERIAL PRIMARY KEY,
+    
+    -- Relaciones (solo choferes pueden ser asignados)
+    id_chofer INTEGER NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    id_empresa INTEGER NOT NULL REFERENCES empresas(id_empresa) ON DELETE CASCADE,
+    
+    -- Información de la ruta
+    origen VARCHAR(100) NOT NULL,
+    destino VARCHAR(100) NOT NULL,
+    duracion_estimada VARCHAR(50) NOT NULL,
+    distancia_km DECIMAL(8, 2),
+    
+    -- Estado del viaje
+    estado VARCHAR(20) CHECK (estado IN ('pendiente', 'en_curso', 'completada', 'cancelada')) DEFAULT 'pendiente',
+    
+    -- Fechas
+    fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_inicio TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    
+    -- Notas adicionales
+    observaciones TEXT,
+    
+    -- Validaciones
+    CONSTRAINT chk_viaje_origen_destino CHECK (origen != destino),
+    CONSTRAINT chk_viaje_chofer_rol CHECK (
+        EXISTS (SELECT 1 FROM usuarios WHERE id_usuario = id_chofer AND rol = 'chofer')
+    )
+);
+
+-- ============================================
 -- ÍNDICES PARA OPTIMIZACIÓN
 -- ============================================
 
@@ -294,6 +329,14 @@ CREATE INDEX idx_reportes_tipo ON reportes(tipo_reporte);
 CREATE INDEX idx_reportes_fecha ON reportes(fecha_generacion DESC);
 CREATE INDEX idx_reportes_generador ON reportes(id_usuario_generador);
 
+-- Índices en viajes
+CREATE INDEX idx_viajes_chofer ON viajes(id_chofer);
+CREATE INDEX idx_viajes_empresa ON viajes(id_empresa);
+CREATE INDEX idx_viajes_estado ON viajes(estado);
+CREATE INDEX idx_viajes_fecha_asignacion ON viajes(fecha_asignacion DESC);
+CREATE INDEX idx_viajes_origen ON viajes(origen);
+CREATE INDEX idx_viajes_destino ON viajes(destino);
+
 -- ============================================
 -- COMENTARIOS EN TABLAS
 -- ============================================
@@ -306,6 +349,7 @@ COMMENT ON TABLE metricas_sesion IS 'Métricas faciales y de comportamiento capt
 COMMENT ON TABLE ubicaciones_gps IS 'Tracking GPS durante las sesiones de viaje';
 COMMENT ON TABLE configuracion_usuario IS 'Configuraciones personalizadas por chofer';
 COMMENT ON TABLE reportes IS 'Metadata de reportes PDF/CSV generados';
+COMMENT ON TABLE viajes IS 'Asignación de viajes/rutas a choferes con información de origen y destino';
 
 -- ============================================
 -- DATOS INICIALES
