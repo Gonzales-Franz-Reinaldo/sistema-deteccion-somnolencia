@@ -33,10 +33,8 @@ const initialFormData: ChoferFormData = {
   telefono: '',
   direccion: '',
   ciudad: '',
-  codigo_postal: '',
   
-  // Laboral
-  tipo_chofer: '',
+  // Laboral (tipo_chofer removido - se hardcodea como 'empresa')
   id_empresa: '',
   numero_licencia: '',
   categoria_licencia: '',
@@ -48,6 +46,7 @@ const initialFormData: ChoferFormData = {
   
   // Configuración
   activo: true,
+  enviar_email: false, // Solo para creación
 };
 
 /**
@@ -106,8 +105,6 @@ export const useChoferForm = ({ choferId }: UseChoferFormProps = {}) => {
         telefono: data.telefono || '',
         direccion: data.direccion || '',
         ciudad: data.ciudad || '',
-        codigo_postal: data.codigo_postal || '',
-        tipo_chofer: data.tipo_chofer || '',
         id_empresa: data.id_empresa ? data.id_empresa.toString() : '',
         numero_licencia: data.numero_licencia || '',
         categoria_licencia: categoriaLetra as any,
@@ -115,6 +112,7 @@ export const useChoferForm = ({ choferId }: UseChoferFormProps = {}) => {
         password: '', // Vacío en modo edición
         password_confirm: '', // Vacío en modo edición
         activo: data.activo,
+        enviar_email: false, // No aplica en modo edición
       });
       
     } catch (error: any) {
@@ -195,12 +193,8 @@ export const useChoferForm = ({ choferId }: UseChoferFormProps = {}) => {
       newErrors.telefono = 'Teléfono inválido';
     }
 
-    // Validar laboral
-    if (!formData.tipo_chofer) {
-      newErrors.tipo_chofer = 'Seleccione tipo de chofer';
-    }
-
-    if (formData.tipo_chofer === 'empresa' && !formData.id_empresa) {
+    // Validar laboral (empresa SIEMPRE requerida ahora - tipo_chofer hardcoded)
+    if (!formData.id_empresa) {
       newErrors.id_empresa = 'Seleccione una empresa';
     }
 
@@ -285,11 +279,10 @@ export const useChoferForm = ({ choferId }: UseChoferFormProps = {}) => {
       telefono: formData.telefono.trim(),
       direccion: formData.direccion.trim() || undefined,
       ciudad: formData.ciudad.trim() || undefined,
-      codigo_postal: formData.codigo_postal.trim() || undefined,
       
-      // Laboral
-      tipo_chofer: formData.tipo_chofer as 'individual' | 'empresa',
-      id_empresa: formData.tipo_chofer === 'empresa' && formData.id_empresa 
+      // Laboral (tipo_chofer hardcoded como 'empresa')
+      tipo_chofer: 'empresa',
+      id_empresa: formData.id_empresa 
         ? parseInt(formData.id_empresa) 
         : undefined,
       numero_licencia: formData.numero_licencia.trim(),
@@ -319,11 +312,10 @@ export const useChoferForm = ({ choferId }: UseChoferFormProps = {}) => {
       telefono: formData.telefono.trim(),
       direccion: formData.direccion.trim() || undefined,
       ciudad: formData.ciudad.trim() || undefined,
-      codigo_postal: formData.codigo_postal.trim() || undefined,
       
-      // Laboral
-      tipo_chofer: formData.tipo_chofer as 'individual' | 'empresa',
-      id_empresa: formData.tipo_chofer === 'empresa' && formData.id_empresa 
+      // Laboral (tipo_chofer hardcoded como 'empresa')
+      tipo_chofer: 'empresa',
+      id_empresa: formData.id_empresa 
         ? parseInt(formData.id_empresa) 
         : undefined,
       numero_licencia: formData.numero_licencia.trim(),

@@ -15,6 +15,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const menuItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
     { path: '/admin/choferes', label: 'Gestión de Choferes', icon: '👥' },
+    { path: '/admin/viajes', label: 'Gestión de Viajes', icon: '🚗' },
     // { path: '/admin/empresas', label: 'Gestión de Empresas', icon: '🏢' },
     { path: '/admin/reportes', label: 'Reportes', icon: '📈' },
     // { path: '/admin/configuracion', label: 'Configuración', icon: '⚙️' },

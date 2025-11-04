@@ -76,7 +76,6 @@ class CRUDUser(CRUDBase[Usuario, UserCreate, UserUpdate]):
             fecha_nacimiento=obj_in.fecha_nacimiento,
             direccion=obj_in.direccion,
             ciudad=obj_in.ciudad,
-            codigo_postal=obj_in.codigo_postal,
             tipo_chofer=obj_in.tipo_chofer,
             id_empresa=obj_in.id_empresa,
             numero_licencia=obj_in.numero_licencia,

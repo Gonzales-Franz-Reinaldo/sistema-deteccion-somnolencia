@@ -12,6 +12,7 @@ from app.schemas.user import (
 )
 from app.crud.user import user as user_crud
 from app.models.user import Usuario
+from app.models.empresa import Empresa
 
 router = APIRouter()
 
@@ -86,6 +87,9 @@ def create_user(
             detail="Solo se pueden registrar usuarios con rol 'chofer'"
         )
     
+    # HARDCODEAR tipo_chofer como "empresa" (todos los choferes son de empresa)
+    user_in.tipo_chofer = "empresa"
+    
     # Verificar duplicados
     if user_crud.get_by_usuario(db, usuario=user_in.usuario):
         raise HTTPException(
@@ -105,22 +109,40 @@ def create_user(
             detail="DNI/CI ya registrado"
         )
     
-    # Validar que la empresa existe si es tipo empresa
-    if user_in.tipo_chofer == "empresa":
-        if not user_in.id_empresa:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Chofer de empresa debe tener id_empresa"
-            )
-        
-        from app.crud.empresa import empresa as empresa_crud
-        if not empresa_crud.get(db, id=user_in.id_empresa):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="La empresa especificada no existe"
-            )
+    # Validar que la empresa existe (ahora SIEMPRE requerida)
+    if not user_in.id_empresa:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El id_empresa es requerido"
+        )
     
+    from app.crud.empresa import empresa as empresa_crud
+    if not empresa_crud.get(db, id=user_in.id_empresa):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La empresa especificada no existe"
+        )
+    
+    # Guardar password antes de hashear (para email si es necesario)
+    password_temporal = user_in.password
+    enviar_email = user_in.enviar_email
+    
+    # Crear usuario
     user = user_crud.create(db, obj_in=user_in)
+    
+    # TODO: Implementar envío de email (funcionalidad futura)
+    # if enviar_email:
+    #     from app.core.email import send_credentials_email
+    #     try:
+    #         send_credentials_email(
+    #             email=user.email,
+    #             usuario=user.usuario,
+    #             password_temporal=password_temporal,
+    #             nombre=user.nombre_completo
+    #         )
+    #     except Exception as e:
+    #         print(f"⚠️ Error enviando email a {user.email}: {e}")
+    
     return user
 
 
@@ -140,8 +162,14 @@ def list_users(
     current_user: Usuario = Depends(get_current_admin_user)
 ):
     
-    # Solo mostrar choferes (no admins)
-    query = db.query(user_crud.model).filter(user_crud.model.rol == "chofer")
+    # Query con LEFT JOIN para obtener nombre de empresa
+    query = db.query(
+        user_crud.model,
+        Empresa.nombre_empresa
+    ).outerjoin(
+        Empresa,
+        user_crud.model.id_empresa == Empresa.id_empresa
+    ).filter(user_crud.model.rol == "chofer")
     
     # Aplicar filtros
     if activo is not None:
@@ -153,9 +181,25 @@ def list_users(
     if id_empresa:
         query = query.filter(user_crud.model.id_empresa == id_empresa)
     
-    # Obtener resultados
-    total = query.count()
-    users = query.offset(skip).limit(limit).all()
+    # Obtener total (contar solo usuarios, no el JOIN)
+    total_query = db.query(user_crud.model).filter(user_crud.model.rol == "chofer")
+    if activo is not None:
+        total_query = total_query.filter(user_crud.model.activo == activo)
+    if tipo_chofer:
+        total_query = total_query.filter(user_crud.model.tipo_chofer == tipo_chofer)
+    if id_empresa:
+        total_query = total_query.filter(user_crud.model.id_empresa == id_empresa)
+    total = total_query.count()
+    
+    # Obtener resultados con paginación
+    results = query.offset(skip).limit(limit).all()
+    
+    # Transformar resultados para incluir nombre_empresa
+    users = []
+    for user, nombre_empresa in results:
+        user_dict = UserResponse.from_orm(user).dict()
+        user_dict['nombre_empresa'] = nombre_empresa
+        users.append(user_dict)
     
     return {
         "total": total,

@@ -238,20 +238,6 @@ export const ChoferForm: React.FC<ChoferFormProps> = ({ choferId }) => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 />
               </div>
-
-              {/* Código Postal */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código Postal
-                </label>
-                <input
-                  type="text"
-                  value={formData.codigo_postal}
-                  onChange={(e) => handleChange('codigo_postal', e.target.value)}
-                  placeholder="Ej: 00000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                />
-              </div>
             </div>
           </div>
         </div>
@@ -266,58 +252,30 @@ export const ChoferForm: React.FC<ChoferFormProps> = ({ choferId }) => {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Tipo de Chofer */}
+              {/* Empresa (SIEMPRE visible - todos los choferes son de empresa) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo de Chofer *
+                  Empresa *
                 </label>
                 <select
-                  value={formData.tipo_chofer}
-                  onChange={(e) => {
-                    handleChange('tipo_chofer', e.target.value);
-                    if (e.target.value === 'individual') {
-                      handleChange('id_empresa', '');
-                    }
-                  }}
+                  value={formData.id_empresa}
+                  onChange={(e) => handleChange('id_empresa', e.target.value)}
+                  disabled={loadingEmpresas}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    errors.tipo_chofer ? 'border-red-500' : 'border-gray-300'
+                    errors.id_empresa ? 'border-red-500' : 'border-gray-300'
                   }`}
                 >
-                  <option value="">Seleccionar...</option>
-                  <option value="individual">Individual</option>
-                  <option value="empresa">Empresa</option>
+                  <option value="">Seleccionar empresa...</option>
+                  {empresas.map((empresa) => (
+                    <option key={empresa.id_empresa} value={empresa.id_empresa}>
+                      {empresa.nombre_empresa}
+                    </option>
+                  ))}
                 </select>
-                {errors.tipo_chofer && (
-                  <p className="text-red-500 text-xs mt-1">{errors.tipo_chofer}</p>
+                {errors.id_empresa && (
+                  <p className="text-red-500 text-xs mt-1">{errors.id_empresa}</p>
                 )}
               </div>
-
-              {/* Empresa (solo si tipo_chofer === 'empresa') */}
-              {formData.tipo_chofer === 'empresa' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Empresa *
-                  </label>
-                  <select
-                    value={formData.id_empresa}
-                    onChange={(e) => handleChange('id_empresa', e.target.value)}
-                    disabled={loadingEmpresas}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      errors.id_empresa ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="">Seleccionar empresa...</option>
-                    {empresas.map((empresa) => (
-                      <option key={empresa.id_empresa} value={empresa.id_empresa}>
-                        {empresa.nombre_empresa}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.id_empresa && (
-                    <p className="text-red-500 text-xs mt-1">{errors.id_empresa}</p>
-                  )}
-                </div>
-              )}
 
               {/* Número de Licencia */}
               <div>
@@ -498,6 +456,21 @@ export const ChoferForm: React.FC<ChoferFormProps> = ({ choferId }) => {
             </h3>
 
             <div className="space-y-3">
+              {/* Enviar credenciales por email (solo en modo creación) */}
+              {!isEditMode && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.enviar_email}
+                    onChange={(e) => handleChange('enviar_email', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    Enviar credenciales por email al chofer
+                  </span>
+                </label>
+              )}
+
               {/* Activar cuenta */}
               <label className="flex items-center gap-2 cursor-pointer">
                 <input

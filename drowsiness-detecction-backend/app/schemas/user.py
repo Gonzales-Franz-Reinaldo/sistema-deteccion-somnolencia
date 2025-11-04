@@ -63,11 +63,13 @@ class UserCreate(UserBase):
     fecha_nacimiento: Optional[date] = None
     direccion: Optional[str] = None
     ciudad: Optional[str] = None
-    codigo_postal: Optional[str] = None
     tipo_chofer: Optional[TipoChoferEnum] = None
     id_empresa: Optional[int] = None
     numero_licencia: Optional[str] = None
     categoria_licencia: Optional[str] = None
+    
+    # Campo para envío de email (no se guarda en BD)
+    enviar_email: Optional[bool] = False
     
     @validator('id_empresa')
     def validate_empresa_for_chofer(cls, v, values):
@@ -106,7 +108,6 @@ class UserUpdate(BaseModel):
     fecha_nacimiento: Optional[date] = None
     direccion: Optional[str] = None
     ciudad: Optional[str] = None
-    codigo_postal: Optional[str] = None
     tipo_chofer: Optional[TipoChoferEnum] = None
     id_empresa: Optional[int] = None
     numero_licencia: Optional[str] = None
@@ -152,9 +153,9 @@ class UserResponse(UserBase):
     fecha_nacimiento: Optional[date] = None
     direccion: Optional[str] = None
     ciudad: Optional[str] = None
-    codigo_postal: Optional[str] = None
     tipo_chofer: Optional[TipoChoferEnum] = None
     id_empresa: Optional[int] = None
+    nombre_empresa: Optional[str] = None  # Nombre de la empresa (JOIN)
     numero_licencia: Optional[str] = None
     categoria_licencia: Optional[str] = None
     activo: bool
