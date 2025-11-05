@@ -45,6 +45,15 @@ class Settings(BaseSettings):
     # Sesión
     SESSION_DURATION_MINUTES: int = 15
     
+    # Configuración de Email SMTP
+    EMAIL_ENABLED: bool = True
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""  # Se configurará en .env
+    SMTP_PASSWORD: str = ""  # App Password de Gmail
+    EMAIL_FROM_NAME: str = "Sistema Detección Somnolencia"
+    EMAIL_FROM_ADDRESS: str = ""  # Se configurará en .env
+    
     # Configuración de la aplicación
     DEBUG: bool = True
     ENVIRONMENT: str = "development"

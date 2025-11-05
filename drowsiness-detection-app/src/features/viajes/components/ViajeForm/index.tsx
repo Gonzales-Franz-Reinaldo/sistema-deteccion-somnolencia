@@ -405,10 +405,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
                     Enviar viaje por email al chofer
                   </span>
                   <p className="text-xs text-gray-500 mt-1">
-                    Se enviará un correo con los detalles del viaje asignado
-                  </p>
-                  <p className="text-xs text-yellow-600 mt-1">
-                    ⚠️ Funcionalidad pendiente de implementación
+                    Se enviará un correo con los detalles completos del viaje (origen, destino, fecha, hora, duración, etc.)
                   </p>
                 </label>
               </div>

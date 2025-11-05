@@ -191,6 +191,60 @@ def health_check():
     }
 
 
+@app.get("/test-email-config", tags=["ℹ️ Info"])
+def test_email_config():
+    """
+    **TEST - Verificar Configuración SMTP**
+    
+    Endpoint temporal para verificar que las variables SMTP se cargaron correctamente.
+    ⚠️ ELIMINAR DESPUÉS DE VERIFICAR
+    """
+    return {
+        "email_enabled": settings.EMAIL_ENABLED,
+        "smtp_host": settings.SMTP_HOST,
+        "smtp_port": settings.SMTP_PORT,
+        "smtp_user_configured": bool(settings.SMTP_USER),
+        "smtp_user_length": len(settings.SMTP_USER) if settings.SMTP_USER else 0,
+        "smtp_password_configured": bool(settings.SMTP_PASSWORD),
+        "smtp_password_length": len(settings.SMTP_PASSWORD) if settings.SMTP_PASSWORD else 0,
+        "email_from_address": settings.EMAIL_FROM_ADDRESS,
+        "smtp_user_preview": settings.SMTP_USER[:10] + "..." if settings.SMTP_USER and len(settings.SMTP_USER) > 10 else settings.SMTP_USER
+    }
+
+
+@app.get("/test-send-email", tags=["ℹ️ Info"])
+def test_send_email(email: str = "cris.yosoy12@gmail.com"):
+    """
+    **TEST - Enviar Email de Prueba**
+    
+    Endpoint temporal para probar el envío de email.
+    ⚠️ ELIMINAR DESPUÉS DE VERIFICAR
+    
+    Uso: /test-send-email?email=tu-email@gmail.com
+    """
+    from app.services.email import email_service
+    
+    try:
+        result = email_service.enviar_credenciales_chofer(
+            email=email,
+            nombre_completo="Usuario de Prueba",
+            usuario="usuario_test",
+            contrasena="password_test_123"
+        )
+        
+        return {
+            "success": result,
+            "message": "Email enviado correctamente" if result else "Error al enviar email",
+            "email_sent_to": email
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Error: {str(e)}",
+            "error_type": type(e).__name__
+        }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
