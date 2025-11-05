@@ -13,6 +13,11 @@ from app.schemas.user import (
 from app.crud.user import user as user_crud
 from app.models.user import Usuario
 from app.models.empresa import Empresa
+from app.services.email import email_service
+import logging
+
+# Configurar logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -130,18 +135,26 @@ def create_user(
     # Crear usuario
     user = user_crud.create(db, obj_in=user_in)
     
-    # TODO: Implementar envío de email (funcionalidad futura)
-    # if enviar_email:
-    #     from app.core.email import send_credentials_email
-    #     try:
-    #         send_credentials_email(
-    #             email=user.email,
-    #             usuario=user.usuario,
-    #             password_temporal=password_temporal,
-    #             nombre=user.nombre_completo
-    #         )
-    #     except Exception as e:
-    #         print(f"⚠️ Error enviando email a {user.email}: {e}")
+    # Enviar email con credenciales si el checkbox está marcado
+    if enviar_email:
+        # Validar que el usuario tenga un email válido
+        if not user.email or not user.email.strip():
+            logger.warning(f"⚠️ No se puede enviar email: el chofer {user.nombre_completo} no tiene un email registrado")
+        else:
+            try:
+                email_enviado = email_service.enviar_credenciales_chofer(
+                    email=user.email,
+                    nombre_completo=user.nombre_completo,
+                    usuario=user.usuario,
+                    contrasena=password_temporal
+                )
+                if email_enviado:
+                    logger.info(f"✉️ Credenciales enviadas por email a {user.email}")
+                else:
+                    logger.warning(f"⚠️ No se pudo enviar email a {user.email}")
+            except Exception as e:
+                # No fallar la creación del usuario si falla el email
+                logger.error(f"⚠️ Error enviando credenciales a {user.email}: {str(e)}")
     
     return user
 

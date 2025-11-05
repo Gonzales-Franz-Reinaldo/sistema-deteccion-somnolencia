@@ -18,7 +18,12 @@ from app.crud.viaje import viaje as viaje_crud
 from app.crud.user import user as user_crud
 from app.crud.empresa import empresa as empresa_crud
 from app.models.user import Usuario
+from app.services.email import email_service
 from datetime import date, time as time_type
+import logging
+
+# Configurar logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -216,20 +221,36 @@ def create_viaje(
             detail=str(e)
         )
     
-    # TODO: Implementar envío de email (funcionalidad futura)
-    # if enviar_email:
-    #     from app.core.email import send_viaje_email
-    #     try:
-    #         send_viaje_email(
-    #             email=chofer.email,
-    #             nombre_chofer=chofer.nombre_completo,
-    #             origen=viaje.origen,
-    #             destino=viaje.destino,
-    #             duracion=viaje.duracion_estimada,
-    #             fecha_asignacion=viaje.fecha_asignacion
-    #         )
-    #     except Exception as e:
-    #         print(f"⚠️ Error enviando email a {chofer.email}: {e}")
+    # Enviar email con detalles del viaje si el checkbox está marcado
+    if enviar_email:
+        # Validar que el chofer tenga un email válido
+        if not chofer.email or not chofer.email.strip():
+            logger.warning(f"⚠️ No se puede enviar email: el chofer {chofer.nombre_completo} no tiene un email registrado")
+        else:
+            try:
+                # Formatear fecha y hora para el email
+                fecha_formateada = viaje.fecha_viaje_programada.strftime('%d/%m/%Y')
+                hora_formateada = viaje.hora_viaje_programada.strftime('%H:%M')
+                
+                email_enviado = email_service.enviar_asignacion_viaje(
+                    email=chofer.email,
+                    nombre_chofer=chofer.nombre_completo,
+                    origen=viaje.origen,
+                    destino=viaje.destino,
+                    fecha_programada=fecha_formateada,
+                    hora_programada=hora_formateada,
+                    duracion_estimada=viaje.duracion_estimada,
+                    distancia_km=viaje.distancia_km,
+                    observaciones=viaje.observaciones,
+                    nombre_empresa=empresa.nombre_empresa if empresa else None
+                )
+                if email_enviado:
+                    logger.info(f"✉️ Detalles del viaje enviados a {chofer.email}")
+                else:
+                    logger.warning(f"⚠️ No se pudo enviar email a {chofer.email}")
+            except Exception as e:
+                # No fallar la creación del viaje si falla el email
+                logger.error(f"⚠️ Error enviando viaje a {chofer.email}: {str(e)}")
     
     # Construir respuesta con datos relacionados
     response = ViajeResponse(
