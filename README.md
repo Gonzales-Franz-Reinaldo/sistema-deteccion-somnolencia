@@ -95,15 +95,3 @@ docker ps -a
 ```
 
 ## Contacto
-¡Gracias por usar el Drowsiness Detection System! Si tienes alguna duda o sugerencia, no dudes en abrir un issue o contactarme.
-
-Si tiene preguntas o consultas relacionadas con este proyecto, no dude en contactarnos en nuestro canal de Youtube [Aprende e Ingenia](https://www.youtube.com/@AprendeIngenia/videos). Le responderemos tan pronto como nos sea posible.
-Gracias por visitar nuestro repositorio y esperamos que disfrute trabajando con nuestro codigo. :smile:
-
-## Recuerda que puedes contribuir a que siga desarrollando:
-Simplemente suscribiendote a mi canal de YouTube:
-- [Canal YouTube](https://www.youtube.com/channel/UCzwHEOCbsZLjfELperJ6VeQ/videos)
-
-### Siguiendome en mis redes sociales: 
-- [Instagram](https://www.instagram.com/santiagsanchezr/)
-- [Twitter](https://twitter.com/SantiagSanchezR)
