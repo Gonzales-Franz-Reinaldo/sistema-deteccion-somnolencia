@@ -12,6 +12,7 @@ interface ChoferesTableProps {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  onDelete: (id: number, nombreCompleto: string) => void;
   // Props para paginación
   currentPage?: number;
   totalPages?: number;
@@ -28,6 +29,7 @@ export const ChoferesTable = ({
   loading, 
   error, 
   onRetry,
+  onDelete,
   currentPage,
   totalPages,
   onPageChange
@@ -92,6 +94,13 @@ export const ChoferesTable = ({
    */
   const handleEdit = (chofer: Chofer) => {
     navigate(`/admin/choferes/${chofer.id_usuario}/editar`);
+  };
+
+  /**
+   * Maneja el click en el botón eliminar
+   */
+  const handleDelete = (chofer: Chofer) => {
+    onDelete(chofer.id_usuario, chofer.nombre_completo);
   };
 
   /**
@@ -220,26 +229,51 @@ export const ChoferesTable = ({
 
                 {/* Acciones */}
                 <td className="px-4 py-3 whitespace-nowrap text-center">
-                  <button
-                    onClick={() => handleEdit(chofer)}
-                    className="inline-flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition-all duration-200 border border-yellow-200 font-medium text-xs shadow-sm hover:shadow"
-                    title="Editar chofer"
-                  >
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  <div className="flex items-center justify-center gap-2">
+                    {/* Botón Editar */}
+                    <button
+                      onClick={() => handleEdit(chofer)}
+                      className="inline-flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition-all duration-200 border border-yellow-200 font-medium text-xs shadow-sm hover:shadow"
+                      title="Editar chofer"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                      />
-                    </svg>
-                    <span>Editar</span>
-                  </button>
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                      <span>Editar</span>
+                    </button>
+
+                    {/* Botón Eliminar */}
+                    <button
+                      onClick={() => handleDelete(chofer)}
+                      className="inline-flex items-center gap-1.5 bg-red-50 text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-all duration-200 border border-red-200 font-medium text-xs shadow-sm hover:shadow"
+                      title="Eliminar chofer"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      <span>Eliminar</span>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

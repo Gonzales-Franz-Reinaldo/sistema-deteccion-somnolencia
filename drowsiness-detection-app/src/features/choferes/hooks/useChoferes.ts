@@ -109,6 +109,35 @@ export const useChoferes = () => {
     }
   }, [loadChoferes]);
 
+  /**
+   * Elimina un chofer con confirmación
+   */
+  const deleteChofer = useCallback(async (id: number, nombreCompleto: string) => {
+    // Confirmación
+    const confirmed = window.confirm(
+      `¿Está seguro de eliminar al chofer ${nombreCompleto}?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmed) {
+      return false;
+    }
+
+    try {
+      await choferesApi.delete(id);
+      console.log('Chofer eliminado correctamente');
+      
+      // Recargar datos
+      await loadChoferes();
+      
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar chofer';
+      console.error('Error deleting chofer:', err);
+      alert(`Error: ${errorMessage}`);
+      return false;
+    }
+  }, [loadChoferes]);
+
   return {
     // Estado
     choferes,
@@ -126,6 +155,7 @@ export const useChoferes = () => {
     setFilters: updateFilters,
     refetch: loadChoferes,
     search: searchChoferes,
+    deleteChofer,
   };
 };
 

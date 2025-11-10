@@ -293,6 +293,9 @@ export const useChoferForm = ({ choferId }: UseChoferFormProps = {}) => {
       
       // Estado
       activo: formData.activo,
+      
+      // Notificaciones (enviar credenciales por email)
+      enviar_email: formData.enviar_email,
     };
   };
 

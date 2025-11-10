@@ -83,14 +83,10 @@ class EmailService:
             message.attach(part2)
             
             # Conectar al servidor SMTP y enviar
-            logger.info(f"📧 Intentando conectar a {self.smtp_host}:{self.smtp_port}...")
+            logger.info(f"📧 Enviando email a {to_email}...")
             with smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=30) as server:
-                server.set_debuglevel(1)  # Activar debug SMTP
-                logger.info("🔐 Iniciando TLS...")
                 server.starttls()  # Iniciar conexión TLS
-                logger.info(f"🔑 Autenticando con usuario: {self.smtp_user}")
                 server.login(self.smtp_user, self.smtp_password)
-                logger.info("📤 Enviando mensaje...")
                 server.send_message(message)
             
             logger.info(f"✉️ Email enviado correctamente a {to_email}")
