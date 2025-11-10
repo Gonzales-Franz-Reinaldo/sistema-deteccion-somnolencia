@@ -88,6 +88,9 @@ export interface ChoferCreateData {
   
   // Estado
   activo: boolean;
+  
+  // Notificaciones (opcional - solo para creación)
+  enviar_email?: boolean;
 }
 
 /**

@@ -152,6 +152,24 @@ export const choferesApi = {
       throw error;
     }
   },
+
+  /**
+   * Elimina un chofer del sistema
+   * 
+   * @param id - ID del chofer a eliminar
+   * @returns Promise<void>
+   * 
+   * @example
+   * await choferesApi.delete(5);
+   */
+  delete: async (id: number): Promise<void> => {
+    try {
+      await apiClient.delete(`/users/${id}`);
+    } catch (error) {
+      console.error(`Error al eliminar chofer ${id}:`, error);
+      throw error;
+    }
+  },
 };
 
 export default choferesApi;

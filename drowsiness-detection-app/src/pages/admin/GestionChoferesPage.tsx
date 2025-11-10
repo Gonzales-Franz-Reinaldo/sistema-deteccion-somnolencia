@@ -22,7 +22,8 @@ export const GestionChoferesPage = () => {
     totalPages,
     setPage, 
     refetch,
-    search 
+    search,
+    deleteChofer
   } = useChoferes();
 
   /**
@@ -30,6 +31,13 @@ export const GestionChoferesPage = () => {
    */
   const handleSearch = (query: string) => {
     search(query);
+  };
+
+  /**
+   * Maneja la eliminación de un chofer
+   */
+  const handleDelete = async (id: number, nombreCompleto: string) => {
+    await deleteChofer(id, nombreCompleto);
   };
 
   return (
@@ -91,6 +99,7 @@ export const GestionChoferesPage = () => {
         loading={loading}
         error={error}
         onRetry={refetch}
+        onDelete={handleDelete}
         currentPage={page}
         totalPages={totalPages}
         onPageChange={setPage}
