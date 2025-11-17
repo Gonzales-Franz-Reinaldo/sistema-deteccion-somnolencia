@@ -1,3 +1,43 @@
 <resources>
-    <string name="app_name">DriverDrowsinessDetectorApp</string>
+    <string name="app_name">Driver Drowsiness Detector</string>
+    
+    <!-- Login -->
+    <string name="login_title">Iniciar Sesión</string>
+    <string name="login_dni">DNI / Código de Chofer</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_button">Ingresar</string>
+    <string name="login_error">Credenciales incorrectas</string>
+    
+    <!-- Dashboard -->
+    <string name="dashboard_welcome">Bienvenido, %s</string>
+    <string name="dashboard_start_trip">Comenzar Viaje</string>
+    <string name="dashboard_stats_today">Estadísticas de Hoy</string>
+    
+    <!-- Monitoring -->
+    <string name="monitoring_active">Monitoreando</string>
+    <string name="monitoring_pause">Pausar</string>
+    <string name="monitoring_stop">Finalizar Viaje</string>
+    <string name="monitoring_blinks">Parpadeos/min</string>
+    <string name="monitoring_microsleeps">Microsueños</string>
+    <string name="monitoring_yawns">Bostezos</string>
+    
+    <!-- Alerts -->
+    <string name="alert_microsleep">¡ATENCIÓN! Microsueño detectado</string>
+    <string name="alert_yawn">Bostezo detectado</string>
+    <string name="alert_head_tilt">Inclinación de cabeza</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_sensitivity">Sensibilidad de Detección</string>
+    <string name="settings_sync_interval">Intervalo de Sincronización</string>
+    <string name="settings_logout">Cerrar Sesión</string>
+    
+    <!-- Permissions -->
+    <string name="permission_camera_rationale">Necesitamos acceso a la cámara para detectar somnolencia</string>
+    <string name="permission_location_rationale">Necesitamos tu ubicación para rastrear el viaje</string>
+    
+    <!-- Errors -->
+    <string name="error_network">Sin conexión a internet</string>
+    <string name="error_camera">No se pudo acceder a la cámara</string>
+    <string name="error_gps">GPS no disponible</string>
 </resources>
