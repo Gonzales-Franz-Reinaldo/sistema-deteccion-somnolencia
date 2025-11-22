@@ -17,6 +17,7 @@ val SecondaryPurple = Color(0xFFB085FF)  // Morado claro
 val GreenSuccess = Color(0xFF4CAF50)  // Verde para botones
 val RedAlert = Color(0xFFF44336)  // Rojo para alertas
 val BlueInfo = Color(0xFF2196F3)  // Azul para info
+val Orange = Color(0xFFFF9800)  // ← AGREGAR ESTE COLOR
 
 val BackgroundLight = Color(0xFFF5F5F5)  // Fondo claro
 val SurfaceWhite = Color(0xFFFFFFFF)  // Superficie blanca

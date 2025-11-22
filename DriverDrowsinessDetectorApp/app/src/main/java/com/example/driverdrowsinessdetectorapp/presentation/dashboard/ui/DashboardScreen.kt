@@ -26,6 +26,7 @@ import java.util.*
 @Composable
 fun DashboardScreen(
     onLogout: () -> Unit,
+    onStartMonitoring: () -> Unit, // ← AGREGAR PARÁMETRO
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val user by viewModel.user.collectAsState()
@@ -127,9 +128,7 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             // Botón grande para iniciar monitoreo
-            StartMonitoringButton(onClick = {
-                // TODO: Navegar a MonitoringScreen
-            })
+            StartMonitoringButton(onClick = onStartMonitoring) // ← CAMBIAR
             
             Spacer(modifier = Modifier.height(24.dp))
             

@@ -106,4 +106,23 @@ dependencies {
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // CameraX
+    val cameraxVersion = "1.3.1"
+    implementation("androidx.camera:camera-core:$cameraxVersion")
+    implementation("androidx.camera:camera-camera2:$cameraxVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
+    implementation("androidx.camera:camera-view:$cameraxVersion")
+
+    // MediaPipe
+    implementation("com.google.mediapipe:tasks-vision:0.10.9")
+
+    // Location (GPS)
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // Permissions (Compose)
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+
+    // WorkManager (para sync en background)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }
