@@ -1,47 +1,45 @@
 package com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.features
 
+import android.util.Log
+import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.processing.EyeDistances
 import javax.inject.Inject
 
-/**
- * Caso de Uso: Detectar Parpadeo
- *
- * Equivalente a: drowsiness_processor/drowsiness_features/flicker_and_microsleep/processing.py
- *
- * Detección de parpadeo basada en cambios de EAR:
- * - EAR cae de >0.20 a <0.20 = Ojo cerró
- * - EAR sube de <0.20 a >0.20 = Ojo abrió (PARPADEO COMPLETADO)
- *
- * Umbral: >20 parpadeos en 60 segundos
- */
 class DetectBlinkUseCase @Inject constructor(
     private val windowedCounter: WindowedCounterUseCase
 ) {
 
     companion object {
-        private const val EAR_THRESHOLD = 0.20f
-
-        // ✅ VENTANA TEMPORAL: 60 segundos (1 minuto)
+        private const val TAG = "DetectBlinkUseCase"
         private const val BLINK_WINDOW_MS = 60_000L
         private const val BLINK_COUNT_THRESHOLD = 20
+        
+        // ✅ UMBRAL EAR: Ojos cerrados cuando EAR < 0.2
+        private const val EAR_THRESHOLD = 0.2f
     }
 
-    private var wasEyeClosed = false
+    private var wasEyesClosed = false
 
-    /**
-     * Detectar parpadeo basado en transiciones de EAR
-     *
-     * @param ear Eye Aspect Ratio actual
-     * @return Triple<Boolean, Int, Boolean> - (isBlinking, blinkCount, isEyeClosed)
-     */
-    operator fun invoke(ear: Float): Triple<Boolean, Int, Boolean> {
+    operator fun invoke(eyeDistances: EyeDistances): Triple<Boolean, Int, Boolean> {
         val currentTime = System.currentTimeMillis()
-        val isEyeClosed = ear < EAR_THRESHOLD
 
-        // Detectar parpadeo: transición de cerrado → abierto
+        // ✅ CALCULAR EAR (Eye Aspect Ratio)
+        val earRight = if (eyeDistances.horizontalRightEye > 0) {
+            eyeDistances.verticalRightEyelid / eyeDistances.horizontalRightEye
+        } else 0f
+        
+        val earLeft = if (eyeDistances.horizontalLeftEye > 0) {
+            eyeDistances.verticalLeftEyelid / eyeDistances.horizontalLeftEye
+        } else 0f
+        
+        val avgEar = (earRight + earLeft) / 2f
+
+        // ✅ DETECCIÓN: EAR < 0.2 = CERRADO
+        val isEyesClosed = avgEar < EAR_THRESHOLD
+
         var isBlinking = false
 
-        if (wasEyeClosed && !isEyeClosed) {
-            // OJO SE ABRIÓ → Parpadeo completado
+        // Detectar parpadeo completo (cerrado → abierto)
+        if (wasEyesClosed && !isEyesClosed) {
             windowedCounter.addEvent(
                 currentTime,
                 WindowedCounterUseCase.WindowConfig(
@@ -50,22 +48,18 @@ class DetectBlinkUseCase @Inject constructor(
                 )
             )
             isBlinking = true
+            Log.d(TAG, "👁️ Parpadeo detectado (EAR: $avgEar)")
         }
 
-        // Actualizar estado anterior
-        wasEyeClosed = isEyeClosed
+        wasEyesClosed = isEyesClosed
 
-        val blinkCount = getBlinkCount(currentTime)
+        val blinkCount = windowedCounter.getCurrentCount(currentTime, BLINK_WINDOW_MS)
 
-        return Triple(isBlinking, blinkCount, isEyeClosed)
-    }
-
-    private fun getBlinkCount(currentTime: Long): Int {
-        return windowedCounter.getCurrentCount(currentTime, BLINK_WINDOW_MS)
+        return Triple(isBlinking, blinkCount, isEyesClosed)
     }
 
     fun reset() {
-        wasEyeClosed = false
+        wasEyesClosed = false
         windowedCounter.reset()
     }
 }

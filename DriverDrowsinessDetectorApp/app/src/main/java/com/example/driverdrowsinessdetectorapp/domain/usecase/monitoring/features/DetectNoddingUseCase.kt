@@ -1,35 +1,32 @@
 package com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.features
 
 import com.example.driverdrowsinessdetectorapp.domain.model.HeadPose
+import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.processing.HeadPosition
 import javax.inject.Inject
 import kotlin.math.abs
 
 class DetectNoddingUseCase @Inject constructor() {
     
     companion object {
-        private const val PITCH_THRESHOLD = 30f // ✅ Umbral ajustado
-        private const val NODDING_DURATION_MS = 1500L // 1.5 segundos
+        private const val NODDING_DURATION_MS = 3000L
     }
     
-    private var noddingStartTime: Long? = null
+    private var headDownStartTime: Long? = null
     private var noddingCount = 0
     private val noddingDurations = mutableListOf<Long>()
-    private var isCurrentlyNodding = false // ✅ NUEVO: Flag para evitar alertas repetidas
+    private var isCurrentlyNodding = false
     
-    operator fun invoke(headPose: HeadPose): Triple<Boolean, Int, List<Long>> {
+    operator fun invoke(headPosition: HeadPosition): Triple<Boolean, Int, List<Long>> {
         val currentTime = System.currentTimeMillis()
-        val isHeadInclined = abs(headPose.pitch) > PITCH_THRESHOLD
         
-        if (isHeadInclined) {
-            // CABEZA INCLINADA
-            if (noddingStartTime == null) {
-                noddingStartTime = currentTime
-                isCurrentlyNodding = false // Reset flag al iniciar nueva inclinación
+        if (headPosition.isHeadDown) {
+            if (headDownStartTime == null) {
+                headDownStartTime = currentTime
+                isCurrentlyNodding = false
             }
             
-            val duration = currentTime - (noddingStartTime ?: currentTime)
+            val duration = currentTime - (headDownStartTime ?: currentTime)
             
-            // ✅ CORRECCIÓN: Solo alerta UNA VEZ cuando alcanza el umbral
             if (duration >= NODDING_DURATION_MS && !isCurrentlyNodding) {
                 isCurrentlyNodding = true
                 noddingCount++
@@ -37,11 +34,9 @@ class DetectNoddingUseCase @Inject constructor() {
                 return Triple(true, noddingCount, noddingDurations)
             }
             
-            // Mientras dura el cabeceo, NO alertar repetidamente
             return Triple(false, noddingCount, noddingDurations)
         } else {
-            // CABEZA NORMAL - Resetear estado
-            noddingStartTime = null
+            headDownStartTime = null
             isCurrentlyNodding = false
         }
         
@@ -49,7 +44,7 @@ class DetectNoddingUseCase @Inject constructor() {
     }
     
     fun reset() {
-        noddingStartTime = null
+        headDownStartTime = null
         noddingCount = 0
         noddingDurations.clear()
         isCurrentlyNodding = false

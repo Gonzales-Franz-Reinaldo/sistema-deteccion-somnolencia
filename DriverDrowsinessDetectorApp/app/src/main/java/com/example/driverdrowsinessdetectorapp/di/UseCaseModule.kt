@@ -15,6 +15,28 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object UseCaseModule {
+
+
+    // ========================================
+    // ✅ NUEVO: Eye Distances
+    // ========================================
+    
+    @Provides
+    @Singleton
+    fun provideCalculateEyeDistancesUseCase(): CalculateEyeDistancesUseCase {
+        return CalculateEyeDistancesUseCase()
+    }
+    
+    // ========================================
+    // ✅ NUEVO: Head Position
+    // ========================================
+    
+    @Provides
+    @Singleton
+    fun provideDetectHeadPositionUseCase(): DetectHeadPositionUseCase {
+        return DetectHeadPositionUseCase()
+    }
+
     
     // ========================================
     // ✅ WINDOWED COUNTER
@@ -113,22 +135,22 @@ object UseCaseModule {
     @Provides
     @Singleton
     fun provideDetectDrowsinessUseCase(
-        calculateEARUseCase: CalculateEARUseCase,
+        calculateEyeDistancesUseCase: CalculateEyeDistancesUseCase,  // ✅ NUEVO
         calculateMARUseCase: CalculateMARUseCase,
-        detectHeadPoseUseCase: DetectHeadPoseUseCase,
+        detectHeadPositionUseCase: DetectHeadPositionUseCase,  // ✅ NUEVO
         detectHandNearEyesUseCase: DetectHandNearEyesUseCase,
-        detectBlinkUseCase: DetectBlinkUseCase, // ✅ NUEVO
+        detectBlinkUseCase: DetectBlinkUseCase,
         detectMicrosleepUseCase: DetectMicrosleepUseCase,
         detectYawnUseCase: DetectYawnUseCase,
         detectNoddingUseCase: DetectNoddingUseCase,
         detectEyeRubUseCase: DetectEyeRubUseCase
     ): DetectDrowsinessUseCase {
         return DetectDrowsinessUseCase(
-            calculateEARUseCase,
+            calculateEyeDistancesUseCase,  
             calculateMARUseCase,
-            detectHeadPoseUseCase,
+            detectHeadPositionUseCase,  
             detectHandNearEyesUseCase,
-            detectBlinkUseCase, // ✅ NUEVO
+            detectBlinkUseCase,
             detectMicrosleepUseCase,
             detectYawnUseCase,
             detectNoddingUseCase,
