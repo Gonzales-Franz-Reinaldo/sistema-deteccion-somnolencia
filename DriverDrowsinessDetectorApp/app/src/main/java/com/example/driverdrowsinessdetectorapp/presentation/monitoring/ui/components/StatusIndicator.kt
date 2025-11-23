@@ -4,8 +4,10 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -20,42 +22,60 @@ fun StatusIndicator(
     alertLevel: AlertLevel,
     modifier: Modifier = Modifier
 ) {
-    // Animación de pulso
+    // Animación de pulsación
     val infiniteTransition = rememberInfiniteTransition(label = "status_pulse")
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 1.2f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000),
+            animation = tween(800),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "status_scale"
+        label = "scale_animation"
     )
-
-    val (color, text) = when (alertLevel) {
-        AlertLevel.NORMAL -> Color.Green to "Normal"
-        AlertLevel.WARNING -> Color(0xFFFF9800) to "Alerta"
-        AlertLevel.CRITICAL -> Color.Red to "¡CRÍTICO!"
-    }
 
     Row(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Indicador circular parpadeante
+        // Indicador circular
         Box(
             modifier = Modifier
                 .size(16.dp)
-                .scale(if (alertLevel == AlertLevel.CRITICAL) scale else 1f)
-                .background(color, CircleShape)
+                .scale(if (alertLevel != AlertLevel.NORMAL) scale else 1f)
+                .background(
+                    color = getStatusColor(alertLevel),
+                    shape = CircleShape
+                )
         )
 
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Texto de estado
         Text(
-            text = text,
-            fontSize = 14.sp,
+            text = getStatusText(alertLevel),
+            style = MaterialTheme.typography.bodyMedium,
+            color = getStatusColor(alertLevel),
             fontWeight = FontWeight.Bold,
-            color = color
+            fontSize = 14.sp
         )
+    }
+}
+
+private fun getStatusColor(alertLevel: AlertLevel): Color {
+    return when (alertLevel) {
+        AlertLevel.NORMAL -> Color(0xFF4CAF50)   // Verde
+        AlertLevel.MEDIUM -> Color(0xFFFFA726)   // Naranja
+        AlertLevel.HIGH -> Color(0xFFFF5722)     // Rojo-Naranja
+        AlertLevel.CRITICAL -> Color(0xFFD32F2F) // Rojo
+    }
+}
+
+private fun getStatusText(alertLevel: AlertLevel): String {
+    return when (alertLevel) {
+        AlertLevel.NORMAL -> "Normal"
+        AlertLevel.MEDIUM -> "Advertencia"
+        AlertLevel.HIGH -> "Alerta Alta"
+        AlertLevel.CRITICAL -> "CRÍTICO"
     }
 }

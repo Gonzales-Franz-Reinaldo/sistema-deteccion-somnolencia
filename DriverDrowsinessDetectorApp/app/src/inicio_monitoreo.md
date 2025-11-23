@@ -400,3 +400,7 @@ LOOP INFINITO (30 FPS):
    - Actualiza métricas en pantalla 
     
 REPETIR (cada 33ms → 30 FPS)
+
+
+
+

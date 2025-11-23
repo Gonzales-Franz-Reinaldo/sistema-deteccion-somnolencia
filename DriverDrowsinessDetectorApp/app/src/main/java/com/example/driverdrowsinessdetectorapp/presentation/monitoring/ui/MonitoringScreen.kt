@@ -1,227 +1,191 @@
 package com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui
 
+import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.driverdrowsinessdetectorapp.domain.model.AlertLevel
 import com.example.driverdrowsinessdetectorapp.presentation.monitoring.MonitoringViewModel
 import com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui.components.*
-import com.example.driverdrowsinessdetectorapp.ui.theme.PrimaryPurple
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MonitoringScreen(
-    onBack: () -> Unit,
+    onNavigateBack: () -> Unit,
     viewModel: MonitoringViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val cameraActive by viewModel.cameraActive.collectAsState()
-    val serverConnected by viewModel.serverConnected.collectAsState()
+    val currentMetrics by viewModel.currentMetrics.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Monitoreo en Vivo", color = Color.White)
-                        Text(
-                            "Procesamiento en tiempo real con IA",
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver al Dashboard",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryPurple
-                )
-            )
+    // Permisos necesarios
+    val permissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    )
+
+    // Solicitar permisos al entrar
+    LaunchedEffect(Unit) {
+        if (!permissionsState.allPermissionsGranted) {
+            permissionsState.launchMultiplePermissionRequest()
+        } else {
+            // Iniciar viaje automáticamente cuando hay permisos
+            viewModel.startTrip()
         }
-    ) { paddingValues ->
+    }
+
+    // Mostrar diálogo si no hay permisos
+    if (!permissionsState.allPermissionsGranted) {
+        PermissionRequestDialog(
+            onRequestPermissions = {
+                permissionsState.launchMultiplePermissionRequest()
+            },
+            onDismiss = onNavigateBack
+        )
+        return
+    }
+
+    // UI Principal
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        // =========================================
+        // CÁMARA
+        // =========================================
+        CameraPreview(
+            modifier = Modifier.fillMaxSize(),
+            onFrameCaptured = { bitmap ->
+                viewModel.processFrame(bitmap)
+            }
+        )
+
+        // =========================================
+        // UI OVERLAY
+        // =========================================
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color.White)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(16.dp)
         ) {
-            // ============================================
-            // VIDEO ORIGINAL (Arriba)
-            // ============================================
-            VideoBox(
-                title = "Video Original",
-                showContent = cameraActive,
-                isProcessing = uiState is MonitoringUiState.Active,
-                content = {
-                    CameraPreview()
-                    if (uiState is MonitoringUiState.Active) {
-                        FaceLandmarksOverlay()
+            // ========== HEADER ==========
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Botón volver
+                IconButton(
+                    onClick = {
+                        viewModel.stopTrip()
+                        onNavigateBack()
                     }
-                }
-            )
-
-            // ============================================
-            // ANÁLISIS DE PUNTOS (Abajo)
-            // ============================================
-            VideoBox(
-                title = "Análisis de Puntos",
-                showContent = uiState is MonitoringUiState.Active,
-                isProcessing = uiState is MonitoringUiState.Active,
-                content = {
-                    // TODO: Aquí irá el análisis visual de MediaPipe
-                    AnalysisPlaceholder()
-                }
-            )
-
-            // ============================================
-            // BOTONES DE CONTROL
-            // ============================================
-            when (uiState) {
-                is MonitoringUiState.Idle -> {
-                    // Botón "Iniciar Viaje"
-                    Button(
-                        onClick = { viewModel.startTrip() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
-                        )
-                    ) {
-                        Text(
-                            text = "🚗 Iniciar Viaje",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                is MonitoringUiState.Active, is MonitoringUiState.Paused -> {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Botón Pausar/Reanudar
-                        Button(
-                            onClick = {
-                                if (uiState is MonitoringUiState.Active) {
-                                    viewModel.pauseTrip()
-                                } else {
-                                    viewModel.resumeTrip()
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(50.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (uiState is MonitoringUiState.Paused)
-                                    Color(0xFF4CAF50) else Color(0xFFFF9800)
-                            )
-                        ) {
-                            Text(
-                                text = if (uiState is MonitoringUiState.Paused)
-                                    "▶ Reanudar" else "⏸ Pausar",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        // Botón Detener
-                        Button(
-                            onClick = { viewModel.stopTrip() },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(50.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFF5722)
-                            )
-                        ) {
-                            Text(
-                                text = "⏹ Detener",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-
-                is MonitoringUiState.Starting -> {
-                    CircularProgressIndicator(modifier = Modifier.fillMaxWidth())
-                }
-
-                is MonitoringUiState.Error -> {
-                    Text(
-                        text = (uiState as MonitoringUiState.Error).message,
-                        color = Color.Red
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = Color.White
                     )
                 }
 
-                else -> {}
-            }
-
-            // ============================================
-            // INDICADORES DE ESTADO
-            // ============================================
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                StatusChip(
-                    label = if (cameraActive) "Cámara Activa" else "Cámara Inactiva",
-                    isActive = cameraActive,
-                    activeColor = Color(0xFF4CAF50),
-                    inactiveColor = Color.Gray
-                )
-
-                StatusChip(
-                    label = if (serverConnected) "Servidor Conectado" else "Servidor Desconectado",
-                    isActive = serverConnected,
-                    activeColor = Color(0xFF2196F3),
-                    inactiveColor = Color.Red
-                )
-            }
-
-            // ============================================
-            // MÉTRICAS (Solo en estado activo)
-            // ============================================
-            if (uiState is MonitoringUiState.Active) {
-                val activeState = uiState as MonitoringUiState.Active
-
+                // Título
                 Text(
-                    text = "Métricas en Tiempo Real",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryPurple
+                    text = "Monitoreo en Vivo",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White
                 )
 
-                MetricsDisplay(
-                    ear = activeState.currentEAR,
-                    mar = activeState.currentMAR,
-                    headPose = activeState.headPose
-                )
+                // GPS Indicator
+                GPSIndicator(isActive = true)
+            }
 
-                // Timer
-                TimerDisplay(duration = activeState.duration)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ========== SUBTÍTULO ==========
+            Text(
+                text = "Procesamiento en tiempo real con IA",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.7f)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ========== TIMER ==========
+            if (uiState is MonitoringUiState.Active) {
+                TimerDisplay(
+                    formattedTime = (uiState as MonitoringUiState.Active).duration
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ========== STATUS INDICATOR ==========
+            currentMetrics?.let { metrics ->
+                StatusIndicator(
+                    alertLevel = metrics.alertLevel
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // ========== ALERT BANNER ==========
+            currentMetrics?.let { metrics ->
+                if (metrics.alertLevel != AlertLevel.NORMAL) {
+                    AlertBanner(
+                        alertLevel = metrics.alertLevel,
+                        alertType = metrics.alertType
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+
+            // ========== METRICS DISPLAY ==========
+            if (uiState is MonitoringUiState.Active) {
+                currentMetrics?.let { metrics ->
+                    MetricsDisplay(metrics = metrics)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ========== CONTROLES ==========
+            SessionControls(
+                isPaused = uiState is MonitoringUiState.Paused,
+                onPauseResume = {
+                    when (uiState) {
+                        is MonitoringUiState.Active -> viewModel.pauseTrip()
+                        is MonitoringUiState.Paused -> viewModel.resumeTrip()
+                        else -> {}
+                    }
+                },
+                onStop = {
+                    viewModel.stopTrip()
+                    onNavigateBack()
+                }
+            )
+        }
+
+        // ========== LOADING OVERLAY ==========
+        if (uiState is MonitoringUiState.Loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.7f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
             }
         }
     }

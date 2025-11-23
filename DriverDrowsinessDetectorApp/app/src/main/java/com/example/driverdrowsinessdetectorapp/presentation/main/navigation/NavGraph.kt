@@ -43,7 +43,7 @@ fun NavGraph(
         //  RUTA: Monitoring
         composable(Screen.Monitoring.route) {
             MonitoringScreen(
-                onBack = {
+                onNavigateBack = {  // ← CORRECCIÓN AQUÍ
                     navController.popBackStack()
                 }
             )
