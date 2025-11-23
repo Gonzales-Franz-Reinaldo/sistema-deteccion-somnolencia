@@ -1,35 +1,35 @@
 package com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui.components
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun PermissionRequestDialog(
-    permissionName: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onRequestPermissions: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Warning,
-                contentDescription = null,
-                tint = Color(0xFFFF9800)
+        title = {
+            Text(
+                text = "Permisos Requeridos",
+                fontWeight = FontWeight.Bold
             )
         },
-        title = {
-            Text("Permiso Requerido")
-        },
         text = {
-            Text("Se requiere permiso de $permissionName para continuar con el monitoreo.")
+            Text(
+                text = "Esta aplicación necesita acceso a la cámara y ubicación para funcionar correctamente.\n\n" +
+                      "• Cámara: Para detectar somnolencia\n" +
+                      "• Ubicación: Para registrar rutas"
+            )
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Conceder")
+            Button(onClick = onRequestPermissions) {
+                Text("Otorgar Permisos")
             }
         },
         dismissButton = {

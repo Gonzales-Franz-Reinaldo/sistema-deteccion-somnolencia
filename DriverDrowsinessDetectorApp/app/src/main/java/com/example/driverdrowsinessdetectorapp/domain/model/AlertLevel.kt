@@ -12,7 +12,12 @@ enum class AlertLevel {
     /**
      * Advertencia - Signos leves de somnolencia detectados
      */
-    WARNING,
+    MEDIUM,
+    
+    /**
+     * Crítico - Somnolencia severa detectada, requiere acción inmediata
+     */
+    HIGH,
     
     /**
      * Crítico - Somnolencia severa detectada, requiere acción inmediata

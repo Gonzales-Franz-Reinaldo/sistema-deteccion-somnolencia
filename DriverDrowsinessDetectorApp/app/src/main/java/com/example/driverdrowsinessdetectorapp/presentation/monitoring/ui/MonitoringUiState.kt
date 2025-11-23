@@ -4,22 +4,45 @@ import com.example.driverdrowsinessdetectorapp.domain.model.AlertLevel
 import com.example.driverdrowsinessdetectorapp.domain.model.HeadPose
 
 sealed class MonitoringUiState {
+    /**
+     * Estado inactivo - Sin sesión iniciada
+     */
     data object Idle : MonitoringUiState()
-    data object RequestingPermissions : MonitoringUiState()
+    
+    /**
+     * Estado de inicio - Inicializando cámara y permisos
+     */
     data object Starting : MonitoringUiState()
     
+    /**
+     * Estado de carga
+     */
+    data object Loading : MonitoringUiState()
+    
+    /**
+     * Sesión activa - Monitoreo en progreso
+     */
     data class Active(
         val sessionId: Long,
-        val duration: String, // Formato: "00:05:23"
-        val currentEAR: Float, // Eye Aspect Ratio (0.0 - 1.0)
-        val currentMAR: Float, // Mouth Aspect Ratio (0.0 - 1.0)
+        val duration: String,
+        val currentEAR: Float,
+        val currentMAR: Float,
         val headPose: HeadPose,
-        val alertLevel: AlertLevel, // NORMAL, WARNING, CRITICAL
+        val alertLevel: AlertLevel,
         val gpsEnabled: Boolean,
-        val isProcessing: Boolean = true
+        val isProcessing: Boolean
     ) : MonitoringUiState()
     
-    data object Paused : MonitoringUiState()
+    /**
+     * Sesión pausada
+     */
+    data class Paused(
+        val sessionId: Long,
+        val duration: String
+    ) : MonitoringUiState()
     
+    /**
+     * Error en la sesión
+     */
     data class Error(val message: String) : MonitoringUiState()
 }
