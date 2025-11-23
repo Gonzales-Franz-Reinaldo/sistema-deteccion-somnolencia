@@ -17,13 +17,15 @@ class DetectHeadPositionUseCase @Inject constructor() {
     companion object {
         private const val TAG = "DetectHeadPositionUseCase"
         
-        // ✅ ÍNDICES CORRECTOS SEGÚN PYTHON
-        // cabeza['distancias'] = [1, 0, 1, 5, 4, 205, 425]
-        private const val NOSE_TIP = 4      // Punta nariz
-        private const val MOUTH_CENTER = 0  // Centro boca
-        private const val FOREHEAD = 5      // Frente
-        private const val RIGHT_CHEEK = 205 // Mejilla derecha
-        private const val LEFT_CHEEK = 425  // Mejilla izquierda
+        // ÍNDICES CORRECTOS
+        private const val NOSE_TIP = 4
+        private const val MOUTH_CENTER = 0
+        private const val FOREHEAD = 5
+        private const val RIGHT_CHEEK = 205
+        private const val LEFT_CHEEK = 425
+        
+        // Umbral de inclinación
+        private const val TILT_THRESHOLD = 0.02f // 2% de diferencia
     }
 
     operator fun invoke(faceLandmarks: List<NormalizedLandmark>): HeadPosition {
@@ -44,29 +46,31 @@ class DetectHeadPositionUseCase @Inject constructor() {
         val rightCheekY = rightCheek.y()
         val leftCheekY = leftCheek.y()
 
-        // ✅ LOGS DETALLADOS
-        Log.d(TAG, "🎯 Coordenadas Y: nariz=$noseY, mejillaDer=$rightCheekY, mejillaIzq=$leftCheekY")
+        Log.d(TAG, "🎯 Coordenadas: nariz=$noseY, mejillaDer=$rightCheekY, mejillaIzq=$leftCheekY")
         Log.d(TAG, "📏 Distancias: nariz-boca=$distanceNoseMouth, frente-nariz=$distanceForeheadNose")
 
         val isHeadDown: Boolean
         val position: String
 
+        //  LÓGICA CORRECTA SEGÚN PYTHON
         when {
-            // Cabeza abajo derecha
-            rightCheekY > noseY && noseY > leftCheekY &&
+            // Cabeza inclinada a la DERECHA (mejilla derecha SUBE)
+            (rightCheekY - noseY) > TILT_THRESHOLD && noseY > leftCheekY &&
                     distanceNoseMouth < distanceForeheadNose -> {
                 isHeadDown = true
                 position = "cabeza abajo derecha"
-                Log.d(TAG, "🙇 Cabeza abajo derecha detectada")
+                Log.d(TAG, "🙇 CABECEO DERECHA detectado (diff=${rightCheekY - noseY})")
             }
-            // Cabeza abajo izquierda
-            leftCheekY > noseY && noseY > rightCheekY &&
+            
+            // Cabeza inclinada a la IZQUIERDA (mejilla izquierda SUBE)
+            (leftCheekY - noseY) > TILT_THRESHOLD && noseY > rightCheekY &&
                     distanceNoseMouth < distanceForeheadNose -> {
                 isHeadDown = true
                 position = "cabeza abajo izquierda"
-                Log.d(TAG, "🙇 Cabeza abajo izquierda detectada")
+                Log.d(TAG, "🙇 CABECEO IZQUIERDA detectado (diff=${leftCheekY - noseY})")
             }
-            // Cabeza arriba
+            
+            // Cabeza NORMAL
             else -> {
                 isHeadDown = false
                 position = "cabeza arriba"

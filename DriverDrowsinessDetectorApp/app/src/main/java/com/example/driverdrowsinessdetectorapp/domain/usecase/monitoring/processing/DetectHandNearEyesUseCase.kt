@@ -14,7 +14,7 @@ import kotlin.math.sqrt
 class DetectHandNearEyesUseCase @Inject constructor() {
     
     companion object {
-        // ✅ CONVERTIR 40 píxeles a normalizado
+        //  CONVERTIR 40 píxeles a normalizado
         // Asumiendo resolución típica de 640x480:
         private const val PROXIMITY_THRESHOLD = 40f / 640f  // ≈ 0.0625f
         

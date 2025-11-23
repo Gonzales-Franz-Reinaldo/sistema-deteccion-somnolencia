@@ -9,7 +9,7 @@ class DetectMicrosleepUseCase @Inject constructor() {
     companion object {
         private const val TAG = "DetectMicrosleepUseCase"
         private const val MICROSLEEP_DURATION_MS = 2000L
-        private const val EAR_THRESHOLD = 0.2f  // ✅ Mismo umbral que parpadeo
+        private const val EAR_THRESHOLD = 0.2f  
     }
     
     private var eyesClosedStartTime: Long? = null
@@ -20,7 +20,7 @@ class DetectMicrosleepUseCase @Inject constructor() {
     operator fun invoke(eyeDistances: EyeDistances): Triple<Boolean, Int, List<Long>> {
         val currentTime = System.currentTimeMillis()
 
-        // ✅ CALCULAR EAR
+        //  CALCULAR EAR
         val earRight = if (eyeDistances.horizontalRightEye > 0) {
             eyeDistances.verticalRightEyelid / eyeDistances.horizontalRightEye
         } else 0f

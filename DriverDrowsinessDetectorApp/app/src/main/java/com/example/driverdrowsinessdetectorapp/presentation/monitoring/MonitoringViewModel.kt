@@ -30,7 +30,7 @@ class MonitoringViewModel @Inject constructor(
     companion object {
         private const val TAG = "MonitoringViewModel"
         private const val FRAME_SKIP_COUNT = 2
-        private const val ALERT_DURATION_MS = 5000L // ✅ 5 segundos de alarma
+        private const val ALERT_DURATION_MS = 5000L 
     }
 
     private val _uiState = MutableStateFlow<MonitoringUiState>(MonitoringUiState.Idle)
@@ -43,7 +43,7 @@ class MonitoringViewModel @Inject constructor(
     private var frameCount = 0
     private var isProcessingFrame = false
     private var lastAlertLevel = AlertLevel.NORMAL
-    private var lastAlertTime: Long = 0 // ✅ NUEVO: Timestamp de última alerta
+    private var lastAlertTime: Long = 0 
 
     fun startTrip() {
         viewModelScope.launch {
@@ -118,24 +118,27 @@ class MonitoringViewModel @Inject constructor(
     }
 
     /**
-     * ✅ MANEJO DE ALARMA CON DURACIÓN DE 5 SEGUNDOS
+     *  MANEJO DE ALARMA CON DURACIÓN DE 5 SEGUNDOS
      */
     private fun handleAlertLevel(newAlertLevel: AlertLevel) {
         val currentTime = System.currentTimeMillis()
         
         when (newAlertLevel) {
             AlertLevel.NORMAL -> {
-                alarmUtil.stopAlarm()
-                lastAlertTime = 0
-                Log.d(TAG, "✅ Estado normal")
+                //  SOLO detener si NO estamos en ventana de alerta
+                if (currentTime - lastAlertTime > ALERT_DURATION_MS) {
+                    alarmUtil.stopAlarm()
+                    lastAlertTime = 0
+                    Log.d(TAG, "✅ Estado normal")
+                }
             }
             
             AlertLevel.MEDIUM, AlertLevel.HIGH, AlertLevel.CRITICAL -> {
-                if (currentTime - lastAlertTime > ALERT_DURATION_MS) {
+                //  ALERTA o RENOVAR
+                if (currentTime - lastAlertTime > ALERT_DURATION_MS || lastAlertLevel != newAlertLevel) {
                     alarmUtil.playAlarm(newAlertLevel)
                     lastAlertTime = currentTime
                     
-                    // ✅ MENSAJE DETALLADO
                     val alertMsg = getAlertMessage(_currentMetrics.value)
                     val emoji = when(newAlertLevel) {
                         AlertLevel.MEDIUM -> "⚠️"

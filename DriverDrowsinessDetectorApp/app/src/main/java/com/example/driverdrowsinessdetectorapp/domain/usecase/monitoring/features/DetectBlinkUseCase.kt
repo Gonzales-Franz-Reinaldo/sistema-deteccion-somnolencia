@@ -13,7 +13,7 @@ class DetectBlinkUseCase @Inject constructor(
         private const val BLINK_WINDOW_MS = 60_000L
         private const val BLINK_COUNT_THRESHOLD = 20
         
-        // ✅ UMBRAL EAR: Ojos cerrados cuando EAR < 0.2
+        // UMBRAL EAR: Ojos cerrados cuando EAR < 0.2
         private const val EAR_THRESHOLD = 0.2f
     }
 
@@ -22,7 +22,7 @@ class DetectBlinkUseCase @Inject constructor(
     operator fun invoke(eyeDistances: EyeDistances): Triple<Boolean, Int, Boolean> {
         val currentTime = System.currentTimeMillis()
 
-        // ✅ CALCULAR EAR (Eye Aspect Ratio)
+        // CALCULAR EAR (Eye Aspect Ratio)
         val earRight = if (eyeDistances.horizontalRightEye > 0) {
             eyeDistances.verticalRightEyelid / eyeDistances.horizontalRightEye
         } else 0f
@@ -33,7 +33,7 @@ class DetectBlinkUseCase @Inject constructor(
         
         val avgEar = (earRight + earLeft) / 2f
 
-        // ✅ DETECCIÓN: EAR < 0.2 = CERRADO
+        // DETECCIÓN: EAR < 0.2 = CERRADO
         val isEyesClosed = avgEar < EAR_THRESHOLD
 
         var isBlinking = false

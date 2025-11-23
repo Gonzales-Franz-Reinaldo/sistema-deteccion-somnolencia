@@ -22,7 +22,7 @@ class DetectEyeRubUseCase @Inject constructor() {
     private val firstHandDurations = mutableListOf<Long>()
     private val secondHandDurations = mutableListOf<Long>()
     
-    // ✅ NUEVO: Flags para evitar registro múltiple
+    //  Flags para evitar registro múltiple
     private var isFirstHandRubbing = false
     private var isSecondHandRubbing = false
     
@@ -90,7 +90,7 @@ class DetectEyeRubUseCase @Inject constructor() {
             
             val duration = currentTime - (newStartTime ?: currentTime)
             
-            // ✅ CORRECCIÓN: Solo registra UNA VEZ cuando alcanza umbral
+            // : Solo registra UNA VEZ cuando alcanza umbral
             if (duration >= EYE_RUB_DURATION_MS && !newIsRubbing) {
                 newIsRubbing = true
                 newCount++
@@ -122,7 +122,7 @@ class DetectEyeRubUseCase @Inject constructor() {
         isSecondHandRubbing = false
     }
     
-    // ✅ NUEVO: Clase auxiliar para retornar 5 valores
+    //  Clase auxiliar para retornar 5 valores
     private data class Quintuple<A, B, C, D, E>(
         val first: A,
         val second: B,
