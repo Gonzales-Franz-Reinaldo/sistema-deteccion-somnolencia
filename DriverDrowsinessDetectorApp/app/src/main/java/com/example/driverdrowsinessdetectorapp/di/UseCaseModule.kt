@@ -28,6 +28,16 @@ object UseCaseModule {
     }
     
     // ========================================
+    // ✅ NUEVO: Mouth Distances
+    // ========================================
+
+    @Provides
+    @Singleton
+    fun provideCalculateMouthDistancesUseCase(): CalculateMouthDistancesUseCase {
+        return CalculateMouthDistancesUseCase()
+    }
+    
+    // ========================================
     // ✅ NUEVO: Head Position
     // ========================================
     
@@ -110,10 +120,8 @@ object UseCaseModule {
     
     @Provides
     @Singleton
-    fun provideDetectYawnUseCase(
-        windowedCounter: WindowedCounterUseCase
-    ): DetectYawnUseCase {
-        return DetectYawnUseCase(windowedCounter)
+    fun provideDetectYawnUseCase(): DetectYawnUseCase {
+        return DetectYawnUseCase()
     }
     
     @Provides
@@ -136,6 +144,7 @@ object UseCaseModule {
     @Singleton
     fun provideDetectDrowsinessUseCase(
         calculateEyeDistancesUseCase: CalculateEyeDistancesUseCase,  // ✅ NUEVO
+        calculateMouthDistancesUseCase: CalculateMouthDistancesUseCase,  // ✅ NUEVO
         calculateMARUseCase: CalculateMARUseCase,
         detectHeadPositionUseCase: DetectHeadPositionUseCase,  // ✅ NUEVO
         detectHandNearEyesUseCase: DetectHandNearEyesUseCase,
@@ -147,6 +156,7 @@ object UseCaseModule {
     ): DetectDrowsinessUseCase {
         return DetectDrowsinessUseCase(
             calculateEyeDistancesUseCase,  
+            calculateMouthDistancesUseCase,  // ✅ NUEVO
             calculateMARUseCase,
             detectHeadPositionUseCase,  
             detectHandNearEyesUseCase,

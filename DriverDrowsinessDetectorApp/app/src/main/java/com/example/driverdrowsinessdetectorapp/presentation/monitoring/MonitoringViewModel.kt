@@ -125,64 +125,44 @@ class MonitoringViewModel @Inject constructor(
         
         when (newAlertLevel) {
             AlertLevel.NORMAL -> {
-                // Si pasaron >5 segundos desde la última alerta → detener alarma
+                alarmUtil.stopAlarm()
+                lastAlertTime = 0
+                Log.d(TAG, "✅ Estado normal")
+            }
+            
+            AlertLevel.MEDIUM, AlertLevel.HIGH, AlertLevel.CRITICAL -> {
                 if (currentTime - lastAlertTime > ALERT_DURATION_MS) {
-                    alarmUtil.stopAlarm()
-                    Log.d(TAG, "✅ Estado normal")
-                }
-            }
-            
-            AlertLevel.MEDIUM -> {
-                if (newAlertLevel != lastAlertLevel) {
                     alarmUtil.playAlarm(newAlertLevel)
                     lastAlertTime = currentTime
-                    Log.i(TAG, "⚡ ALERTA MEDIA")
                     
-                    // Programar detención automática después de 5s
-                    viewModelScope.launch {
-                        delay(ALERT_DURATION_MS)
-                        if (_currentMetrics.value?.alertLevel == AlertLevel.MEDIUM) {
-                            alarmUtil.stopAlarm()
-                            Log.d(TAG, "⏰ Alarma MEDIA detenida después de 5s")
-                        }
+                    // ✅ MENSAJE DETALLADO
+                    val alertMsg = getAlertMessage(_currentMetrics.value)
+                    val emoji = when(newAlertLevel) {
+                        AlertLevel.MEDIUM -> "⚠️"
+                        AlertLevel.HIGH -> "🚨"
+                        AlertLevel.CRITICAL -> "🔴"
+                        else -> ""
                     }
-                }
-            }
-            
-            AlertLevel.HIGH -> {
-                if (newAlertLevel != lastAlertLevel) {
-                    alarmUtil.playAlarm(newAlertLevel)
-                    lastAlertTime = currentTime
-                    Log.w(TAG, "⚠️ ALERTA ALTA")
-                    
-                    viewModelScope.launch {
-                        delay(ALERT_DURATION_MS)
-                        if (_currentMetrics.value?.alertLevel == AlertLevel.HIGH) {
-                            alarmUtil.stopAlarm()
-                            Log.d(TAG, "⏰ Alarma ALTA detenida después de 5s")
-                        }
-                    }
-                }
-            }
-            
-            AlertLevel.CRITICAL -> {
-                if (newAlertLevel != lastAlertLevel) {
-                    alarmUtil.playAlarm(newAlertLevel)
-                    lastAlertTime = currentTime
-                    Log.w(TAG, "🚨 ALERTA CRÍTICA")
-                    
-                    viewModelScope.launch {
-                        delay(ALERT_DURATION_MS)
-                        if (_currentMetrics.value?.alertLevel == AlertLevel.CRITICAL) {
-                            alarmUtil.stopAlarm()
-                            Log.d(TAG, "⏰ Alarma CRÍTICA detenida después de 5s")
-                        }
-                    }
+                    Log.w(TAG, "$emoji ALERTA ${newAlertLevel.name}: $alertMsg")
                 }
             }
         }
         
         lastAlertLevel = newAlertLevel
+    }
+
+    private fun getAlertMessage(metrics: MetricasSomnolencia?): String {
+        if (metrics == null) return "Desconocido"
+        
+        return when {
+            metrics.isMicrosleep -> "😴 Microsueño detectado (${metrics.microsleepCount}x)"
+            metrics.isNodding -> "🙇 Cabeceo detectado (${metrics.noddingCount}x)"
+            metrics.isYawning -> "🥱 Bostezo prolongado (${metrics.yawnCount}x)"
+            metrics.eyeRubFirstHand.first -> "🤲 Frotamiento ojos - Primera mano"
+            metrics.eyeRubSecondHand.first -> "🤲 Frotamiento ojos - Segunda mano"
+            metrics.blinkCount > 20 -> "👁️ Parpadeo excesivo (${metrics.blinkCount}/min)"
+            else -> "⚠️ Fatiga general"
+        }
     }
 
     fun pauseTrip() {
