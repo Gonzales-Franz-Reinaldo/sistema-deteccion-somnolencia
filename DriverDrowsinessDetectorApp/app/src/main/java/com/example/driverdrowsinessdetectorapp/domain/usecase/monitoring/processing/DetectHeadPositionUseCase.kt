@@ -1,17 +1,13 @@
 package com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.processing
 
+import android.util.Log
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
 import javax.inject.Inject
 import kotlin.math.sqrt
 
-/**
- * Detectar Posición de Cabeza - MÉTODO PYTHON
- *
- * Equivalente a: pitch/processing.py - DeteccionInclinacion
- */
 data class HeadPosition(
     val isHeadDown: Boolean,
-    val position: String,  // "cabeza abajo derecha", "cabeza abajo izquierda", "cabeza arriba"
+    val position: String,
     val distanceNoseMouth: Float,
     val distanceForeheadNose: Float
 )
@@ -19,12 +15,15 @@ data class HeadPosition(
 class DetectHeadPositionUseCase @Inject constructor() {
 
     companion object {
-        // Índices según Python: cabeza['distancias'] = [1, 0, 1, 5, 4, 205, 425]
-        private const val NOSE_TIP = 4
-        private const val MOUTH_CENTER = 0
-        private const val FOREHEAD = 5
-        private const val RIGHT_CHEEK = 205
-        private const val LEFT_CHEEK = 425
+        private const val TAG = "DetectHeadPositionUseCase"
+        
+        // ✅ ÍNDICES CORRECTOS SEGÚN PYTHON
+        // cabeza['distancias'] = [1, 0, 1, 5, 4, 205, 425]
+        private const val NOSE_TIP = 4      // Punta nariz
+        private const val MOUTH_CENTER = 0  // Centro boca
+        private const val FOREHEAD = 5      // Frente
+        private const val RIGHT_CHEEK = 205 // Mejilla derecha
+        private const val LEFT_CHEEK = 425  // Mejilla izquierda
     }
 
     operator fun invoke(faceLandmarks: List<NormalizedLandmark>): HeadPosition {
@@ -38,16 +37,17 @@ class DetectHeadPositionUseCase @Inject constructor() {
         val rightCheek = faceLandmarks[RIGHT_CHEEK]
         val leftCheek = faceLandmarks[LEFT_CHEEK]
 
-        // Calcular distancias
         val distanceNoseMouth = euclideanDistance(noseTip, mouthCenter)
         val distanceForeheadNose = euclideanDistance(forehead, noseTip)
 
-        // Obtener coordenadas Y
         val noseY = noseTip.y()
         val rightCheekY = rightCheek.y()
         val leftCheekY = leftCheek.y()
 
-        // LÓGICA PYTHON EXACTA
+        // ✅ LOGS DETALLADOS
+        Log.d(TAG, "🎯 Coordenadas Y: nariz=$noseY, mejillaDer=$rightCheekY, mejillaIzq=$leftCheekY")
+        Log.d(TAG, "📏 Distancias: nariz-boca=$distanceNoseMouth, frente-nariz=$distanceForeheadNose")
+
         val isHeadDown: Boolean
         val position: String
 
@@ -57,19 +57,16 @@ class DetectHeadPositionUseCase @Inject constructor() {
                     distanceNoseMouth < distanceForeheadNose -> {
                 isHeadDown = true
                 position = "cabeza abajo derecha"
+                Log.d(TAG, "🙇 Cabeza abajo derecha detectada")
             }
             // Cabeza abajo izquierda
             leftCheekY > noseY && noseY > rightCheekY &&
                     distanceNoseMouth < distanceForeheadNose -> {
                 isHeadDown = true
                 position = "cabeza abajo izquierda"
+                Log.d(TAG, "🙇 Cabeza abajo izquierda detectada")
             }
             // Cabeza arriba
-            noseY < rightCheekY && noseY < leftCheekY &&
-                    distanceNoseMouth > distanceForeheadNose -> {
-                isHeadDown = false
-                position = "cabeza arriba"
-            }
             else -> {
                 isHeadDown = false
                 position = "cabeza arriba"
