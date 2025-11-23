@@ -8,42 +8,50 @@ class DetectNoddingUseCase @Inject constructor() {
     
     companion object {
         private const val TAG = "DetectNoddingUseCase"
-        private const val NODDING_DURATION_MS = 3000L
+        private const val NODDING_DURATION_MS = 3000L //  3 SEGUNDOS
     }
     
     private var headDownStartTime: Long? = null
     private var noddingCount = 0
     private val noddingDurations = mutableListOf<Long>()
-    private var isCurrentlyNodding = false
+    private var wasDetecting = false //  FLAG PARA EVITAR DOBLE DETECCIÓN
     
     operator fun invoke(headPosition: HeadPosition): Triple<Boolean, Int, List<Long>> {
         val currentTime = System.currentTimeMillis()
         
+        //  LÓGICA PYTHON EXACTA
         if (headPosition.isHeadDown) {
+            // Cabeza se acaba de inclinar
             if (headDownStartTime == null) {
                 headDownStartTime = currentTime
-                isCurrentlyNodding = false
-                Log.d(TAG, "🙇 Cabeza inclinada")
+                wasDetecting = false
+                Log.d(TAG, "🙇 Cabeza inclinada: ${headPosition.position}")
             }
             
-            val duration = currentTime - (headDownStartTime ?: currentTime)
-            Log.d(TAG, "⏱️ Cabeza inclinada: ${duration}ms")
+            //  OPCIONAL: Mostrar progreso
+            val currentDuration = currentTime - (headDownStartTime ?: currentTime)
+            if (currentDuration > 1000 && currentDuration % 1000 < 100) {
+                Log.d(TAG, "⏱️ Cabeza inclinada: ${currentDuration}ms / ${NODDING_DURATION_MS}ms")
+            }
             
         } else {
-            //  CABEZA VOLVIÓ ARRIBA - CALCULAR DURACIÓN
+            // elif not cabeza_abajo and self.bandera:
+            // Cabeza volvió arriba - CALCULAR DURACIÓN TOTAL
             if (headDownStartTime != null) {
                 val duration = currentTime - (headDownStartTime ?: currentTime)
-                headDownStartTime = null
+                headDownStartTime = null //  RESETEAR
                 
-                // CABECEO = CABEZA ABAJO ≥ 3 SEGUNDOS
-                if (duration >= NODDING_DURATION_MS && !isCurrentlyNodding) {
-                    isCurrentlyNodding = true
+                Log.d(TAG, "🙇 Cabeza volvió arriba (duración: ${duration}ms)")
+                
+                // if duracion_inclinacion >= 3.0:
+                if (duration >= NODDING_DURATION_MS && !wasDetecting) {
+                    wasDetecting = true
                     noddingCount++
                     noddingDurations.add(duration)
-                    Log.d(TAG, "🚨 CABECEO: ${duration}ms (count=$noddingCount)")
+                    Log.d(TAG, "🚨 CABECEO DETECTADO: ${duration}ms (count=$noddingCount)")
                     return Triple(true, noddingCount, noddingDurations)
-                } else {
-                    Log.d(TAG, "🙇 Cabeza arriba (duración: ${duration}ms)")
+                } else if (duration < NODDING_DURATION_MS) {
+                    Log.d(TAG, "⏭️ Cabeceo muy corto: ${duration}ms < ${NODDING_DURATION_MS}ms")
                 }
             }
         }
@@ -55,6 +63,6 @@ class DetectNoddingUseCase @Inject constructor() {
         headDownStartTime = null
         noddingCount = 0
         noddingDurations.clear()
-        isCurrentlyNodding = false
+        wasDetecting = false
     }
 }
