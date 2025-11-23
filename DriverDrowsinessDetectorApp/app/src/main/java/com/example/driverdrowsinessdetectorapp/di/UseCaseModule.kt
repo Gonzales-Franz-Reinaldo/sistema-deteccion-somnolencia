@@ -18,7 +18,7 @@ object UseCaseModule {
 
 
     // ========================================
-    // ✅ NUEVO: Eye Distances
+    //  Eye Distances
     // ========================================
     
     @Provides
@@ -28,7 +28,7 @@ object UseCaseModule {
     }
     
     // ========================================
-    // ✅ NUEVO: Mouth Distances
+    //  Mouth Distances
     // ========================================
 
     @Provides
@@ -38,7 +38,7 @@ object UseCaseModule {
     }
     
     // ========================================
-    // ✅ NUEVO: Head Position
+    //  Head Position
     // ========================================
     
     @Provides
@@ -49,7 +49,7 @@ object UseCaseModule {
 
     
     // ========================================
-    // ✅ WINDOWED COUNTER
+    //  WINDOWED COUNTER
     // ========================================
     
     @Provides
@@ -103,7 +103,7 @@ object UseCaseModule {
     // FEATURES USE CASES
     // ========================================
     
-    // ✅ NUEVO: Detección de parpadeo
+    //  Detección de parpadeo
     @Provides
     @Singleton
     fun provideDetectBlinkUseCase(
@@ -143,10 +143,10 @@ object UseCaseModule {
     @Provides
     @Singleton
     fun provideDetectDrowsinessUseCase(
-        calculateEyeDistancesUseCase: CalculateEyeDistancesUseCase,  // ✅ NUEVO
-        calculateMouthDistancesUseCase: CalculateMouthDistancesUseCase,  // ✅ NUEVO
+        calculateEyeDistancesUseCase: CalculateEyeDistancesUseCase,  
+        calculateMouthDistancesUseCase: CalculateMouthDistancesUseCase,  
         calculateMARUseCase: CalculateMARUseCase,
-        detectHeadPositionUseCase: DetectHeadPositionUseCase,  // ✅ NUEVO
+        detectHeadPositionUseCase: DetectHeadPositionUseCase,  
         detectHandNearEyesUseCase: DetectHandNearEyesUseCase,
         detectBlinkUseCase: DetectBlinkUseCase,
         detectMicrosleepUseCase: DetectMicrosleepUseCase,
@@ -156,7 +156,7 @@ object UseCaseModule {
     ): DetectDrowsinessUseCase {
         return DetectDrowsinessUseCase(
             calculateEyeDistancesUseCase,  
-            calculateMouthDistancesUseCase,  // ✅ NUEVO
+            calculateMouthDistancesUseCase,  
             calculateMARUseCase,
             detectHeadPositionUseCase,  
             detectHandNearEyesUseCase,

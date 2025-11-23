@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 class DetectDrowsinessUseCase @Inject constructor(
     private val calculateEyeDistancesUseCase: CalculateEyeDistancesUseCase,
-    private val calculateMouthDistancesUseCase: CalculateMouthDistancesUseCase,  // ✅ NUEVO
+    private val calculateMouthDistancesUseCase: CalculateMouthDistancesUseCase,  
     private val calculateMARUseCase: CalculateMARUseCase,
     private val detectHeadPositionUseCase: DetectHeadPositionUseCase,
     private val detectHandNearEyesUseCase: DetectHandNearEyesUseCase,
@@ -35,7 +35,7 @@ class DetectDrowsinessUseCase @Inject constructor(
             // 1. CALCULAR DISTANCIAS DE OJOS
             val eyeDistances = calculateEyeDistancesUseCase(faceLandmarks)
             
-            // 2. ✅ CALCULAR DISTANCIAS DE BOCA
+            // 2.  CALCULAR DISTANCIAS DE BOCA
             val mouthDistances = calculateMouthDistancesUseCase(faceLandmarks)
             
             // 3. CALCULAR EAR
@@ -56,10 +56,10 @@ class DetectDrowsinessUseCase @Inject constructor(
             // 6. DETECTAR MANOS CERCA DE OJOS
             val handNearEyes = detectHandNearEyesUseCase(faceLandmarks, handLandmarks)
             
-            // 7. ✅ DETECCIONES CON NUEVAS LÓGICAS
+            // 7.  DETECCIONES CON NUEVAS LÓGICAS
             val (isBlinking, blinkCount, isEyeClosed) = detectBlinkUseCase(eyeDistances)
             val (isMicrosleep, microsleepCount, microsleepDurations) = detectMicrosleepUseCase(eyeDistances)
-            val (isYawning, yawnCount, yawnDurations) = detectYawnUseCase(mouthDistances)  // ✅ PASAR MouthDistances
+            val (isYawning, yawnCount, yawnDurations) = detectYawnUseCase(mouthDistances)  
             val (isNodding, noddingCount, noddingDurations) = detectNoddingUseCase(headPosition)
             val eyeRubResults = detectEyeRubUseCase(handNearEyes)
             

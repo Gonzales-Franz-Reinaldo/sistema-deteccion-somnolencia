@@ -6,7 +6,7 @@ import javax.inject.Inject
 import kotlin.math.sqrt
 
 /**
- * ✅ NUEVO: Calcular distancias de BOCA según Python
+ * : Calcular distancias de BOCA según Python
  *
  * Python usa: boca['distancias'] = [0, 61, 81, 13, 311, 17, 402, 14, 178, 84, 405, 314, 181]
  */
@@ -20,7 +20,7 @@ class CalculateMouthDistancesUseCase @Inject constructor() {
     companion object {
         private const val TAG = "CalculateMouthDistances"
 
-        // ✅ ÍNDICES SEGÚN PYTHON
+        //  ÍNDICES SEGÚN PYTHON
         // boca['distancias'] = [0, 61, 81, 13, 311, 17, 402, 14, 178, 84, 405, 314, 181]
         private const val P0 = 0    // Centro boca
         private const val P61 = 61  // Labio superior izquierdo
@@ -48,7 +48,7 @@ class CalculateMouthDistancesUseCase @Inject constructor() {
         val p84 = faceLandmarks[P84]   // Mentón izquierdo
         val p314 = faceLandmarks[P314] // Mentón derecho
 
-        // ✅ CALCULAR DISTANCIAS SEGÚN PYTHON
+        //  CALCULAR DISTANCIAS SEGÚN PYTHON
         // distancia_labios = distancia(labio_superior, labio_inferior)
         val distanciaLabios = euclideanDistance(p13, p14)
 

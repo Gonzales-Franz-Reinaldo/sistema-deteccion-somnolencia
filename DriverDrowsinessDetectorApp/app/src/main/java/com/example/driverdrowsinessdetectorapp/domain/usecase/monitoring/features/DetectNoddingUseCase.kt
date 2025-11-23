@@ -30,12 +30,12 @@ class DetectNoddingUseCase @Inject constructor() {
             Log.d(TAG, "⏱️ Cabeza inclinada: ${duration}ms")
             
         } else {
-            // ✅ CABEZA VOLVIÓ ARRIBA - CALCULAR DURACIÓN
+            //  CABEZA VOLVIÓ ARRIBA - CALCULAR DURACIÓN
             if (headDownStartTime != null) {
                 val duration = currentTime - (headDownStartTime ?: currentTime)
                 headDownStartTime = null
                 
-                // ✅ CABECEO = CABEZA ABAJO ≥ 3 SEGUNDOS
+                // CABECEO = CABEZA ABAJO ≥ 3 SEGUNDOS
                 if (duration >= NODDING_DURATION_MS && !isCurrentlyNodding) {
                     isCurrentlyNodding = true
                     noddingCount++

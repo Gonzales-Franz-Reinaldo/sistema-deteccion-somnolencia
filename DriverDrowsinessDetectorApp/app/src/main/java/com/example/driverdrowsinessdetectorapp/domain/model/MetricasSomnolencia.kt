@@ -8,7 +8,7 @@ data class MetricasSomnolencia(
     val mar: Float,
     val headPose: HeadPose,
     
-    // ✅ PARPADEO (NUEVO)
+    //  PARPADEO 
     val isBlinking: Boolean,
     val blinkCount: Int,
     

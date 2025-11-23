@@ -12,7 +12,7 @@ import com.example.driverdrowsinessdetectorapp.data.local.entity.*
         SessionEntity::class,
         AlertEntity::class,
         LocationEntity::class,
-        MetricsEntity::class // ← AGREGAR
+        MetricsEntity::class 
     ],
     version = 2, // ← INCREMENTAR VERSIÓN
     exportSchema = false

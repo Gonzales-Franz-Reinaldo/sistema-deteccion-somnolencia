@@ -24,7 +24,7 @@ class CalculateEyeDistancesUseCase @Inject constructor() {
     companion object {
         private const val TAG = "CalculateEyeDistances"
         
-        // ✅ ÍNDICES CORRECTOS SEGÚN MEDIAPIPE FACE MESH
+        //  ÍNDICES CORRECTOS SEGÚN MEDIAPIPE FACE MESH
         // Ojo derecho (RIGHT EYE)
         private const val RIGHT_EYE_TOP = 159        // Superior centro
         private const val RIGHT_EYE_BOTTOM = 145     // Inferior centro
@@ -39,7 +39,7 @@ class CalculateEyeDistancesUseCase @Inject constructor() {
     }
 
     operator fun invoke(faceLandmarks: List<NormalizedLandmark>): EyeDistances {
-        // ✅ VERIFICACIÓN CORRECTA
+        //  VERIFICACIÓN CORRECTA
         if (faceLandmarks.size < 468) {
             Log.w(TAG, "⚠️ Landmarks insuficientes: ${faceLandmarks.size}")
             return EyeDistances(0f, 0f, 0f, 0f)
@@ -58,11 +58,11 @@ class CalculateEyeDistancesUseCase @Inject constructor() {
             val leftLeft = faceLandmarks[LEFT_EYE_LEFT]
             val leftRight = faceLandmarks[LEFT_EYE_RIGHT]
 
-            // ✅ CALCULAR DISTANCIAS VERTICALES (para detectar cierre)
+            //  CALCULAR DISTANCIAS VERTICALES (para detectar cierre)
             val verticalRight = euclideanDistance(rightTop, rightBottom)
             val verticalLeft = euclideanDistance(leftTop, leftBottom)
             
-            // ✅ CALCULAR DISTANCIAS HORIZONTALES (para normalizar)
+            //  CALCULAR DISTANCIAS HORIZONTALES (para normalizar)
             val horizontalRight = euclideanDistance(rightLeft, rightRight)
             val horizontalLeft = euclideanDistance(leftLeft, leftRight)
 
