@@ -8,10 +8,9 @@ class DetectYawnUseCase @Inject constructor(
     
     companion object {
         private const val MAR_THRESHOLD = 0.6f
-        private const val YAWN_DURATION_MS = 2000L // ✅ 2 segundos (como backend Python)
+        private const val YAWN_DURATION_MS = 4000L  // ✅ CAMBIAR A 4 SEGUNDOS
         
-        // ✅ VENTANA TEMPORAL: 180 segundos (3 minutos)
-        private const val YAWN_WINDOW_MS = 180_000L
+        private const val YAWN_WINDOW_MS = 180_000L  // 3 minutos
         private const val YAWN_COUNT_THRESHOLD = 10
     }
     

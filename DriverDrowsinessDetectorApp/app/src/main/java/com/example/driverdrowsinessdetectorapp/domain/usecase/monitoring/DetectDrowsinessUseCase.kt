@@ -1,20 +1,18 @@
 package com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring
 
 import android.util.Log
-import com.example.driverdrowsinessdetectorapp.domain.model.AlertLevel
-import com.example.driverdrowsinessdetectorapp.domain.model.AlertType
-import com.example.driverdrowsinessdetectorapp.domain.model.MetricasSomnolencia
+import com.example.driverdrowsinessdetectorapp.domain.model.*
 import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.features.*
 import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.processing.*
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
 import javax.inject.Inject
 
 class DetectDrowsinessUseCase @Inject constructor(
-    private val calculateEARUseCase: CalculateEARUseCase,
+    private val calculateEyeDistancesUseCase: CalculateEyeDistancesUseCase,
     private val calculateMARUseCase: CalculateMARUseCase,
-    private val detectHeadPoseUseCase: DetectHeadPoseUseCase,
+    private val detectHeadPositionUseCase: DetectHeadPositionUseCase,
     private val detectHandNearEyesUseCase: DetectHandNearEyesUseCase,
-    private val detectBlinkUseCase: DetectBlinkUseCase, // ✅ NUEVO
+    private val detectBlinkUseCase: DetectBlinkUseCase,
     private val detectMicrosleepUseCase: DetectMicrosleepUseCase,
     private val detectYawnUseCase: DetectYawnUseCase,
     private val detectNoddingUseCase: DetectNoddingUseCase,
@@ -23,10 +21,9 @@ class DetectDrowsinessUseCase @Inject constructor(
     companion object {
         private const val TAG = "DetectDrowsinessUseCase"
         
-        // ✅ UMBRALES DE VENTANA TEMPORAL
-        private const val BLINK_THRESHOLD = 20     // >20 parpadeos en 1 min
-        private const val YAWN_THRESHOLD = 10      // >10 bostezos en 3 min
-        private const val EYE_RUB_THRESHOLD = 10   // >10 frotamientos en 5 min
+        private const val BLINK_THRESHOLD = 20
+        private const val YAWN_THRESHOLD = 10
+        private const val EYE_RUB_THRESHOLD = 10
     }
     
     operator fun invoke(
@@ -34,42 +31,50 @@ class DetectDrowsinessUseCase @Inject constructor(
         handLandmarks: List<List<NormalizedLandmark>>?
     ): MetricasSomnolencia {
         try {
-            // 1. CÁLCULO DE MÉTRICAS
-            val ear = calculateEARUseCase(faceLandmarks)
+            val eyeDistances = calculateEyeDistancesUseCase(faceLandmarks)
+            
+            // ✅ CALCULAR EAR CORRECTAMENTE
+            val ear = if (eyeDistances.horizontalRightEye > 0 && eyeDistances.horizontalLeftEye > 0) {
+                val earRight = eyeDistances.verticalRightEyelid / eyeDistances.horizontalRightEye
+                val earLeft = eyeDistances.verticalLeftEyelid / eyeDistances.horizontalLeftEye
+                (earRight + earLeft) / 2f
+            } else {
+                0f
+            }
+            
             val mar = calculateMARUseCase(faceLandmarks)
-            val headPose = detectHeadPoseUseCase(faceLandmarks)
+            val headPosition = detectHeadPositionUseCase(faceLandmarks)
             val handNearEyes = detectHandNearEyesUseCase(faceLandmarks, handLandmarks)
             
-            // 2. DETECCIÓN DE CARACTERÍSTICAS
-            val (isBlinking, blinkCount, isEyeClosed) = detectBlinkUseCase(ear) // ✅ NUEVO
-            val (isMicrosleep, microsleepCount, microsleepDurations) = detectMicrosleepUseCase(ear)
+            val (isBlinking, blinkCount, isEyeClosed) = detectBlinkUseCase(eyeDistances)
+            val (isMicrosleep, microsleepCount, microsleepDurations) = detectMicrosleepUseCase(eyeDistances)
             val (isYawning, yawnCount, yawnDurations) = detectYawnUseCase(mar)
-            val (isNodding, noddingCount, noddingDurations) = detectNoddingUseCase(headPose)
+            val (isNodding, noddingCount, noddingDurations) = detectNoddingUseCase(headPosition)
             val eyeRubResults = detectEyeRubUseCase(handNearEyes)
             
-            // 3. DETERMINAR NIVEL DE ALERTA
+            Log.d(TAG, "EAR=$ear, Blinking=$isBlinking, Microsleep=$isMicrosleep")
+            
+            // 6. DETERMINAR NIVEL DE ALERTA
             val alertLevel = determineAlertLevel(
                 isMicrosleep = isMicrosleep,
-                isYawning = isYawning,
-                yawnCount = yawnCount,
                 isNodding = isNodding,
-                blinkCount = blinkCount, // ✅ NUEVO
+                blinkCount = blinkCount,
+                yawnCount = yawnCount,
                 eyeRubFirstHandCount = eyeRubResults["PRIMERA_MANO"]?.second ?: 0,
                 eyeRubSecondHandCount = eyeRubResults["SEGUNDA_MANO"]?.second ?: 0
             )
             
-            val alertType = determineAlertType(
-                isMicrosleep = isMicrosleep,
-                isYawning = isYawning,
-                isNodding = isNodding
-            )
+            val alertType = determineAlertType(isMicrosleep, isYawning, isNodding)
             
-            // 4. RETORNAR MÉTRICAS COMPLETAS
             return MetricasSomnolencia(
                 timestamp = System.currentTimeMillis(),
-                ear = ear,
+                ear = ear,  // ✅ EAR calculado correctamente
                 mar = mar,
-                headPose = headPose,
+                headPose = HeadPose(
+                    pitch = 0f,
+                    yaw = 0f,
+                    roll = 0f
+                ),
                 isBlinking = isBlinking,
                 blinkCount = blinkCount,
                 isMicrosleep = isMicrosleep,
@@ -88,52 +93,40 @@ class DetectDrowsinessUseCase @Inject constructor(
             )
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al detectar somnolencia: ${e.message}", e)
+            Log.e(TAG, "❌ Error: ${e.message}", e)
             return MetricasSomnolencia.empty()
         }
     }
     
     private fun determineAlertLevel(
         isMicrosleep: Boolean,
-        isYawning: Boolean,
-        yawnCount: Int,
         isNodding: Boolean,
-        blinkCount: Int, // ✅ NUEVO
+        blinkCount: Int,
+        yawnCount: Int,
         eyeRubFirstHandCount: Int,
         eyeRubSecondHandCount: Int
     ): AlertLevel {
         return when {
-            // CRÍTICO: Microsueño (inmediato)
             isMicrosleep -> {
-                Log.w(TAG, "🚨 CRÍTICO: Microsueño detectado")
+                Log.d(TAG, "🚨 CRITICAL: Microsueño detectado")
                 AlertLevel.CRITICAL
             }
-            
-            // ALTO: Cabeceo (inmediato)
             isNodding -> {
-                Log.w(TAG, "⚠️ ALTO: Cabeceo detectado")
+                Log.d(TAG, "🚨 CRITICAL: Cabeceo detectado")
+                AlertLevel.CRITICAL
+            }
+            blinkCount > BLINK_THRESHOLD -> {
+                Log.d(TAG, "⚠️ MEDIUM: Parpadeo excesivo ($blinkCount)")
+                AlertLevel.MEDIUM
+            }
+            yawnCount > YAWN_THRESHOLD -> {
+                Log.d(TAG, "⚠️ HIGH: Bostezos excesivos ($yawnCount)")
                 AlertLevel.HIGH
             }
-            
-            // MEDIO: Parpadeo excede umbral ✅ NUEVO
-            blinkCount > BLINK_THRESHOLD -> {
-                Log.w(TAG, "⚡ MEDIO: $blinkCount parpadeos en 1 min (umbral: $BLINK_THRESHOLD)")
-                AlertLevel.MEDIUM
-            }
-            
-            // MEDIO: Bostezo excede umbral
-            yawnCount > YAWN_THRESHOLD -> {
-                Log.w(TAG, "⚡ MEDIO: $yawnCount bostezos en 3 min (umbral: $YAWN_THRESHOLD)")
-                AlertLevel.MEDIUM
-            }
-            
-            // MEDIO: Frotamiento excede umbral
             eyeRubFirstHandCount > EYE_RUB_THRESHOLD || eyeRubSecondHandCount > EYE_RUB_THRESHOLD -> {
-                Log.w(TAG, "⚡ MEDIO: Frotamiento ojos (Primera: $eyeRubFirstHandCount, Segunda: $eyeRubSecondHandCount)")
+                Log.d(TAG, "⚠️ MEDIUM: Frotamiento excesivo")
                 AlertLevel.MEDIUM
             }
-            
-            // NORMAL
             else -> AlertLevel.NORMAL
         }
     }
@@ -152,7 +145,7 @@ class DetectDrowsinessUseCase @Inject constructor(
     }
     
     fun reset() {
-        detectBlinkUseCase.reset() // ✅ NUEVO
+        detectBlinkUseCase.reset()
         detectMicrosleepUseCase.reset()
         detectYawnUseCase.reset()
         detectNoddingUseCase.reset()

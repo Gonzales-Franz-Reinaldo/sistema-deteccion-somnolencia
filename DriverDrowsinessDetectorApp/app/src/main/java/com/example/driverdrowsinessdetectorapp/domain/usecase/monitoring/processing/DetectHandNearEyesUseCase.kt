@@ -14,16 +14,15 @@ import kotlin.math.sqrt
 class DetectHandNearEyesUseCase @Inject constructor() {
     
     companion object {
-        // Índices de landmarks de ojos
-        private const val LEFT_EYE_CENTER = 159
-        private const val RIGHT_EYE_CENTER = 386
+        // ✅ CONVERTIR 40 píxeles a normalizado
+        // Asumiendo resolución típica de 640x480:
+        private const val PROXIMITY_THRESHOLD = 40f / 640f  // ≈ 0.0625f
         
-        // Índices de landmarks de manos (MediaPipe Hands)
+        private const val LEFT_EYE_CENTER = 468   // Índice Python
+        private const val RIGHT_EYE_CENTER = 473  // Índice Python
+        
         private const val INDEX_FINGER_TIP = 8
         private const val MIDDLE_FINGER_TIP = 12
-        
-        // Umbral de distancia (normalizado)
-        private const val PROXIMITY_THRESHOLD = 0.08f
     }
     
     /**
