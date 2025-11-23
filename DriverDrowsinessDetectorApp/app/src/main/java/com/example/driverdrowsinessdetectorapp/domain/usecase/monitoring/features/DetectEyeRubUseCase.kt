@@ -1,133 +1,131 @@
 package com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.features
 
+import android.util.Log
 import javax.inject.Inject
 
 /**
- * Caso de Uso: Detectar Frotamiento de Ojos
+ * : Detectar Frotamiento de Ojos
  * 
- * Equivalente a: drowsiness_processor/drowsiness_features/eye_rub/processing.py
+ * Equivalente a: eye_rub/processing.py
  * 
- * Frotamiento = Mano cerca de ojos por >1.5 segundos
+ *  LÓGICA PYTHON EXACTA:
+ * - Frotamiento = Mano cerca de ojos por >1 segundo
+ * - Detecta cuando la mano SE ALEJA (no mientras está cerca)
  */
 class DetectEyeRubUseCase @Inject constructor() {
     
     companion object {
-        private const val EYE_RUB_DURATION_MS = 1500L
+        private const val TAG = "DetectEyeRubUseCase"
+        private const val EYE_RUB_DURATION_MS = 1000L
     }
     
+    //  PRIMERA MANO (INDEPENDIENTE)
     private var firstHandStartTime: Long? = null
-    private var secondHandStartTime: Long? = null
     private var firstHandCount = 0
-    private var secondHandCount = 0
     private val firstHandDurations = mutableListOf<Long>()
+    
+    //  SEGUNDA MANO (INDEPENDIENTE)
+    private var secondHandStartTime: Long? = null
+    private var secondHandCount = 0
     private val secondHandDurations = mutableListOf<Long>()
     
-    //  Flags para evitar registro múltiple
-    private var isFirstHandRubbing = false
-    private var isSecondHandRubbing = false
-    
-    /**
-     * Detectar frotamiento de ojos
-     * 
-     * @param handNearEyes Par (isNear, whichHand)
-     * @return Map con resultados para ambas manos
-     */
-    operator fun invoke(handNearEyes: Pair<Boolean, String?>): Map<String, Triple<Boolean, Int, List<Long>>> {
+    operator fun invoke(handNearEyes: Map<String, Boolean>): Map<String, Triple<Boolean, Int, List<Long>>> {
         val currentTime = System.currentTimeMillis()
-        val (isNear, whichHand) = handNearEyes
         
-        // Procesar primera mano
-        val firstHandResult = processHand(
-            isNear && whichHand == "PRIMERA_MANO",
-            currentTime,
-            firstHandStartTime,
-            firstHandCount,
-            firstHandDurations,
-            isFirstHandRubbing
-        )
-        firstHandStartTime = firstHandResult.fourth
-        isFirstHandRubbing = firstHandResult.fifth
+        Log.d(TAG, "🔍 Claves recibidas: ${handNearEyes.keys}")
+        Log.d(TAG, "🔍 Valores: $handNearEyes")
         
-        // Procesar segunda mano
-        val secondHandResult = processHand(
-            isNear && whichHand == "SEGUNDA_MANO",
-            currentTime,
-            secondHandStartTime,
-            secondHandCount,
-            secondHandDurations,
-            isSecondHandRubbing
+        // 🆕 VERIFICAR MANO IZQUIERDA
+        val isLeftHandNear = handNearEyes["MANO_IZQUIERDA_OJO_DERECHO"] == true || 
+                             handNearEyes["MANO_IZQUIERDA_OJO_IZQUIERDO"] == true
+        
+        // 🆕 VERIFICAR MANO DERECHA
+        val isRightHandNear = handNearEyes["MANO_DERECHA_OJO_DERECHO"] == true || 
+                           handNearEyes["MANO_DERECHA_OJO_IZQUIERDO"] == true
+        
+        Log.d(TAG, "🔍 isLeftHandNear=$isLeftHandNear, isRightHandNear=$isRightHandNear")
+        
+        //  PROCESAR PRIMERA MANO (USA firstHandStartTime, firstHandCount, firstHandDurations)
+        val leftHandDetected = processHand(
+            isNear = isLeftHandNear,
+            currentTime = currentTime,
+            startTimeRef = { firstHandStartTime },
+            setStartTime = { firstHandStartTime = it },
+            countRef = { firstHandCount },
+            incrementCount = { firstHandCount++ },
+            durations = firstHandDurations,
+            handLabel = "MANO_IZQUIERDA"
         )
-        secondHandStartTime = secondHandResult.fourth
-        isSecondHandRubbing = secondHandResult.fifth
+        
+        //  PROCESAR SEGUNDA MANO (USA secondHandStartTime, secondHandCount, secondHandDurations)
+        val rightHandDetected = processHand(
+            isNear = isRightHandNear,
+            currentTime = currentTime,
+            startTimeRef = { secondHandStartTime },
+            setStartTime = { secondHandStartTime = it },
+            countRef = { secondHandCount },
+            incrementCount = { secondHandCount++ },
+            durations = secondHandDurations,
+            handLabel = "MANO_DERECHA"
+        )
         
         return mapOf(
-            "PRIMERA_MANO" to Triple(firstHandResult.first, firstHandCount, firstHandDurations),
-            "SEGUNDA_MANO" to Triple(secondHandResult.first, secondHandCount, secondHandDurations)
+            "MANO_IZQUIERDA" to Triple(leftHandDetected, firstHandCount, firstHandDurations.toList()),
+            "MANO_DERECHA" to Triple(rightHandDetected, secondHandCount, secondHandDurations.toList())
         )
     }
     
     /**
-     * Procesar detección para una mano específica
+     *  NUEVA IMPLEMENTACIÓN: Funciones lambda para mantener estado independiente
      */
     private fun processHand(
         isNear: Boolean,
         currentTime: Long,
-        startTime: Long?,
-        count: Int,
+        startTimeRef: () -> Long?,
+        setStartTime: (Long?) -> Unit,
+        countRef: () -> Int,
+        incrementCount: () -> Unit,
         durations: MutableList<Long>,
-        isCurrentlyRubbing: Boolean
-    ): Quintuple<Boolean, Int, List<Long>, Long?, Boolean> {
-        var newStartTime = startTime
-        var newCount = count
-        var newIsRubbing = isCurrentlyRubbing
-        
+        handLabel: String
+    ): Boolean {
         if (isNear) {
-            // MANO CERCA DE OJOS
-            if (newStartTime == null) {
-                newStartTime = currentTime
-                newIsRubbing = false
+            // Mano cerca de ojos
+            if (startTimeRef() == null) {
+                setStartTime(currentTime)
+                Log.d(TAG, "👁️✋ $handLabel cerca de ojos")
+            } else {
+                val elapsed = currentTime - (startTimeRef() ?: currentTime)
+                if (elapsed > 500 && elapsed % 100 < 50) {
+                    Log.d(TAG, "⏱️ $handLabel cerca: ${elapsed}ms / ${EYE_RUB_DURATION_MS}ms")
+                }
             }
-            
-            val duration = currentTime - (newStartTime ?: currentTime)
-            
-            // : Solo registra UNA VEZ cuando alcanza umbral
-            if (duration >= EYE_RUB_DURATION_MS && !newIsRubbing) {
-                newIsRubbing = true
-                newCount++
-                durations.add(duration)
-                return Quintuple(true, newCount, durations, newStartTime, newIsRubbing)
-            }
-            
-            return Quintuple(false, newCount, durations, newStartTime, newIsRubbing)
+            return false
         } else {
-            // MANO ALEJADA - Resetear
-            newStartTime = null
-            newIsRubbing = false
+            // Mano alejada
+            if (startTimeRef() != null) {
+                val duration = currentTime - (startTimeRef() ?: currentTime)
+                setStartTime(null)
+                
+                if (duration > EYE_RUB_DURATION_MS) {
+                    incrementCount()
+                    durations.add(duration)
+                    Log.d(TAG, "🚨 FROTAMIENTO DETECTADO ($handLabel): ${duration}ms (count=${countRef()})")
+                    return true
+                } else {
+                    Log.d(TAG, "👁️✋ $handLabel se alejó (duración: ${duration}ms)")
+                    Log.d(TAG, "⏭️ Frotamiento muy corto: ${duration}ms <= ${EYE_RUB_DURATION_MS}ms")
+                }
+            }
+            return false
         }
-        
-        return Quintuple(false, newCount, durations, newStartTime, newIsRubbing)
     }
     
-    /**
-     * Resetear contadores
-     */
     fun reset() {
         firstHandStartTime = null
-        secondHandStartTime = null
         firstHandCount = 0
-        secondHandCount = 0
         firstHandDurations.clear()
+        secondHandStartTime = null
+        secondHandCount = 0
         secondHandDurations.clear()
-        isFirstHandRubbing = false
-        isSecondHandRubbing = false
     }
-    
-    //  Clase auxiliar para retornar 5 valores
-    private data class Quintuple<A, B, C, D, E>(
-        val first: A,
-        val second: B,
-        val third: C,
-        val fourth: D,
-        val fifth: E
-    )
 }

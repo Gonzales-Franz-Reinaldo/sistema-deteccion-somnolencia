@@ -35,12 +35,19 @@ data class MetricasSomnolencia(
     val alertLevel: AlertLevel,
     val alertType: AlertType?
 ) {
+    // PROPIEDADES COMPUTADAS para acceso directo en UI
+    val eyeRubFirstHandCount: Int
+        get() = eyeRubFirstHand.second
+
+    val eyeRubSecondHandCount: Int
+        get() = eyeRubSecondHand.second
+
     companion object {
         fun empty() = MetricasSomnolencia(
-            timestamp = System.currentTimeMillis(),
+            timestamp = 0L,
             ear = 0f,
             mar = 0f,
-            headPose = HeadPose.NEUTRAL,
+            headPose = HeadPose(pitch = 0f, yaw = 0f, roll = 0f),
             isBlinking = false,
             blinkCount = 0,
             isMicrosleep = false,

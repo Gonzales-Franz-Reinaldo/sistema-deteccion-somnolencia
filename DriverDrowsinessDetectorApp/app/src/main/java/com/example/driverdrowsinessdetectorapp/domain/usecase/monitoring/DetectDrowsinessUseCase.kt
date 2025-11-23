@@ -4,12 +4,13 @@ import android.util.Log
 import com.example.driverdrowsinessdetectorapp.domain.model.*
 import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.features.*
 import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.processing.*
+import com.google.mediapipe.tasks.components.containers.Category  
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
 import javax.inject.Inject
 
 class DetectDrowsinessUseCase @Inject constructor(
     private val calculateEyeDistancesUseCase: CalculateEyeDistancesUseCase,
-    private val calculateMouthDistancesUseCase: CalculateMouthDistancesUseCase,  
+    private val calculateMouthDistancesUseCase: CalculateMouthDistancesUseCase,
     private val calculateMARUseCase: CalculateMARUseCase,
     private val detectHeadPositionUseCase: DetectHeadPositionUseCase,
     private val detectHandNearEyesUseCase: DetectHandNearEyesUseCase,
@@ -29,13 +30,14 @@ class DetectDrowsinessUseCase @Inject constructor(
     
     operator fun invoke(
         faceLandmarks: List<NormalizedLandmark>,
-        handLandmarks: List<List<NormalizedLandmark>>?
+        handLandmarks: List<List<NormalizedLandmark>>?,
+        handedness: List<List<Category>>?  
     ): MetricasSomnolencia {
         try {
             // 1. CALCULAR DISTANCIAS DE OJOS
             val eyeDistances = calculateEyeDistancesUseCase(faceLandmarks)
             
-            // 2.  CALCULAR DISTANCIAS DE BOCA
+            // 2. CALCULAR DISTANCIAS DE BOCA
             val mouthDistances = calculateMouthDistancesUseCase(faceLandmarks)
             
             // 3. CALCULAR EAR
@@ -47,45 +49,48 @@ class DetectDrowsinessUseCase @Inject constructor(
                 0f
             }
             
-            // 4. CALCULAR MAR (LEGACY - para métricas)
+            // 4. CALCULAR MAR
             val mar = calculateMARUseCase(faceLandmarks)
             
             // 5. DETECTAR POSICIÓN DE CABEZA
             val headPosition = detectHeadPositionUseCase(faceLandmarks)
             
-            // 6. DETECTAR MANOS CERCA DE OJOS
-            val handNearEyes = detectHandNearEyesUseCase(faceLandmarks, handLandmarks)
+            // 6. DETECTAR MANOS CERCA DE OJOS (CON HANDEDNESS)
+            val handNearEyes = detectHandNearEyesUseCase(faceLandmarks, handLandmarks, handedness)
             
-            // 7.  DETECCIONES CON NUEVAS LÓGICAS
-            val (isBlinking, blinkCount, isEyeClosed) = detectBlinkUseCase(eyeDistances)
+            // 7. DETECTAR PARPADEO
+            val (isBlinking, blinkCount, _) = detectBlinkUseCase(eyeDistances)
+            
+            // 8. DETECTAR MICROSUEÑO
             val (isMicrosleep, microsleepCount, microsleepDurations) = detectMicrosleepUseCase(eyeDistances)
-            val (isYawning, yawnCount, yawnDurations) = detectYawnUseCase(mouthDistances)  
+            
+            // 9. DETECTAR BOSTEZO
+            val (isYawning, yawnCount, yawnDurations) = detectYawnUseCase(mouthDistances)
+            
+            // 10. DETECTAR CABECEO
             val (isNodding, noddingCount, noddingDurations) = detectNoddingUseCase(headPosition)
+            
+            // 11. DETECTAR FROTAMIENTO DE OJOS
             val eyeRubResults = detectEyeRubUseCase(handNearEyes)
             
-            Log.d(TAG, "EAR=$ear, Blinking=$isBlinking, Microsleep=$isMicrosleep, Yawning=$isYawning")
-            
-            // 8. DETERMINAR NIVEL DE ALERTA
+            // 12. DETERMINAR NIVEL DE ALERTA
             val alertLevel = determineAlertLevel(
                 isMicrosleep = isMicrosleep,
                 isNodding = isNodding,
                 blinkCount = blinkCount,
                 yawnCount = yawnCount,
-                eyeRubFirstHandCount = eyeRubResults["PRIMERA_MANO"]?.second ?: 0,
-                eyeRubSecondHandCount = eyeRubResults["SEGUNDA_MANO"]?.second ?: 0
+                eyeRubFirstHandCount = eyeRubResults["MANO_IZQUIERDA"]?.second ?: 0,
+                eyeRubSecondHandCount = eyeRubResults["MANO_DERECHA"]?.second ?: 0
             )
             
             val alertType = determineAlertType(isMicrosleep, isYawning, isNodding)
             
+            // 13. RETORNAR MÉTRICAS
             return MetricasSomnolencia(
                 timestamp = System.currentTimeMillis(),
                 ear = ear,
                 mar = mar,
-                headPose = HeadPose(
-                    pitch = 0f,
-                    yaw = 0f,
-                    roll = 0f
-                ),
+                headPose = HeadPose(pitch = 0f, yaw = 0f, roll = 0f),
                 isBlinking = isBlinking,
                 blinkCount = blinkCount,
                 isMicrosleep = isMicrosleep,
@@ -97,8 +102,16 @@ class DetectDrowsinessUseCase @Inject constructor(
                 isNodding = isNodding,
                 noddingCount = noddingCount,
                 noddingDurations = noddingDurations,
-                eyeRubFirstHand = eyeRubResults["PRIMERA_MANO"] ?: Triple(false, 0, emptyList()),
-                eyeRubSecondHand = eyeRubResults["SEGUNDA_MANO"] ?: Triple(false, 0, emptyList()),
+                eyeRubFirstHand = Triple(
+                    eyeRubResults["MANO_IZQUIERDA"]?.first ?: false,
+                    eyeRubResults["MANO_IZQUIERDA"]?.second ?: 0,
+                    eyeRubResults["MANO_IZQUIERDA"]?.third ?: emptyList()
+                ),
+                eyeRubSecondHand = Triple(
+                    eyeRubResults["MANO_DERECHA"]?.first ?: false,
+                    eyeRubResults["MANO_DERECHA"]?.second ?: 0,
+                    eyeRubResults["MANO_DERECHA"]?.third ?: emptyList()
+                ),
                 alertLevel = alertLevel,
                 alertType = alertType
             )
