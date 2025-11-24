@@ -31,6 +31,9 @@ class MonitoringViewModel @Inject constructor(
         private const val TAG = "MonitoringViewModel"
         private const val FRAME_SKIP_COUNT = 2
         private const val ALERT_DURATION_MS = 5000L 
+        private const val BLINK_THRESHOLD = 20
+        private const val YAWN_THRESHOLD = 3
+        private const val EYE_RUB_THRESHOLD = 3
     }
 
     private val _uiState = MutableStateFlow<MonitoringUiState>(MonitoringUiState.Idle)
@@ -57,7 +60,7 @@ class MonitoringViewModel @Inject constructor(
             sessionStartTime = System.currentTimeMillis()
             frameCount = 0
             lastAlertLevel = AlertLevel.NORMAL
-            lastAlertTime = 0 // ✅ NUEVO
+            lastAlertTime = 0 
             
             _uiState.value = MonitoringUiState.Active(
                 sessionId = sessionStartTime,
@@ -234,6 +237,39 @@ class MonitoringViewModel @Inject constructor(
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
         return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    }
+
+    private fun determineAlertLevel(
+        isMicrosleep: Boolean,
+        isNodding: Boolean,  
+        blinkCount: Int,
+        yawnCount: Int,
+        eyeRubFirstHandCount: Int,
+        eyeRubSecondHandCount: Int
+    ): AlertLevel {
+        return when {
+            isMicrosleep -> {
+                Log.d(TAG, "🚨 ALERTA CRITICAL: Microsueño detectado")
+                AlertLevel.CRITICAL
+            }
+            isNodding -> {  
+                Log.d(TAG, "🚨 ALERTA CRITICAL: Cabeceo detectado")
+                AlertLevel.CRITICAL
+            }
+            blinkCount > BLINK_THRESHOLD -> {
+                Log.d(TAG, "⚠️ ALERTA HIGH: Parpadeo excesivo ($blinkCount)")
+                AlertLevel.HIGH
+            }
+            yawnCount > YAWN_THRESHOLD -> {
+                Log.d(TAG, "⚠️ ALERTA MEDIUM: Bostezos frecuentes ($yawnCount)")
+                AlertLevel.MEDIUM
+            }
+            eyeRubFirstHandCount > EYE_RUB_THRESHOLD || eyeRubSecondHandCount > EYE_RUB_THRESHOLD -> {
+                Log.d(TAG, "⚠️ ALERTA MEDIUM: Frotamiento de ojos")
+                AlertLevel.MEDIUM
+            }
+            else -> AlertLevel.NORMAL
+        }
     }
 
     override fun onCleared() {
