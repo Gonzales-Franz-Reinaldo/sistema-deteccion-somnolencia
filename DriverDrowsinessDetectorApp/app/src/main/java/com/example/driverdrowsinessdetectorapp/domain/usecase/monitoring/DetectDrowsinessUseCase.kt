@@ -4,7 +4,7 @@ import android.util.Log
 import com.example.driverdrowsinessdetectorapp.domain.model.*
 import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.features.*
 import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.processing.*
-import com.google.mediapipe.tasks.components.containers.Category  
+import com.google.mediapipe.tasks.components.containers.Category
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
 import javax.inject.Inject
 
@@ -23,57 +23,38 @@ class DetectDrowsinessUseCase @Inject constructor(
     companion object {
         private const val TAG = "DetectDrowsinessUseCase"
         
-        private const val BLINK_THRESHOLD = 20
-        private const val YAWN_THRESHOLD = 10
-        private const val EYE_RUB_THRESHOLD = 10
+        //  UMBRALES SEGÚN PYTHON
+        private const val BLINK_THRESHOLD = 20        // >20 parpadeos/min
+        private const val YAWN_THRESHOLD = 3          // >3 bostezos/3min
+        private const val EYE_RUB_THRESHOLD = 3       // >3 frotamientos/5min
     }
     
     operator fun invoke(
         faceLandmarks: List<NormalizedLandmark>,
         handLandmarks: List<List<NormalizedLandmark>>?,
-        handedness: List<List<Category>>?  
+        handedness: List<List<Category>>?
     ): MetricasSomnolencia {
         try {
-            // 1. CALCULAR DISTANCIAS DE OJOS
+            // 1-6. Cálculos previos (sin cambios)
             val eyeDistances = calculateEyeDistancesUseCase(faceLandmarks)
-            
-            // 2. CALCULAR DISTANCIAS DE BOCA
             val mouthDistances = calculateMouthDistancesUseCase(faceLandmarks)
-            
-            // 3. CALCULAR EAR
             val ear = if (eyeDistances.horizontalRightEye > 0 && eyeDistances.horizontalLeftEye > 0) {
                 val earRight = eyeDistances.verticalRightEyelid / eyeDistances.horizontalRightEye
                 val earLeft = eyeDistances.verticalLeftEyelid / eyeDistances.horizontalLeftEye
                 (earRight + earLeft) / 2f
-            } else {
-                0f
-            }
-            
-            // 4. CALCULAR MAR
+            } else 0f
             val mar = calculateMARUseCase(faceLandmarks)
-            
-            // 5. DETECTAR POSICIÓN DE CABEZA
             val headPosition = detectHeadPositionUseCase(faceLandmarks)
-            
-            // 6. DETECTAR MANOS CERCA DE OJOS (CON HANDEDNESS)
             val handNearEyes = detectHandNearEyesUseCase(faceLandmarks, handLandmarks, handedness)
             
-            // 7. DETECTAR PARPADEO
+            // 7-11. Detecciones (sin cambios)
             val (isBlinking, blinkCount, _) = detectBlinkUseCase(eyeDistances)
-            
-            // 8. DETECTAR MICROSUEÑO
             val (isMicrosleep, microsleepCount, microsleepDurations) = detectMicrosleepUseCase(eyeDistances)
-            
-            // 9. DETECTAR BOSTEZO
             val (isYawning, yawnCount, yawnDurations) = detectYawnUseCase(mouthDistances)
-            
-            // 10. DETECTAR CABECEO
             val (isNodding, noddingCount, noddingDurations) = detectNoddingUseCase(headPosition)
-            
-            // 11. DETECTAR FROTAMIENTO DE OJOS
             val eyeRubResults = detectEyeRubUseCase(handNearEyes)
             
-            // 12. DETERMINAR NIVEL DE ALERTA
+            // 12.  DETERMINAR NIVEL DE ALERTA
             val alertLevel = determineAlertLevel(
                 isMicrosleep = isMicrosleep,
                 isNodding = isNodding,
@@ -83,9 +64,18 @@ class DetectDrowsinessUseCase @Inject constructor(
                 eyeRubSecondHandCount = eyeRubResults["MANO_DERECHA"]?.second ?: 0
             )
             
-            val alertType = determineAlertType(isMicrosleep, isYawning, isNodding)
+            //  DETERMINAR TIPO DE ALERTA (CORREGIDO)
+            val alertType = determineAlertType(
+                isMicrosleep = isMicrosleep,
+                isNodding = isNodding,
+                isYawning = isYawning,
+                yawnCount = yawnCount,
+                blinkCount = blinkCount,
+                eyeRubFirstHandCount = eyeRubResults["MANO_IZQUIERDA"]?.second ?: 0,
+                eyeRubSecondHandCount = eyeRubResults["MANO_DERECHA"]?.second ?: 0
+            )
             
-            // 13. RETORNAR MÉTRICAS
+            // 13. Retornar métricas
             return MetricasSomnolencia(
                 timestamp = System.currentTimeMillis(),
                 ear = ear,
@@ -122,6 +112,9 @@ class DetectDrowsinessUseCase @Inject constructor(
         }
     }
     
+    /**
+     *  DETERMINAR NIVEL DE ALERTA (SIN CAMBIOS)
+     */
     private fun determineAlertLevel(
         isMicrosleep: Boolean,
         isNodding: Boolean,
@@ -131,6 +124,7 @@ class DetectDrowsinessUseCase @Inject constructor(
         eyeRubSecondHandCount: Int
     ): AlertLevel {
         return when {
+            //  CRÍTICO INMEDIATO
             isMicrosleep -> {
                 Log.d(TAG, "🚨 CRITICAL: Microsueño detectado")
                 AlertLevel.CRITICAL
@@ -139,32 +133,69 @@ class DetectDrowsinessUseCase @Inject constructor(
                 Log.d(TAG, "🚨 CRITICAL: Cabeceo detectado")
                 AlertLevel.CRITICAL
             }
-            blinkCount > BLINK_THRESHOLD -> {
-                Log.d(TAG, "⚠️ MEDIUM: Parpadeo excesivo ($blinkCount)")
-                AlertLevel.MEDIUM
-            }
+            
+            //  ADVERTENCIAS GRADUALES
             yawnCount > YAWN_THRESHOLD -> {
-                Log.d(TAG, "⚠️ HIGH: Bostezos excesivos ($yawnCount)")
+                Log.d(TAG, "⚠️ HIGH: Bostezos frecuentes ($yawnCount en 3 min)")
                 AlertLevel.HIGH
             }
-            eyeRubFirstHandCount > EYE_RUB_THRESHOLD || eyeRubSecondHandCount > EYE_RUB_THRESHOLD -> {
-                Log.d(TAG, "⚠️ MEDIUM: Frotamiento excesivo")
+            blinkCount > BLINK_THRESHOLD -> {
+                Log.d(TAG, "⚠️ MEDIUM: Parpadeo excesivo ($blinkCount en 1 min)")
                 AlertLevel.MEDIUM
             }
+            eyeRubFirstHandCount > EYE_RUB_THRESHOLD || eyeRubSecondHandCount > EYE_RUB_THRESHOLD -> {
+                Log.d(TAG, "⚠️ MEDIUM: Frotamiento frecuente (${eyeRubFirstHandCount + eyeRubSecondHandCount} en 5 min)")
+                AlertLevel.MEDIUM
+            }
+            
+            //  NORMAL
             else -> AlertLevel.NORMAL
         }
     }
     
+    /**
+     * DETERMINAR TIPO DE ALERTA 
+     */
     private fun determineAlertType(
         isMicrosleep: Boolean,
+        isNodding: Boolean,
         isYawning: Boolean,
-        isNodding: Boolean
+        yawnCount: Int,
+        blinkCount: Int,
+        eyeRubFirstHandCount: Int,
+        eyeRubSecondHandCount: Int
     ): AlertType? {
+        //  PRIORIDAD 1: CRÍTICOS (Microsueño, Cabeceo)
         return when {
-            isMicrosleep -> AlertType.MICROSLEEP
-            isNodding -> AlertType.HEAD_NODDING
-            isYawning -> AlertType.YAWNING
-            else -> null
+            isMicrosleep -> {
+                Log.d(TAG, "🔴 AlertType: MICROSLEEP")
+                AlertType.MICROSLEEP
+            }
+            isNodding -> {
+                Log.d(TAG, "🔴 AlertType: HEAD_NODDING")
+                AlertType.HEAD_NODDING
+            }
+            
+            //  PRIORIDAD 2: ADVERTENCIAS (Bostezo, Parpadeo, Frotamiento)
+            // ORDEN: Bostezo > Frotamiento > Parpadeo
+            isYawning && yawnCount > YAWN_THRESHOLD -> {
+                Log.d(TAG, "⚠️ AlertType: YAWNING (count=$yawnCount)")
+                AlertType.YAWNING
+            }
+            eyeRubFirstHandCount > EYE_RUB_THRESHOLD || eyeRubSecondHandCount > EYE_RUB_THRESHOLD -> {
+                Log.d(TAG, "⚠️ AlertType: EYE_RUB (Izq=$eyeRubFirstHandCount, Der=$eyeRubSecondHandCount)")
+                AlertType.EYE_RUB
+            }
+            blinkCount > BLINK_THRESHOLD -> {
+                Log.d(TAG, "⚠️ AlertType: EXCESSIVE_BLINKING (count=$blinkCount)")
+                AlertType.EXCESSIVE_BLINKING
+            }
+            
+            //  SIN ALERTA
+            else -> {
+                Log.d(TAG, "✅ AlertType: NONE")
+                null
+            }
         }
     }
     

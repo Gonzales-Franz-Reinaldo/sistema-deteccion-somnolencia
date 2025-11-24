@@ -16,9 +16,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object UseCaseModule {
 
-
     // ========================================
-    //  Eye Distances
+    //  PROCESSING USE CASES
     // ========================================
     
     @Provides
@@ -26,55 +25,19 @@ object UseCaseModule {
     fun provideCalculateEyeDistancesUseCase(): CalculateEyeDistancesUseCase {
         return CalculateEyeDistancesUseCase()
     }
-    
-    // ========================================
-    //  Mouth Distances
-    // ========================================
 
     @Provides
     @Singleton
     fun provideCalculateMouthDistancesUseCase(): CalculateMouthDistancesUseCase {
         return CalculateMouthDistancesUseCase()
     }
-    
-    // ========================================
-    //  Head Position
-    // ========================================
-    
+
     @Provides
     @Singleton
     fun provideDetectHeadPositionUseCase(): DetectHeadPositionUseCase {
         return DetectHeadPositionUseCase()
     }
 
-    
-    // ========================================
-    //  WINDOWED COUNTER
-    // ========================================
-    
-    @Provides
-    @Singleton
-    fun provideWindowedCounterUseCase(): WindowedCounterUseCase {
-        return WindowedCounterUseCase()
-    }
-    
-    // ========================================
-    // EXTRACTION USE CASES
-    // ========================================
-    
-    @Provides
-    @Singleton
-    fun provideExtractLandmarksUseCase(
-        faceLandmarkerHelper: FaceLandmarkerHelper,
-        handLandmarkerHelper: HandLandmarkerHelper
-    ): ExtractLandmarksUseCase {
-        return ExtractLandmarksUseCase(faceLandmarkerHelper, handLandmarkerHelper)
-    }
-    
-    // ========================================
-    // PROCESSING USE CASES
-    // ========================================
-    
     @Provides
     @Singleton
     fun provideCalculateEARUseCase(): CalculateEARUseCase {
@@ -100,16 +63,26 @@ object UseCaseModule {
     }
     
     // ========================================
-    // FEATURES USE CASES
+    // EXTRACTION USE CASES
     // ========================================
     
-    //  Detección de parpadeo
     @Provides
     @Singleton
-    fun provideDetectBlinkUseCase(
-        windowedCounter: WindowedCounterUseCase
-    ): DetectBlinkUseCase {
-        return DetectBlinkUseCase(windowedCounter)
+    fun provideExtractLandmarksUseCase(
+        faceLandmarkerHelper: FaceLandmarkerHelper,
+        handLandmarkerHelper: HandLandmarkerHelper
+    ): ExtractLandmarksUseCase {
+        return ExtractLandmarksUseCase(faceLandmarkerHelper, handLandmarkerHelper)
+    }
+    
+    // ========================================
+    // FEATURES USE CASES (DETECCIÓN)
+    // ========================================
+    
+    @Provides
+    @Singleton
+    fun provideDetectBlinkUseCase(): DetectBlinkUseCase {
+        return DetectBlinkUseCase() 
     }
     
     @Provides
@@ -121,7 +94,7 @@ object UseCaseModule {
     @Provides
     @Singleton
     fun provideDetectYawnUseCase(): DetectYawnUseCase {
-        return DetectYawnUseCase()
+        return DetectYawnUseCase() 
     }
     
     @Provides
@@ -133,7 +106,7 @@ object UseCaseModule {
     @Provides
     @Singleton
     fun provideDetectEyeRubUseCase(): DetectEyeRubUseCase {
-        return DetectEyeRubUseCase()
+        return DetectEyeRubUseCase() 
     }
     
     // ========================================
@@ -143,10 +116,10 @@ object UseCaseModule {
     @Provides
     @Singleton
     fun provideDetectDrowsinessUseCase(
-        calculateEyeDistancesUseCase: CalculateEyeDistancesUseCase,  
-        calculateMouthDistancesUseCase: CalculateMouthDistancesUseCase,  
+        calculateEyeDistancesUseCase: CalculateEyeDistancesUseCase,
+        calculateMouthDistancesUseCase: CalculateMouthDistancesUseCase,
         calculateMARUseCase: CalculateMARUseCase,
-        detectHeadPositionUseCase: DetectHeadPositionUseCase,  
+        detectHeadPositionUseCase: DetectHeadPositionUseCase,
         detectHandNearEyesUseCase: DetectHandNearEyesUseCase,
         detectBlinkUseCase: DetectBlinkUseCase,
         detectMicrosleepUseCase: DetectMicrosleepUseCase,
@@ -155,10 +128,10 @@ object UseCaseModule {
         detectEyeRubUseCase: DetectEyeRubUseCase
     ): DetectDrowsinessUseCase {
         return DetectDrowsinessUseCase(
-            calculateEyeDistancesUseCase,  
-            calculateMouthDistancesUseCase,  
+            calculateEyeDistancesUseCase,
+            calculateMouthDistancesUseCase,
             calculateMARUseCase,
-            detectHeadPositionUseCase,  
+            detectHeadPositionUseCase,
             detectHandNearEyesUseCase,
             detectBlinkUseCase,
             detectMicrosleepUseCase,
