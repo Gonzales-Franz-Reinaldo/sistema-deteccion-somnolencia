@@ -12,6 +12,7 @@ import com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui.Monito
 import com.example.driverdrowsinessdetectorapp.util.AlarmUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,10 +31,10 @@ class MonitoringViewModel @Inject constructor(
     companion object {
         private const val TAG = "MonitoringViewModel"
         private const val FRAME_SKIP_COUNT = 2
-        private const val ALERT_DURATION_MS = 5000L 
-        private const val BLINK_THRESHOLD = 20
-        private const val YAWN_THRESHOLD = 3
-        private const val EYE_RUB_THRESHOLD = 3
+        
+        // ✅ DURACIONES DE ALERTAS
+        private const val CRITICAL_ALERT_DURATION_MS = 5000L  // 5 segundos
+        private const val WARNING_ALERT_DURATION_MS = 3000L   // 3 segundos
     }
 
     private val _uiState = MutableStateFlow<MonitoringUiState>(MonitoringUiState.Idle)
@@ -45,8 +46,11 @@ class MonitoringViewModel @Inject constructor(
     private var sessionStartTime: Long = 0
     private var frameCount = 0
     private var isProcessingFrame = false
-    private var lastAlertLevel = AlertLevel.NORMAL
-    private var lastAlertTime: Long = 0 
+    
+    // ✅ NUEVO: Control de alertas con temporizador
+    private var activeAlertLevel: AlertLevel = AlertLevel.NORMAL
+    private var alertStartTime: Long = 0
+    private var alertTimerJob: Job? = null
 
     fun startTrip() {
         viewModelScope.launch {
@@ -59,14 +63,14 @@ class MonitoringViewModel @Inject constructor(
             
             sessionStartTime = System.currentTimeMillis()
             frameCount = 0
-            lastAlertLevel = AlertLevel.NORMAL
-            lastAlertTime = 0 
+            activeAlertLevel = AlertLevel.NORMAL
+            alertStartTime = 0
             
             _uiState.value = MonitoringUiState.Active(
                 sessionId = sessionStartTime,
                 duration = "00:00:00",
-                currentEAR = 0.0f,
-                currentMAR = 0.0f,
+                currentEAR = 0f,
+                currentMAR = 0f,
                 headPose = com.example.driverdrowsinessdetectorapp.domain.model.HeadPose.NEUTRAL,
                 alertLevel = AlertLevel.NORMAL,
                 gpsEnabled = true,
@@ -96,7 +100,7 @@ class MonitoringViewModel @Inject constructor(
                 if (metrics != null) {
                     _currentMetrics.value = metrics
                     updateUiStateWithMetrics(metrics)
-                    handleAlertLevel(metrics.alertLevel)
+                    handleAlertWithDuration(metrics.alertLevel)
                 }
                 
             } catch (e: Exception) {
@@ -114,47 +118,106 @@ class MonitoringViewModel @Inject constructor(
                 currentEAR = metrics.ear,
                 currentMAR = metrics.mar,
                 headPose = metrics.headPose,
-                alertLevel = metrics.alertLevel,
-                isProcessing = false
+                alertLevel = activeAlertLevel, 
+                isProcessing = true
             )
         }
     }
 
     /**
-     *  MANEJO DE ALARMA CON DURACIÓN DE 5 SEGUNDOS
+     *  Manejo de alerta con duración garantizada
      */
-    private fun handleAlertLevel(newAlertLevel: AlertLevel) {
+    private fun handleAlertWithDuration(newAlertLevel: AlertLevel) {
         val currentTime = System.currentTimeMillis()
         
         when (newAlertLevel) {
             AlertLevel.NORMAL -> {
-                //  SOLO detener si NO estamos en ventana de alerta
-                if (currentTime - lastAlertTime > ALERT_DURATION_MS) {
-                    alarmUtil.stopAlarm()
-                    lastAlertTime = 0
-                    Log.d(TAG, "✅ Estado normal")
+                // NO detener alerta inmediatamente si hay una activa
+                if (activeAlertLevel != AlertLevel.NORMAL) {
+                    val elapsedTime = currentTime - alertStartTime
+                    val requiredDuration = getAlertDuration(activeAlertLevel)
+                    
+                    if (elapsedTime >= requiredDuration) {
+                        //  Duración cumplida, detener alerta
+                        stopAlert()
+                        Log.d(TAG, "✅ Alerta completada: ${elapsedTime}ms")
+                    } else {
+                        Log.d(TAG, "⏱️ Manteniendo alerta: ${elapsedTime}ms / ${requiredDuration}ms")
+                    }
                 }
             }
             
             AlertLevel.MEDIUM, AlertLevel.HIGH, AlertLevel.CRITICAL -> {
-                //  ALERTA o RENOVAR
-                if (currentTime - lastAlertTime > ALERT_DURATION_MS || lastAlertLevel != newAlertLevel) {
-                    alarmUtil.playAlarm(newAlertLevel)
-                    lastAlertTime = currentTime
-                    
-                    val alertMsg = getAlertMessage(_currentMetrics.value)
-                    val emoji = when(newAlertLevel) {
-                        AlertLevel.MEDIUM -> "⚠️"
-                        AlertLevel.HIGH -> "🚨"
-                        AlertLevel.CRITICAL -> "🔴"
-                        else -> ""
-                    }
-                    Log.w(TAG, "$emoji ALERTA ${newAlertLevel.name}: $alertMsg")
+                // NUEVA ALERTA o NIVEL MÁS ALTO
+                if (newAlertLevel != activeAlertLevel || activeAlertLevel == AlertLevel.NORMAL) {
+                    startAlert(newAlertLevel)
                 }
             }
         }
+    }
+
+    /**
+     *  Iniciar alerta con temporizador
+     */
+    private fun startAlert(level: AlertLevel) {
+        // Cancelar temporizador anterior
+        alertTimerJob?.cancel()
         
-        lastAlertLevel = newAlertLevel
+        activeAlertLevel = level
+        alertStartTime = System.currentTimeMillis()
+        
+        // Reproducir alarma
+        alarmUtil.playAlarm(level)
+        
+        val duration = getAlertDuration(level)
+        val emoji = when(level) {
+            AlertLevel.MEDIUM -> "⚠️"
+            AlertLevel.HIGH -> "🚨"
+            AlertLevel.CRITICAL -> "🔴"
+            else -> ""
+        }
+        
+        Log.w(TAG, "$emoji ALERTA ${level.name} INICIADA (duración: ${duration}ms)")
+        
+        //  Programar detención automática después de la duración
+        alertTimerJob = viewModelScope.launch {
+            delay(duration)
+            stopAlert()
+            Log.d(TAG, "⏰ Temporizador de alerta expirado")
+        }
+        
+        // Actualizar UI
+        val currentState = _uiState.value
+        if (currentState is MonitoringUiState.Active) {
+            _uiState.value = currentState.copy(alertLevel = level)
+        }
+    }
+
+    /**
+     *  Detener alerta
+     */
+    private fun stopAlert() {
+        alertTimerJob?.cancel()
+        alarmUtil.stopAlarm()
+        activeAlertLevel = AlertLevel.NORMAL
+        alertStartTime = 0
+        
+        // Actualizar UI
+        val currentState = _uiState.value
+        if (currentState is MonitoringUiState.Active) {
+            _uiState.value = currentState.copy(alertLevel = AlertLevel.NORMAL)
+        }
+    }
+
+    /**
+     *  Obtener duración según nivel
+     */
+    private fun getAlertDuration(level: AlertLevel): Long {
+        return when (level) {
+            AlertLevel.CRITICAL -> CRITICAL_ALERT_DURATION_MS  // 5 segundos
+            AlertLevel.HIGH, AlertLevel.MEDIUM -> WARNING_ALERT_DURATION_MS  // 3 segundos
+            AlertLevel.NORMAL -> 0L
+        }
     }
 
     private fun getAlertMessage(metrics: MetricasSomnolencia?): String {
@@ -164,9 +227,9 @@ class MonitoringViewModel @Inject constructor(
             metrics.isMicrosleep -> "😴 Microsueño detectado (${metrics.microsleepCount}x)"
             metrics.isNodding -> "🙇 Cabeceo detectado (${metrics.noddingCount}x)"
             metrics.isYawning -> "🥱 Bostezo prolongado (${metrics.yawnCount}x)"
-            metrics.eyeRubFirstHand.first -> "🤲 Frotamiento ojos - Primera mano"
-            metrics.eyeRubSecondHand.first -> "🤲 Frotamiento ojos - Segunda mano"
-            metrics.blinkCount > 20 -> "👁️ Parpadeo excesivo (${metrics.blinkCount}/min)"
+            metrics.blinkCount > 20 -> "👁️ Parpadeo excesivo (${metrics.blinkCount}/min)" 
+            metrics.eyeRubFirstHand.first -> "🤲 Frotamiento ojos - Mano izquierda"
+            metrics.eyeRubSecondHand.first -> "🤲 Frotamiento ojos - Mano derecha"
             else -> "⚠️ Fatiga general"
         }
     }
@@ -175,11 +238,11 @@ class MonitoringViewModel @Inject constructor(
         viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState is MonitoringUiState.Active) {
-                alarmUtil.stopAlarm()
                 _uiState.value = MonitoringUiState.Paused(
                     sessionId = currentState.sessionId,
                     duration = currentState.duration
                 )
+                stopAlert() // ← Detener alerta al pausar
                 Log.d(TAG, "⏸️ Viaje pausado")
             }
         }
@@ -187,35 +250,30 @@ class MonitoringViewModel @Inject constructor(
 
     fun resumeTrip() {
         viewModelScope.launch {
-            Log.d(TAG, "▶️ Reanudando viaje...")
-            
-            val currentMetrics = _currentMetrics.value
-            _uiState.value = MonitoringUiState.Active(
-                sessionId = sessionStartTime,
-                duration = formatDuration((System.currentTimeMillis() - sessionStartTime) / 1000),
-                currentEAR = currentMetrics?.ear ?: 0f,
-                currentMAR = currentMetrics?.mar ?: 0f,
-                headPose = currentMetrics?.headPose ?: com.example.driverdrowsinessdetectorapp.domain.model.HeadPose.NEUTRAL,
-                alertLevel = currentMetrics?.alertLevel ?: AlertLevel.NORMAL,
-                gpsEnabled = true,
-                isProcessing = false
-            )
-            
-            startTimer()
+            val currentState = _uiState.value
+            if (currentState is MonitoringUiState.Paused) {
+                _uiState.value = MonitoringUiState.Active(
+                    sessionId = currentState.sessionId,
+                    duration = currentState.duration,
+                    currentEAR = 0f,
+                    currentMAR = 0f,
+                    headPose = com.example.driverdrowsinessdetectorapp.domain.model.HeadPose.NEUTRAL,
+                    alertLevel = AlertLevel.NORMAL,
+                    gpsEnabled = true,
+                    isProcessing = false
+                )
+                Log.d(TAG, "▶️ Viaje reanudado")
+            }
         }
     }
 
     fun stopTrip() {
         viewModelScope.launch {
-            Log.d(TAG, "⏹️ Deteniendo viaje...")
-            
-            alarmUtil.stopAlarm()
+            stopAlert()
             detectDrowsinessUseCase.reset()
-            
             _uiState.value = MonitoringUiState.Idle
             _currentMetrics.value = null
-            
-            Log.d(TAG, "✅ Viaje detenido")
+            Log.d(TAG, "⏹️ Viaje finalizado")
         }
     }
 
@@ -223,10 +281,12 @@ class MonitoringViewModel @Inject constructor(
         viewModelScope.launch {
             while (_uiState.value is MonitoringUiState.Active) {
                 delay(1000)
+                val elapsed = (System.currentTimeMillis() - sessionStartTime) / 1000
+                val formatted = formatDuration(elapsed)
+                
                 val currentState = _uiState.value
                 if (currentState is MonitoringUiState.Active) {
-                    val duration = (System.currentTimeMillis() - sessionStartTime) / 1000
-                    _uiState.value = currentState.copy(duration = formatDuration(duration))
+                    _uiState.value = currentState.copy(duration = formatted)
                 }
             }
         }
@@ -239,42 +299,9 @@ class MonitoringViewModel @Inject constructor(
         return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 
-    private fun determineAlertLevel(
-        isMicrosleep: Boolean,
-        isNodding: Boolean,  
-        blinkCount: Int,
-        yawnCount: Int,
-        eyeRubFirstHandCount: Int,
-        eyeRubSecondHandCount: Int
-    ): AlertLevel {
-        return when {
-            isMicrosleep -> {
-                Log.d(TAG, "🚨 ALERTA CRITICAL: Microsueño detectado")
-                AlertLevel.CRITICAL
-            }
-            isNodding -> {  
-                Log.d(TAG, "🚨 ALERTA CRITICAL: Cabeceo detectado")
-                AlertLevel.CRITICAL
-            }
-            blinkCount > BLINK_THRESHOLD -> {
-                Log.d(TAG, "⚠️ ALERTA HIGH: Parpadeo excesivo ($blinkCount)")
-                AlertLevel.HIGH
-            }
-            yawnCount > YAWN_THRESHOLD -> {
-                Log.d(TAG, "⚠️ ALERTA MEDIUM: Bostezos frecuentes ($yawnCount)")
-                AlertLevel.MEDIUM
-            }
-            eyeRubFirstHandCount > EYE_RUB_THRESHOLD || eyeRubSecondHandCount > EYE_RUB_THRESHOLD -> {
-                Log.d(TAG, "⚠️ ALERTA MEDIUM: Frotamiento de ojos")
-                AlertLevel.MEDIUM
-            }
-            else -> AlertLevel.NORMAL
-        }
-    }
-
     override fun onCleared() {
         super.onCleared()
-        alarmUtil.stopAlarm()
+        stopAlert()
         Log.d(TAG, "🧹 ViewModel cleared")
     }
 }

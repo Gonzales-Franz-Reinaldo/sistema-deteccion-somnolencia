@@ -3,117 +3,99 @@ package com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.featur
 import android.util.Log
 import javax.inject.Inject
 
-/**
- * : Detectar Frotamiento de Ojos
- * 
- * Equivalente a: eye_rub/processing.py
- * 
- *  LÓGICA PYTHON EXACTA:
- * - Frotamiento = Mano cerca de ojos por >1 segundo
- * - Detecta cuando la mano SE ALEJA (no mientras está cerca)
- */
 class DetectEyeRubUseCase @Inject constructor() {
     
     companion object {
         private const val TAG = "DetectEyeRubUseCase"
         private const val EYE_RUB_DURATION_MS = 1000L
+        private const val EYE_RUB_WINDOW_MS = 300_000L  // ← 300 segundos (5 minutos)
     }
     
-    //  PRIMERA MANO (INDEPENDIENTE)
+    //  MANO IZQUIERDA
     private var firstHandStartTime: Long? = null
-    private var firstHandCount = 0
+    private val firstHandTimestamps = mutableListOf<Long>() 
     private val firstHandDurations = mutableListOf<Long>()
     
-    //  SEGUNDA MANO (INDEPENDIENTE)
+    // MANO DERECHA
     private var secondHandStartTime: Long? = null
-    private var secondHandCount = 0
+    private val secondHandTimestamps = mutableListOf<Long>() 
     private val secondHandDurations = mutableListOf<Long>()
     
     operator fun invoke(handNearEyes: Map<String, Boolean>): Map<String, Triple<Boolean, Int, List<Long>>> {
         val currentTime = System.currentTimeMillis()
         
-        Log.d(TAG, "🔍 Claves recibidas: ${handNearEyes.keys}")
-        Log.d(TAG, "🔍 Valores: $handNearEyes")
-        
-        // 🆕 VERIFICAR MANO IZQUIERDA
         val isLeftHandNear = handNearEyes["MANO_IZQUIERDA_OJO_DERECHO"] == true || 
                              handNearEyes["MANO_IZQUIERDA_OJO_IZQUIERDO"] == true
         
-        // 🆕 VERIFICAR MANO DERECHA
         val isRightHandNear = handNearEyes["MANO_DERECHA_OJO_DERECHO"] == true || 
-                           handNearEyes["MANO_DERECHA_OJO_IZQUIERDO"] == true
+                              handNearEyes["MANO_DERECHA_OJO_IZQUIERDO"] == true
         
-        Log.d(TAG, "🔍 isLeftHandNear=$isLeftHandNear, isRightHandNear=$isRightHandNear")
-        
-        //  PROCESAR PRIMERA MANO (USA firstHandStartTime, firstHandCount, firstHandDurations)
+        //  PROCESAR MANO IZQUIERDA
         val leftHandDetected = processHand(
             isNear = isLeftHandNear,
             currentTime = currentTime,
             startTimeRef = { firstHandStartTime },
             setStartTime = { firstHandStartTime = it },
-            countRef = { firstHandCount },
-            incrementCount = { firstHandCount++ },
+            timestamps = firstHandTimestamps,
             durations = firstHandDurations,
             handLabel = "MANO_IZQUIERDA"
         )
         
-        //  PROCESAR SEGUNDA MANO (USA secondHandStartTime, secondHandCount, secondHandDurations)
+        //  PROCESAR MANO DERECHA
         val rightHandDetected = processHand(
             isNear = isRightHandNear,
             currentTime = currentTime,
             startTimeRef = { secondHandStartTime },
             setStartTime = { secondHandStartTime = it },
-            countRef = { secondHandCount },
-            incrementCount = { secondHandCount++ },
+            timestamps = secondHandTimestamps,
             durations = secondHandDurations,
             handLabel = "MANO_DERECHA"
         )
         
         return mapOf(
-            "MANO_IZQUIERDA" to Triple(leftHandDetected, firstHandCount, firstHandDurations.toList()),
-            "MANO_DERECHA" to Triple(rightHandDetected, secondHandCount, secondHandDurations.toList())
+            "MANO_IZQUIERDA" to Triple(leftHandDetected, firstHandTimestamps.size, firstHandDurations.toList()),
+            "MANO_DERECHA" to Triple(rightHandDetected, secondHandTimestamps.size, secondHandDurations.toList())
         )
     }
     
-    /**
-     *  NUEVA IMPLEMENTACIÓN: Funciones lambda para mantener estado independiente
-     */
     private fun processHand(
         isNear: Boolean,
         currentTime: Long,
         startTimeRef: () -> Long?,
         setStartTime: (Long?) -> Unit,
-        countRef: () -> Int,
-        incrementCount: () -> Unit,
+        timestamps: MutableList<Long>,
         durations: MutableList<Long>,
         handLabel: String
     ): Boolean {
         if (isNear) {
-            // Mano cerca de ojos
             if (startTimeRef() == null) {
                 setStartTime(currentTime)
                 Log.d(TAG, "👁️✋ $handLabel cerca de ojos")
-            } else {
-                val elapsed = currentTime - (startTimeRef() ?: currentTime)
-                if (elapsed > 500 && elapsed % 100 < 50) {
-                    Log.d(TAG, "⏱️ $handLabel cerca: ${elapsed}ms / ${EYE_RUB_DURATION_MS}ms")
-                }
             }
             return false
         } else {
-            // Mano alejada
             if (startTimeRef() != null) {
                 val duration = currentTime - (startTimeRef() ?: currentTime)
                 setStartTime(null)
                 
+                // FROTAMIENTO = MANO CERCA > 1 SEGUNDO
                 if (duration > EYE_RUB_DURATION_MS) {
-                    incrementCount()
+                    timestamps.add(currentTime) 
                     durations.add(duration)
-                    Log.d(TAG, "🚨 FROTAMIENTO DETECTADO ($handLabel): ${duration}ms (count=${countRef()})")
+                    Log.d(TAG, "🚨 FROTAMIENTO DETECTADO ($handLabel): ${duration}ms")
+                    
+                    //  LIMPIAR timestamps fuera de ventana (últimos 5 minutos)
+                    val cutoffTime = currentTime - EYE_RUB_WINDOW_MS
+                    timestamps.removeAll { it < cutoffTime }
+                    
+                    val count = timestamps.size
+                    
+                    //  LOG cuando excede umbral
+                    if (count > 3) {
+                        Log.w(TAG, "⚠️ EXCEDE UMBRAL ($handLabel): $count frotamientos en 5 minutos")
+                    }
+                    
                     return true
-                } else {
-                    Log.d(TAG, "👁️✋ $handLabel se alejó (duración: ${duration}ms)")
-                    Log.d(TAG, "⏭️ Frotamiento muy corto: ${duration}ms <= ${EYE_RUB_DURATION_MS}ms")
                 }
             }
             return false
@@ -122,10 +104,10 @@ class DetectEyeRubUseCase @Inject constructor() {
     
     fun reset() {
         firstHandStartTime = null
-        firstHandCount = 0
+        firstHandTimestamps.clear()
         firstHandDurations.clear()
         secondHandStartTime = null
-        secondHandCount = 0
+        secondHandTimestamps.clear()
         secondHandDurations.clear()
     }
 }

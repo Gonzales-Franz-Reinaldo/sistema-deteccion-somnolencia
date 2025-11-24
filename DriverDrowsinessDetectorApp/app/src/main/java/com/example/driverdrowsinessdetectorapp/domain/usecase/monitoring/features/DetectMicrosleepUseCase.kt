@@ -8,7 +8,7 @@ class DetectMicrosleepUseCase @Inject constructor() {
     
     companion object {
         private const val TAG = "DetectMicrosleepUseCase"
-        private const val MICROSLEEP_DURATION_MS = 2000L
+        private const val MICROSLEEP_DURATION_MS = 2500L
         private const val EAR_THRESHOLD = 0.2f  
     }
     

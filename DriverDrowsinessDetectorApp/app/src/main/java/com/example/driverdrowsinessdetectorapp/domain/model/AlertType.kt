@@ -22,5 +22,10 @@ enum class AlertType {
     /**
      * Frotamiento de ojos
      */
-    EYE_RUB
+    EYE_RUB,
+
+    /**
+     * Parpadeo excesivo
+     */
+    EXCESSIVE_BLINKING
 }
