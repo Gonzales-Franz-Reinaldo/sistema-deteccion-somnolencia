@@ -25,6 +25,9 @@ class DetectDrowsinessUseCase @Inject constructor(
         private const val BLINK_THRESHOLD = 20
         private const val YAWN_THRESHOLD = 3
         private const val EYE_RUB_THRESHOLD = 3
+        
+        //  Umbral para considerar boca "muy abierta" (bostezo en progreso)
+        private const val MOUTH_WIDE_OPEN_THRESHOLD = 0.5f  // MAR > 0.5 = boca muy abierta
     }
     
     /**
@@ -36,10 +39,8 @@ class DetectDrowsinessUseCase @Inject constructor(
         handedness: List<List<Category>>?
     ): MetricasSomnolencia {
         try {
-            // SIEMPRE detectar posición de cabeza (incluso sin rostro)
+            // SIEMPRE detectar posición de cabeza
             val headPosition = detectHeadPositionUseCase(faceLandmarks)
-            
-            // SIEMPRE detectar cabeceo
             val (isNodding, noddingCount, noddingDurations) = detectNoddingUseCase(headPosition)
             
             // Si no hay rostro, solo retornar métricas de cabeceo
@@ -72,7 +73,7 @@ class DetectDrowsinessUseCase @Inject constructor(
                 )
             }
             
-            // Cálculos normales cuando hay rostro
+            // CÁLCULOS NORMALES
             val eyeDistances = calculateEyeDistancesUseCase(faceLandmarks)
             val mouthDistances = calculateMouthDistancesUseCase(faceLandmarks)
             
@@ -85,11 +86,23 @@ class DetectDrowsinessUseCase @Inject constructor(
             val mar = calculateMARUseCase(faceLandmarks)
             val handNearEyes = detectHandNearEyesUseCase(faceLandmarks, handLandmarks, handedness)
             
+            //  DETECTAR SI LA BOCA ESTÁ MUY ABIERTA (bostezo en progreso)
+            val isMouthWideOpen = mouthDistances.distanciaLabios > mouthDistances.distanciaMenton ||
+                                  mar > MOUTH_WIDE_OPEN_THRESHOLD
+            
+            // DETECTAR EVENTOS
             val (isBlinking, blinkCount, _) = detectBlinkUseCase(eyeDistances)
-            val (isMicrosleep, microsleepCount, microsleepDurations) = detectMicrosleepUseCase(eyeDistances)
+            
+            //  PASAR el estado de boca abierta a microsueño
+            val (isMicrosleep, microsleepCount, microsleepDurations) = detectMicrosleepUseCase(
+                eyeDistances = eyeDistances,
+                isMouthWideOpen = isMouthWideOpen  
+            )
+            
             val (isYawning, yawnCount, yawnDurations) = detectYawnUseCase(mouthDistances)
             val eyeRubResults = detectEyeRubUseCase(handNearEyes)
             
+            // DETERMINAR NIVEL DE ALERTA
             val alertLevel = determineAlertLevel(
                 isMicrosleep = isMicrosleep,
                 isNodding = isNodding,
