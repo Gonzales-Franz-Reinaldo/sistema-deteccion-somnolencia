@@ -7,63 +7,94 @@ import javax.inject.Inject
 class DetectNoddingUseCase @Inject constructor() {
     
     companion object {
-        private const val TAG = "DetectNoddingUseCase"
-        private const val NODDING_DURATION_MS = 3000L // 3 segundos
+        private const val TAG = "DetectNodding"
+        private const val NODDING_DURATION_MS = 3000L  // 3 segundos
+        private const val LOG_INTERVAL_MS = 500L       // Log cada 500ms
     }
     
     private var headDownStartTime: Long? = null
     private var noddingCount = 0
     private val noddingDurations = mutableListOf<Long>()
-    private var lastDetectionTime: Long = 0
-    private var isCurrentlyDetecting = false
+    private var hasAlertedForCurrentNodding = false
+    private var lastLogTime = 0L
     
     operator fun invoke(headPosition: HeadPosition): Triple<Boolean, Int, List<Long>> {
         val currentTime = System.currentTimeMillis()
         
+        //  LOG DE DEBUG cada segundo
+        if (currentTime - lastLogTime > 1000) {
+            Log.d(TAG, "📊 Estado: isHeadDown=${headPosition.isHeadDown}, noFace=${headPosition.noFaceDetected}, startTime=$headDownStartTime")
+            lastLogTime = currentTime
+        }
+        
+        //  CABEZA INCLINADA (detectada O sin rostro pero manteniendo estado)
         if (headPosition.isHeadDown) {
-            // Cabeza inclinada
+            
+            // INICIO de nueva inclinación
             if (headDownStartTime == null) {
                 headDownStartTime = currentTime
-                isCurrentlyDetecting = false
-                Log.d(TAG, "🙇 Cabeza inclinada: ${headPosition.position}")
+                hasAlertedForCurrentNodding = false
+                Log.w(TAG, "🙇 ═══════ INICIO CABEZA INCLINADA ═══════")
             }
             
             val duration = currentTime - (headDownStartTime ?: currentTime)
             
-            //  DETECTAR MIENTRAS ESTÁ INCLINADA (cada 3 segundos)
-            if (duration >= NODDING_DURATION_MS && !isCurrentlyDetecting) {
-                isCurrentlyDetecting = true
+            //  Log de progreso cada 500ms
+            if (duration % LOG_INTERVAL_MS < 100) {
+                val progress = ((duration.toFloat() / NODDING_DURATION_MS) * 100).toInt().coerceAtMost(100)
+                val remaining = ((NODDING_DURATION_MS - duration) / 1000f).coerceAtLeast(0f)
+                Log.d(TAG, "⏱️ Progreso: ${duration}ms / ${NODDING_DURATION_MS}ms ($progress%) - Faltan: ${"%.1f".format(remaining)}s")
+            }
+            
+            //  DETECTAR CABECEO A LOS 3 SEGUNDOS
+            if (duration >= NODDING_DURATION_MS && !hasAlertedForCurrentNodding) {
+                hasAlertedForCurrentNodding = true
                 noddingCount++
                 noddingDurations.add(duration)
-                lastDetectionTime = currentTime
-                Log.d(TAG, "🚨 CABECEO DETECTADO: ${duration}ms (count=$noddingCount)")
+                
+                Log.w(TAG, "")
+                Log.w(TAG, "🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨")
+                Log.w(TAG, "🚨   CABECEO #$noddingCount DETECTADO!   🚨")
+                Log.w(TAG, "🚨   Duración: ${duration}ms            🚨")
+                Log.w(TAG, "🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨")
+                Log.w(TAG, "")
+                
                 return Triple(true, noddingCount, noddingDurations)
             }
             
-            // Mostrar progreso cada segundo
-            if (duration > 1000 && duration % 1000 < 200) {
-                Log.d(TAG, "⏱️ Cabeza inclinada: ${duration}ms / ${NODDING_DURATION_MS}ms")
+            //  MANTENER ALERTA mientras sigue inclinada
+            if (hasAlertedForCurrentNodding) {
+                val seconds = duration / 1000
+                if (duration % 1000 < 100) {
+                    Log.d(TAG, "⚠️ CABECEO ACTIVO: ${seconds}s - Alerta en curso")
+                }
+                return Triple(true, noddingCount, noddingDurations)
             }
             
+            // Aún no llega a 3 segundos
+            return Triple(false, noddingCount, noddingDurations)
+            
         } else {
-            // Cabeza volvió arriba
+            //  CABEZA EN POSICIÓN NORMAL
             if (headDownStartTime != null) {
                 val duration = currentTime - (headDownStartTime ?: currentTime)
-                Log.d(TAG, "⬆️ Cabeza volvió arriba (duración total: ${duration}ms)")
+                Log.d(TAG, "⬆️ ═══════ CABEZA ARRIBA ═══════ (duración: ${duration}ms, alertó: $hasAlertedForCurrentNodding)")
+                
+                // Reset
                 headDownStartTime = null
-                isCurrentlyDetecting = false
+                hasAlertedForCurrentNodding = false
             }
+            
+            return Triple(false, noddingCount, noddingDurations)
         }
-        
-        return Triple(false, noddingCount, noddingDurations)
     }
     
     fun reset() {
         headDownStartTime = null
         noddingCount = 0
         noddingDurations.clear()
-        lastDetectionTime = 0
-        isCurrentlyDetecting = false
-        Log.d(TAG, "🔄 Contador reseteado")
+        hasAlertedForCurrentNodding = false
+        lastLogTime = 0L
+        Log.d(TAG, "🔄 Contadores reseteados")
     }
 }
