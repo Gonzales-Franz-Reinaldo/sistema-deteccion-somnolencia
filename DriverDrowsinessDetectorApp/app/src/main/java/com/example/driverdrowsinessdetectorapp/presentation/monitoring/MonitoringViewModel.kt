@@ -32,7 +32,7 @@ class MonitoringViewModel @Inject constructor(
         private const val TAG = "MonitoringViewModel"
         private const val FRAME_SKIP_COUNT = 2
         
-        // ✅ DURACIONES DE ALERTAS
+        //  DURACIONES DE ALERTAS
         private const val CRITICAL_ALERT_DURATION_MS = 5000L  // 5 segundos
         private const val WARNING_ALERT_DURATION_MS = 3000L   // 3 segundos
     }
@@ -47,10 +47,11 @@ class MonitoringViewModel @Inject constructor(
     private var frameCount = 0
     private var isProcessingFrame = false
     
-    // ✅ NUEVO: Control de alertas con temporizador
+    //  Control de alertas MEJORADO
     private var activeAlertLevel: AlertLevel = AlertLevel.NORMAL
     private var alertStartTime: Long = 0
     private var alertTimerJob: Job? = null
+    private var lastCriticalAlertTime: Long = 0  //  Evitar spam de alertas
 
     fun startTrip() {
         viewModelScope.launch {
@@ -65,6 +66,7 @@ class MonitoringViewModel @Inject constructor(
             frameCount = 0
             activeAlertLevel = AlertLevel.NORMAL
             alertStartTime = 0
+            lastCriticalAlertTime = 0
             
             _uiState.value = MonitoringUiState.Active(
                 sessionId = sessionStartTime,
@@ -100,7 +102,7 @@ class MonitoringViewModel @Inject constructor(
                 if (metrics != null) {
                     _currentMetrics.value = metrics
                     updateUiStateWithMetrics(metrics)
-                    handleAlertWithDuration(metrics.alertLevel)
+                    handleAlertWithDuration(metrics)  
                 }
                 
             } catch (e: Exception) {
@@ -118,46 +120,72 @@ class MonitoringViewModel @Inject constructor(
                 currentEAR = metrics.ear,
                 currentMAR = metrics.mar,
                 headPose = metrics.headPose,
-                alertLevel = activeAlertLevel, 
+                alertLevel = if (activeAlertLevel != AlertLevel.NORMAL) activeAlertLevel else metrics.alertLevel,
                 isProcessing = true
             )
         }
     }
 
     /**
-     *  Manejo de alerta con duración garantizada
+     * ✅ Manejo de alerta MEJORADO
      */
-    private fun handleAlertWithDuration(newAlertLevel: AlertLevel) {
+    private fun handleAlertWithDuration(metrics: MetricasSomnolencia) {
         val currentTime = System.currentTimeMillis()
+        val newAlertLevel = metrics.alertLevel
         
-        when (newAlertLevel) {
-            AlertLevel.NORMAL -> {
-                // NO detener alerta inmediatamente si hay una activa
-                if (activeAlertLevel != AlertLevel.NORMAL) {
-                    val elapsedTime = currentTime - alertStartTime
-                    val requiredDuration = getAlertDuration(activeAlertLevel)
-                    
-                    if (elapsedTime >= requiredDuration) {
-                        //  Duración cumplida, detener alerta
-                        stopAlert()
-                        Log.d(TAG, "✅ Alerta completada: ${elapsedTime}ms")
-                    } else {
-                        Log.d(TAG, "⏱️ Manteniendo alerta: ${elapsedTime}ms / ${requiredDuration}ms")
-                    }
-                }
-            }
+        //  Microsueño o Cabeceo
+        if (newAlertLevel == AlertLevel.CRITICAL) {
+            val isMicrosleepOrNodding = metrics.isMicrosleep || metrics.isNodding
             
-            AlertLevel.MEDIUM, AlertLevel.HIGH, AlertLevel.CRITICAL -> {
-                // NUEVA ALERTA o NIVEL MÁS ALTO
-                if (newAlertLevel != activeAlertLevel || activeAlertLevel == AlertLevel.NORMAL) {
-                    startAlert(newAlertLevel)
+            if (isMicrosleepOrNodding) {
+                // ✅ Verificar si ya hay una alerta activa
+                if (activeAlertLevel == AlertLevel.CRITICAL) {
+                    // Ya hay alerta activa, solo mantener
+                    val elapsed = currentTime - alertStartTime
+                    if (elapsed < CRITICAL_ALERT_DURATION_MS) {
+                        Log.d(TAG, "⏱️ Alerta CRÍTICA activa: ${elapsed}ms / ${CRITICAL_ALERT_DURATION_MS}ms")
+                    }
+                    return
                 }
+                
+                // ✅ Cooldown: No disparar otra alerta si pasaron menos de 2s desde la última
+                if (currentTime - lastCriticalAlertTime < 2000) {
+                    Log.d(TAG, "⏳ Cooldown activo, ignorando nueva alerta")
+                    return
+                }
+                
+                // ✅ NUEVA ALERTA CRÍTICA
+                Log.w(TAG, "🔴🔴🔴 INICIANDO ALERTA CRÍTICA: ${if (metrics.isMicrosleep) "MICROSUEÑO" else "CABECEO"} 🔴🔴🔴")
+                startAlert(AlertLevel.CRITICAL)
+                lastCriticalAlertTime = currentTime
+                return
+            }
+        }
+        
+        // ✅ ADVERTENCIAS (MEDIUM/HIGH)
+        if (newAlertLevel == AlertLevel.HIGH || newAlertLevel == AlertLevel.MEDIUM) {
+            if (activeAlertLevel == AlertLevel.NORMAL) {
+                startAlert(newAlertLevel)
+            }
+            return
+        }
+        
+        // ✅ NORMAL: Verificar si la alerta actual debe continuar
+        if (newAlertLevel == AlertLevel.NORMAL && activeAlertLevel != AlertLevel.NORMAL) {
+            val elapsedTime = currentTime - alertStartTime
+            val requiredDuration = getAlertDuration(activeAlertLevel)
+            
+            if (elapsedTime >= requiredDuration) {
+                Log.d(TAG, "✅ Alerta completada: ${elapsedTime}ms")
+                stopAlert()
+            } else {
+                Log.d(TAG, "⏱️ Manteniendo alerta: ${elapsedTime}ms / ${requiredDuration}ms")
             }
         }
     }
 
     /**
-     *  Iniciar alerta con temporizador
+     * ✅ Iniciar alerta con temporizador
      */
     private fun startAlert(level: AlertLevel) {
         // Cancelar temporizador anterior
@@ -166,7 +194,7 @@ class MonitoringViewModel @Inject constructor(
         activeAlertLevel = level
         alertStartTime = System.currentTimeMillis()
         
-        // Reproducir alarma
+        // ✅ Reproducir alarma INMEDIATAMENTE
         alarmUtil.playAlarm(level)
         
         val duration = getAlertDuration(level)
@@ -179,11 +207,11 @@ class MonitoringViewModel @Inject constructor(
         
         Log.w(TAG, "$emoji ALERTA ${level.name} INICIADA (duración: ${duration}ms)")
         
-        //  Programar detención automática después de la duración
+        // ✅ Programar detención automática después de la duración
         alertTimerJob = viewModelScope.launch {
             delay(duration)
-            stopAlert()
             Log.d(TAG, "⏰ Temporizador de alerta expirado")
+            stopAlert()
         }
         
         // Actualizar UI
@@ -194,7 +222,7 @@ class MonitoringViewModel @Inject constructor(
     }
 
     /**
-     *  Detener alerta
+     * ✅ Detener alerta
      */
     private fun stopAlert() {
         alertTimerJob?.cancel()
@@ -210,7 +238,7 @@ class MonitoringViewModel @Inject constructor(
     }
 
     /**
-     *  Obtener duración según nivel
+     * ✅ Obtener duración según nivel
      */
     private fun getAlertDuration(level: AlertLevel): Long {
         return when (level) {
@@ -242,7 +270,7 @@ class MonitoringViewModel @Inject constructor(
                     sessionId = currentState.sessionId,
                     duration = currentState.duration
                 )
-                stopAlert() // ← Detener alerta al pausar
+                stopAlert()
                 Log.d(TAG, "⏸️ Viaje pausado")
             }
         }

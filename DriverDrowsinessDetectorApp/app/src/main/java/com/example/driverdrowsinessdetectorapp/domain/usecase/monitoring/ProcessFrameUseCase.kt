@@ -16,23 +16,18 @@ class ProcessFrameUseCase @Inject constructor(
     
     operator fun invoke(bitmap: Bitmap): MetricasSomnolencia? {
         return try {
-            // 1. Extraer landmarks
             val landmarksResult = extractLandmarksUseCase(bitmap)
             
-            // 2. Verificar que haya rostro
-            if (!landmarksResult.hasFace || landmarksResult.faceLandmarks == null) {
-                Log.w(TAG, "⚠️ Frame sin rostro detectado")
-                return null
-            }
-            
-            // 3. Detectar somnolencia (AHORA CON HANDEDNESS)
+            //  SIEMPRE procesar, incluso sin rostro (para mantener estado de cabeceo)
             val metrics = detectDrowsinessUseCase(
-                faceLandmarks = landmarksResult.faceLandmarks,
+                faceLandmarks = landmarksResult.faceLandmarks,  
                 handLandmarks = landmarksResult.handLandmarks,
-                handedness = landmarksResult.handedness  
+                handedness = landmarksResult.handedness
             )
             
-            Log.d(TAG, "✅ Frame procesado: EAR=${metrics.ear}, MAR=${metrics.mar}")
+            if (!landmarksResult.hasFace) {
+                Log.d(TAG, "⚠️ Frame sin rostro - Procesando cabeceo: isNodding=${metrics.isNodding}")
+            }
             
             metrics
             

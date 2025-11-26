@@ -9,56 +9,85 @@ data class HeadPosition(
     val isHeadDown: Boolean,
     val position: String,
     val distanceNoseMouth: Float,
-    val distanceForeheadNose: Float
+    val distanceForeheadNose: Float,
+    val noFaceDetected: Boolean = false  
 )
 
 class DetectHeadPositionUseCase @Inject constructor() {
 
     companion object {
-        private const val TAG = "DetectHeadPositionUseCase"
+        private const val TAG = "DetectHeadPosition"
         
-        // ========== ÍNDICES MEDIAPIPE ==========
+        // Índices MediaPipe
         private const val NOSE_TIP = 1
         private const val NOSE_BASE = 0
         private const val NOSE_BOTTOM = 5
-        private const val FOREHEAD = 4
         
-        // UMBRAL SOLO PARA CABEZA HACIA ABAJO
-        private const val VERTICAL_THRESHOLD = 0.012f
+        // Umbral para detectar cabeza abajo
+        private const val HEAD_DOWN_THRESHOLD = 0.002f
+        private const val HYSTERESIS_MARGIN = 0.005f
     }
+    
+    private var wasHeadDown = false
+    private var lastKnownHeadDown = false  
+    private var frameCount = 0
 
-    operator fun invoke(faceLandmarks: List<NormalizedLandmark>): HeadPosition {
-        if (faceLandmarks.size < 468) {
-            return HeadPosition(false, "cabeza arriba", 0f, 0f)
+    operator fun invoke(faceLandmarks: List<NormalizedLandmark>?): HeadPosition {
+        frameCount++
+        
+        // ✅ SI NO HAY ROSTRO: Mantener último estado conocido
+        if (faceLandmarks == null || faceLandmarks.size < 468) {
+            if (frameCount % 10 == 0) {
+                Log.w(TAG, "⚠️ Sin rostro detectado - Manteniendo estado: ${if(lastKnownHeadDown) "ABAJO" else "ARRIBA"}")
+            }
+            return HeadPosition(
+                isHeadDown = lastKnownHeadDown,  // ✅ Usar último estado
+                position = if (lastKnownHeadDown) "cabeza abajo (sin rostro)" else "sin rostro",
+                distanceNoseMouth = 0f,
+                distanceForeheadNose = 0f,
+                noFaceDetected = true
+            )
         }
 
         val noseTip = faceLandmarks[NOSE_TIP]
         val noseBase = faceLandmarks[NOSE_BASE]
         val noseBottom = faceLandmarks[NOSE_BOTTOM]
-        val forehead = faceLandmarks[FOREHEAD]
 
-        // ========== CALCULAR DISTANCIAS VERTICALES ==========
         val distanceNoseMouth = euclideanDistance(noseTip, noseBase)
         val distanceForeheadNose = euclideanDistance(noseTip, noseBottom)
+        
+        val difference = distanceForeheadNose - distanceNoseMouth
 
-        Log.d(TAG, "📏 Verticales: nariz-boca=${distanceNoseMouth.f3()}, frente-nariz=${distanceForeheadNose.f3()}")
-
-        // ========== DETECTAR SOLO CABEZA HACIA ABAJO ==========
-        val isHeadDown: Boolean
-        val position: String
-
-        // CONDICIÓN: CABEZA AGACHADA HACIA ABAJO
-        if (distanceNoseMouth < distanceForeheadNose) {
-            isHeadDown = true
-            position = "cabeza abajo"
-            Log.w(TAG, "🙇⬇️ CABECEO FRONTAL DETECTADO")
-            Log.w(TAG, "   → Diferencia: ${(distanceForeheadNose - distanceNoseMouth).f3()}")
+        // Detectar con histéresis
+        val isHeadDown: Boolean = if (wasHeadDown) {
+            difference > -HYSTERESIS_MARGIN
         } else {
-            isHeadDown = false
-            position = "cabeza arriba"
+            difference > HEAD_DOWN_THRESHOLD
+        }
+        
+        //  Actualizar estados
+        val stateChanged = isHeadDown != wasHeadDown
+        wasHeadDown = isHeadDown
+        lastKnownHeadDown = isHeadDown  
+        
+        val position = if (isHeadDown) "cabeza abajo" else "cabeza arriba"
+
+        // Log cuando cambia estado
+        if (stateChanged) {
+            if (isHeadDown) {
+                Log.w(TAG, "🙇⬇️ CABEZA INCLINADA DETECTADA (diff=${"%.3f".format(difference)})")
+            } else {
+                Log.d(TAG, "⬆️ Cabeza ARRIBA (diff=${"%.3f".format(difference)})")
+            }
         }
 
-        return HeadPosition(isHeadDown, position, distanceNoseMouth, distanceForeheadNose)
+        return HeadPosition(
+            isHeadDown = isHeadDown,
+            position = position,
+            distanceNoseMouth = distanceNoseMouth,
+            distanceForeheadNose = distanceForeheadNose,
+            noFaceDetected = false
+        )
     }
 
     private fun euclideanDistance(p1: NormalizedLandmark, p2: NormalizedLandmark): Float {
@@ -66,6 +95,10 @@ class DetectHeadPositionUseCase @Inject constructor() {
         val dy = p1.y() - p2.y()
         return sqrt(dx * dx + dy * dy)
     }
-
-    private fun Float.f3(): String = "%.3f".format(this)
+    
+    fun reset() {
+        wasHeadDown = false
+        lastKnownHeadDown = false
+        frameCount = 0
+    }
 }
