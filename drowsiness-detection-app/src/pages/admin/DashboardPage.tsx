@@ -35,7 +35,7 @@ export const AdminDashboardPage = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <Link to="/admin/choferes" className="group">
           <Card className="hover:shadow-lg transition-shadow border-0 h-48 flex flex-col items-center justify-center text-center p-6 group-hover:bg-blue-50">
             <div className="text-4xl mb-4 text-blue-600 group-hover:text-blue-700">👥</div>
@@ -52,13 +52,13 @@ export const AdminDashboardPage = () => {
           </Card>
         </Link>
 
-        <Link to="/admin/monitoreo" className="group">
-          <Card className="hover:shadow-lg transition-shadow border-0 h-48 flex flex-col items-center justify-center text-center p-6 group-hover:bg-green-50">
-            <div className="text-4xl mb-4 text-green-600 group-hover:text-green-700">📹</div>
-            <h3 className="font-semibold text-gray-900 mb-2">Monitoreo en Vivo Choferes en Viaje</h3>
-            <p className="text-sm text-gray-600">Ver choferes en tiempo real</p>
-          </Card>
-        </Link>
+          <Link to="/admin/monitoreo-viajes" className="group">
+            <Card className="hover:shadow-lg transition-shadow border-0 h-48 flex flex-col items-center justify-center text-center p-6 group-hover:bg-green-50">
+              <div className="text-4xl mb-4 text-green-600 group-hover:text-green-700">📹</div>
+              <h3 className="font-semibold text-gray-900 mb-2">Monitoreo Viajes</h3>
+              <p className="text-sm text-gray-600">Choferes y alertas en vivo</p>
+            </Card>
+          </Link>
 
         <Link to="/admin/reportes" className="group">
           <Card className="hover:shadow-lg transition-shadow border-0 h-48 flex flex-col items-center justify-center text-center p-6 group-hover:bg-purple-50">

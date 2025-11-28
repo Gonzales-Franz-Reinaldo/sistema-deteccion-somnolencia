@@ -16,9 +16,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
     { path: '/admin/choferes', label: 'Gestión de Choferes', icon: '👥' },
     { path: '/admin/viajes', label: 'Gestión de Viajes', icon: '🚗' },
-    // { path: '/admin/empresas', label: 'Gestión de Empresas', icon: '🏢' },
+    { path: '/admin/monitoreo-viajes', label: 'Monitoreo Viajes', icon: '📹' },
     { path: '/admin/reportes', label: 'Reportes', icon: '📈' },
-    // { path: '/admin/configuracion', label: 'Configuración', icon: '⚙️' },
   ];
 
   const handleLogout = async () => {

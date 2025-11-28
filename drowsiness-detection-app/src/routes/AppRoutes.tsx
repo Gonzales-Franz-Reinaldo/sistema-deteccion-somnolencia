@@ -11,10 +11,13 @@ import {
   EdicionChoferPage,
   GestionViajesPage,
   AsignarViajePage,
-  EdicionViajePage
+  EdicionViajePage,
+  ReportesPage,
+  MonitoreoViajesPage,
+  MonitoreoViajeDetallePage
 } from '../pages/admin';
 import ChoferDashboardPage from '../pages/chofer/DashboardPage';
-import MonitoreoPage from '../pages/chofer/MonitoreoPage'; 
+import MonitoreoPage from '../pages/chofer/MonitoreoPage';
 
 // Layouts
 import AdminLayout from '../components/layout/AdminLayout';
@@ -88,15 +91,9 @@ export const AppRoutes = () => {
             </div>
           }
         />
-        <Route
-          path="reportes"
-          element={
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold text-gray-900">Reportes</h2>
-              <p className="text-gray-600 mt-2">Módulo en desarrollo</p>
-            </div>
-          }
-        />
+        <Route path="reportes" element={<ReportesPage />} />
+        <Route path="monitoreo-viajes" element={<MonitoreoViajesPage />} />
+        <Route path="monitoreo-viajes/:id_sesion" element={<MonitoreoViajeDetallePage />} />
         <Route
           path="configuracion"
           element={

@@ -1,4 +1,4 @@
-from sqlalchemy import (
+﻿from sqlalchemy import (
     Column, Integer, String, DECIMAL, Text, DateTime, Date, Time,
     ForeignKey, CheckConstraint
 )
@@ -106,3 +106,4 @@ class Viaje(Base):
     def ruta_completa(self) -> str:
         """Obtener ruta completa como string"""
         return f"{self.origen} - {self.destino}"
+

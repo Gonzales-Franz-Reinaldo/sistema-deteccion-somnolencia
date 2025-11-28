@@ -1,11 +1,20 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
+import logging
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from app.core.config import settings
 from app.core.middleware import setup_middlewares
-from app.api.v1.routers import auth, empresas, users, viajes
+from app.api.v1.routers import auth, empresas, users, viajes, reportes
 from app.api.v1.routers import monitoring  
+from app.db.session import engine
+from app.db.base_class import Base
+
+# Configuración básica de logging (asegura nivel INFO global y formato compacto)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:%(name)s:%(message)s"
+)
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -150,12 +159,25 @@ app.include_router(
     tags=["Gestión de Viajes (Solo Admin)"]
 )
 
+app.include_router(
+    reportes.router,
+    prefix=f"{settings.API_V1_PREFIX}/reportes",
+    tags=["📊 Reportes (Solo Admin)"]
+)
+
 # ←  ROUTER DE MONITOREO
 app.include_router(
     monitoring.router,
     prefix=f"{settings.API_V1_PREFIX}/monitoring",
     tags=["📹 Monitoreo en Tiempo Real (Choferes)"]
 )
+
+# Inicializar tablas (crea nuevas si no existen, p.ej. posiciones_viaje)
+@app.on_event("startup")
+def init_db_tables():
+    # Importar modelos para que se registren en el metadata antes de create_all
+    from app.models import sesion, posicion_viaje, user, empresa  # noqa: F401
+    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/", tags=["ℹ️ Info"])

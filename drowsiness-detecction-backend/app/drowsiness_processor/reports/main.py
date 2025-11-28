@@ -1,4 +1,4 @@
-import csv
+﻿import csv
 import os
 import json
 from datetime import datetime
