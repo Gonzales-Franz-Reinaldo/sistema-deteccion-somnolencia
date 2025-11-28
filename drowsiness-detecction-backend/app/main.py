@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.core.middleware import setup_middlewares
 from app.api.v1.routers import auth, empresas, users, viajes
 from app.api.v1.routers import monitoring  
+from app.api.v1.routers import eventos
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -157,6 +158,11 @@ app.include_router(
     tags=["📹 Monitoreo en Tiempo Real (Choferes)"]
 )
 
+app.include_router(
+    eventos.router,
+    prefix=f"{settings.API_V1_PREFIX}/eventos",
+    tags=["📊 Eventos de Somnolencia"]
+)
 
 @app.get("/", tags=["ℹ️ Info"])
 def root():

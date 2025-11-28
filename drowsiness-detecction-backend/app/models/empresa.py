@@ -39,7 +39,8 @@ class Empresa(Base):
     # ============================================
     # RELACIONES
     # ============================================
-    choferes = relationship("Usuario", back_populates="empresa")
+    usuarios = relationship("Usuario", back_populates="empresa")
+    viajes = relationship("Viaje", back_populates="empresa")
     
     def __repr__(self):
         return f"<Empresa {self.nombre_empresa}>"
@@ -47,4 +48,9 @@ class Empresa(Base):
     @property
     def total_choferes(self) -> int:
         """Contar choferes de esta empresa"""
-        return len(self.choferes) if self.choferes else 0
+        return len(self.usuarios) if self.usuarios else 0
+    
+    @property
+    def choferes(self):
+        """Alias para compatibilidad - retorna usuarios que son choferes"""
+        return [u for u in self.usuarios if u.rol == "chofer"] if self.usuarios else []
