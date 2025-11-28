@@ -1,13 +1,13 @@
 -- ============================================
 -- SISTEMA DE DETECCIÓN DE SOMNOLENCIA
--- Base de Datos PostgreSQL - Versión Refactorizada
+-- Base de Datos PostgreSQL - Versión Corregida
 -- ============================================
 
 -- ============================================
 -- 1. TABLA: empresas
 -- Empresas de transporte (opcional para choferes)
 -- ============================================
-CREATE TABLE empresas (
+CREATE TABLE IF NOT EXISTS empresas (
     id_empresa SERIAL PRIMARY KEY,
     nombre_empresa VARCHAR(200) NOT NULL UNIQUE,
     ruc VARCHAR(20) UNIQUE,
@@ -22,7 +22,7 @@ CREATE TABLE empresas (
 -- 2. TABLA: usuarios
 -- Usuarios del sistema (ADMIN y CHOFER)
 -- ============================================
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
     id_usuario SERIAL PRIMARY KEY,
     
     -- Credenciales (Compartidas por ambos roles)
@@ -76,7 +76,7 @@ CREATE TABLE usuarios (
 -- TABLA: token_blacklist
 -- Tokens JWT invalidados (logout)
 -- ============================================
-CREATE TABLE token_blacklist (
+CREATE TABLE IF NOT EXISTS token_blacklist  (
     id SERIAL PRIMARY KEY,
     token VARCHAR(500) NOT NULL UNIQUE,
     id_usuario INTEGER REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
@@ -85,183 +85,15 @@ CREATE TABLE token_blacklist (
 );
 
 -- Índice para búsqueda rápida
-CREATE INDEX idx_token_blacklist_token ON token_blacklist(token);
-CREATE INDEX idx_token_blacklist_expiracion ON token_blacklist(fecha_expiracion);
-
--- Comentario
-COMMENT ON TABLE token_blacklist IS 'Tokens JWT invalidados por logout o revocación manual';
+CREATE INDEX IF NOT EXISTS idx_token_blacklist_token ON token_blacklist(token);
+CREATE INDEX IF NOT EXISTS idx_token_blacklist_expiracion ON token_blacklist(fecha_expiracion);
 
 
 -- ============================================
--- 3. TABLA: sesiones_viaje
--- Registro de cada sesión de monitoreo
--- ============================================
-CREATE TABLE sesiones_viaje (
-    id_sesion SERIAL PRIMARY KEY,
-    id_usuario INTEGER NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
-    
-    -- Información temporal
-    fecha_inicio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    fecha_fin TIMESTAMP,
-    duracion_minutos INTEGER,
-    
-    -- Ubicación
-    ruta_nombre VARCHAR(200),
-    ubicacion_inicio VARCHAR(300),
-    ubicacion_fin VARCHAR(300),
-    
-    -- Estado de la sesión
-    estado VARCHAR(20) CHECK (estado IN ('activa', 'finalizada', 'interrumpida')) DEFAULT 'activa',
-    nivel_alerta VARCHAR(20) CHECK (nivel_alerta IN ('normal', 'alerta', 'critico')) DEFAULT 'normal',
-    
-    -- Contadores de eventos
-    total_microsueños INTEGER DEFAULT 0,
-    total_bostezos INTEGER DEFAULT 0,
-    total_parpadeos_excesivos INTEGER DEFAULT 0,
-    total_cabeceos INTEGER DEFAULT 0,
-    total_frotamiento_ojos INTEGER DEFAULT 0,
-    
-    -- Notas adicionales
-    observaciones TEXT
-);
-
--- ============================================
--- 4. TABLA: alertas_somnolencia
--- Eventos de somnolencia detectados durante las sesiones
--- ============================================
-CREATE TABLE alertas_somnolencia (
-    id_alerta SERIAL PRIMARY KEY,
-    id_sesion INTEGER NOT NULL REFERENCES sesiones_viaje(id_sesion) ON DELETE CASCADE,
-    
-    -- Información del evento
-    timestamp_alerta TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tipo_alerta VARCHAR(50) CHECK (tipo_alerta IN (
-        'microsueño',
-        'bostezo',
-        'parpadeo_excesivo',
-        'cabeceo',
-        'frotamiento_ojos'
-    )) NOT NULL,
-    
-    -- Severidad del evento
-    severidad VARCHAR(20) CHECK (severidad IN ('leve', 'moderado', 'grave', 'critico')) NOT NULL,
-    
-    -- Duración del evento en segundos
-    duracion_segundos DECIMAL(5, 2),
-    
-    -- Datos adicionales del evento (métricas específicas)
-    detalles JSONB,
-    
-    -- Acción tomada por el sistema
-    accion_tomada VARCHAR(200)
-);
-
--- ============================================
--- 5. TABLA: metricas_sesion
--- Métricas y estadísticas calculadas por sesión
--- ============================================
-CREATE TABLE metricas_sesion (
-    id_metrica SERIAL PRIMARY KEY,
-    id_sesion INTEGER NOT NULL REFERENCES sesiones_viaje(id_sesion) ON DELETE CASCADE,
-    
-    -- Timestamp de la métrica
-    timestamp_metrica TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Métricas de ojos
-    distancia_ojo_izq DECIMAL(6, 3),
-    distancia_ojo_der DECIMAL(6, 3),
-    promedio_distancia_ojos DECIMAL(6, 3),
-    
-    -- Métricas de boca
-    apertura_bucal DECIMAL(6, 3),
-    
-    -- Métricas de cabeza (ángulos en grados)
-    angulo_pitch DECIMAL(6, 2), -- Cabeceo (arriba/abajo)
-    angulo_yaw DECIMAL(6, 2),   -- Rotación (izq/der)
-    angulo_roll DECIMAL(6, 2),  -- Inclinación lateral
-    
-    -- Estado general en ese momento
-    estado_momento VARCHAR(20) CHECK (estado_momento IN ('normal', 'alerta', 'critico'))
-);
-
--- ============================================
--- 6. TABLA: ubicaciones_gps
--- Tracking GPS durante el viaje
--- ============================================
-CREATE TABLE ubicaciones_gps (
-    id_ubicacion SERIAL PRIMARY KEY,
-    id_sesion INTEGER NOT NULL REFERENCES sesiones_viaje(id_sesion) ON DELETE CASCADE,
-    
-    -- Coordenadas GPS
-    timestamp_gps TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    latitud DECIMAL(10, 8) NOT NULL,
-    longitud DECIMAL(11, 8) NOT NULL,
-    
-    -- Velocidad
-    velocidad_kmh DECIMAL(6, 2),
-    
-    -- Dirección textual (geocodificación inversa)
-    direccion VARCHAR(300),
-    zona VARCHAR(150)
-);
-
--- ============================================
--- 7. TABLA: configuracion_usuario
--- Configuraciones personalizables por usuario (solo choferes)
--- ============================================
-CREATE TABLE configuracion_usuario (
-    id_config SERIAL PRIMARY KEY,
-    id_usuario INTEGER NOT NULL UNIQUE REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
-    
-    -- Parámetros de detección
-    sensibilidad_deteccion INTEGER CHECK (sensibilidad_deteccion BETWEEN 1 AND 10) DEFAULT 5,
-    umbral_microsueño_seg DECIMAL(4, 2) DEFAULT 2.5,
-    
-    -- Alertas
-    alertas_sonoras BOOLEAN DEFAULT TRUE,
-    alertas_visuales BOOLEAN DEFAULT TRUE,
-    
-    -- Notificaciones
-    notificaciones_email BOOLEAN DEFAULT FALSE,
-    email_notificacion VARCHAR(100),
-    
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    
-);
-
--- ============================================
--- 8. TABLA: reportes
--- Metadata de reportes generados
--- ============================================
-CREATE TABLE reportes (
-    id_reporte SERIAL PRIMARY KEY,
-    
-    -- Usuario que generó el reporte (admin)
-    id_usuario_generador INTEGER REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
-    
-    -- Relacionado con (puede ser de una sesión específica o general)
-    id_sesion INTEGER REFERENCES sesiones_viaje(id_sesion) ON DELETE SET NULL,
-    id_usuario_chofer INTEGER REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
-    id_empresa INTEGER REFERENCES empresas(id_empresa) ON DELETE SET NULL,
-    
-    -- Información del reporte
-    tipo_reporte VARCHAR(50) CHECK (tipo_reporte IN ('sesion', 'chofer', 'empresa', 'general')) NOT NULL,
-    fecha_generacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    periodo_inicio DATE,
-    periodo_fin DATE,
-    
-    -- Archivo generado
-    nombre_archivo VARCHAR(300) NOT NULL,
-    ruta_archivo VARCHAR(500) NOT NULL,
-    formato VARCHAR(10) CHECK (formato IN ('PDF', 'CSV', 'XLSX')) DEFAULT 'PDF',
-    tamaño_kb INTEGER
-);
-
--- ============================================
--- 9. TABLA: viajes
+-- . TABLA: viajes
 -- Asignación de viajes/rutas a choferes
 -- ============================================
-CREATE TABLE viajes (
+CREATE TABLE IF NOT EXISTS viajes (
     id_viaje SERIAL PRIMARY KEY,
     
     -- Relaciones (solo choferes pueden ser asignados)
@@ -279,6 +111,8 @@ CREATE TABLE viajes (
     
     -- Fechas
     fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_viaje_programada DATE NOT NULL,
+    hora_viaje_programada TIME NOT NULL,
     fecha_inicio TIMESTAMP,
     fecha_fin TIMESTAMP,
     
@@ -286,70 +120,115 @@ CREATE TABLE viajes (
     observaciones TEXT,
     
     -- Validaciones
-    CONSTRAINT chk_viaje_origen_destino CHECK (origen != destino),
-    CONSTRAINT chk_viaje_chofer_rol CHECK (
-        EXISTS (SELECT 1 FROM usuarios WHERE id_usuario = id_chofer AND rol = 'chofer')
-    )
+    CONSTRAINT chk_viaje_origen_destino CHECK (origen != destino)
 );
 
+
 -- ============================================
--- ÍNDICES PARA OPTIMIZACIÓN
+-- TRIGGER: Validar que id_chofer realmente sea un chofer
 -- ============================================
+CREATE OR REPLACE FUNCTION validar_chofer_viaje()
+RETURNS TRIGGER AS $$
+DECLARE
+    es_chofer BOOLEAN;
+BEGIN
+    SELECT rol = 'chofer' INTO es_chofer
+    FROM usuarios
+    WHERE id_usuario = NEW.id_chofer;
 
--- Índices en usuarios
-CREATE INDEX idx_usuarios_rol ON usuarios(rol);
-CREATE INDEX idx_usuarios_empresa ON usuarios(id_empresa);
-CREATE INDEX idx_usuarios_tipo_chofer ON usuarios(tipo_chofer);
-CREATE INDEX idx_usuarios_activo ON usuarios(activo);
-CREATE INDEX idx_usuarios_dni ON usuarios(dni_ci);
+    IF NOT es_chofer THEN
+        RAISE EXCEPTION 'El usuario asignado al viaje no es un chofer.';
+    END IF;
 
--- Índices en sesiones_viaje
-CREATE INDEX idx_sesiones_usuario ON sesiones_viaje(id_usuario);
-CREATE INDEX idx_sesiones_estado ON sesiones_viaje(estado);
-CREATE INDEX idx_sesiones_fecha ON sesiones_viaje(fecha_inicio DESC);
-CREATE INDEX idx_sesiones_nivel_alerta ON sesiones_viaje(nivel_alerta);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- Índices en alertas_somnolencia
-CREATE INDEX idx_alertas_sesion ON alertas_somnolencia(id_sesion);
-CREATE INDEX idx_alertas_tipo ON alertas_somnolencia(tipo_alerta);
-CREATE INDEX idx_alertas_timestamp ON alertas_somnolencia(timestamp_alerta DESC);
-CREATE INDEX idx_alertas_severidad ON alertas_somnolencia(severidad);
+CREATE TRIGGER trg_validar_chofer_viaje
+BEFORE INSERT OR UPDATE ON viajes
+FOR EACH ROW
+EXECUTE FUNCTION validar_chofer_viaje();
 
--- Índices en metricas_sesion
-CREATE INDEX idx_metricas_sesion ON metricas_sesion(id_sesion);
-CREATE INDEX idx_metricas_timestamp ON metricas_sesion(timestamp_metrica DESC);
 
--- Índices en ubicaciones_gps
-CREATE INDEX idx_ubicaciones_sesion ON ubicaciones_gps(id_sesion);
-CREATE INDEX idx_ubicaciones_timestamp ON ubicaciones_gps(timestamp_gps DESC);
-CREATE INDEX idx_ubicaciones_coords ON ubicaciones_gps(latitud, longitud);
 
--- Índices en reportes
-CREATE INDEX idx_reportes_tipo ON reportes(tipo_reporte);
-CREATE INDEX idx_reportes_fecha ON reportes(fecha_generacion DESC);
-CREATE INDEX idx_reportes_generador ON reportes(id_usuario_generador);
+-- ============================================
+-- TABLA: eventos_somnolencia
+-- Registro de todos los eventos detectados por la app
+-- ============================================
+CREATE TABLE eventos_somnolencia (
+    id_evento SERIAL PRIMARY KEY,
+    
+    -- Relaciones
+    id_chofer INTEGER NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    id_viaje INTEGER REFERENCES viajes(id_viaje) ON DELETE SET NULL,
+    
+    -- Tipo de evento
+    tipo_evento VARCHAR(50) CHECK (tipo_evento IN (
+        'microsueno', 
+        'cabeceo', 
+        'parpadeo_ojos', 
+        'bostezo', 
+        'frotamiento_ojos'
+    )) NOT NULL,
+    
+    -- Detalles del evento
+    duracion_segundos DECIMAL(5, 2),  -- Duración del evento (ej: 3.2s)
+    cantidad_eventos INTEGER DEFAULT 1,
+    nivel_severidad VARCHAR(20) CHECK (nivel_severidad IN ('NORMAL', 'MEDIUM', 'HIGH', 'CRITICAL')),
+    
+    -- Ubicación GPS
+    latitud DECIMAL(10, 7),
+    longitud DECIMAL(10, 7),
+    velocidad_kmh INTEGER,
+    
+    -- Timestamps
+    timestamp_evento TIMESTAMP NOT NULL,  -- Cuándo ocurrió el evento
+    timestamp_sincronizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Cuándo llegó al servidor
+    
+    -- Metadatos
+    dispositivo_id VARCHAR(100),  -- ID único del tablet
+    version_app VARCHAR(20),
+    sincronizado_offline BOOLEAN DEFAULT FALSE,  -- TRUE si se guardó offline y se sincronizó después
+    
+    -- Índices
+    CONSTRAINT chk_duracion_positiva CHECK (duracion_segundos > 0)
+);
 
--- Índices en viajes
+
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_eventos_chofer ON eventos_somnolencia(id_chofer);
+CREATE INDEX IF NOT EXISTS idx_eventos_viaje ON eventos_somnolencia(id_viaje);
+CREATE INDEX IF NOT EXISTS idx_eventos_tipo ON eventos_somnolencia(tipo_evento);
+CREATE INDEX IF NOT EXISTS idx_eventos_timestamp ON eventos_somnolencia(timestamp_evento DESC);
+CREATE INDEX IF NOT EXISTS idx_eventos_severidad ON eventos_somnolencia(nivel_severidad);
+CREATE INDEX IF NOT EXISTS idx_eventos_fecha ON eventos_somnolencia(DATE(timestamp_evento));
+
+-- Índices usuarios
+CREATE INDEX IF NOT EXISTS idx_usuarios_rol ON usuarios(rol);
+CREATE INDEX IF NOT EXISTS idx_usuarios_empresa ON usuarios(id_empresa);
+CREATE INDEX IF NOT EXISTS idx_usuarios_tipo_chofer ON usuarios(tipo_chofer);
+CREATE INDEX IF NOT EXISTS idx_usuarios_activo ON usuarios(activo);
+
+-- Índices viajes
 CREATE INDEX idx_viajes_chofer ON viajes(id_chofer);
 CREATE INDEX idx_viajes_empresa ON viajes(id_empresa);
 CREATE INDEX idx_viajes_estado ON viajes(estado);
 CREATE INDEX idx_viajes_fecha_asignacion ON viajes(fecha_asignacion DESC);
+CREATE INDEX idx_viajes_fecha_programada ON viajes(fecha_viaje_programada);
 CREATE INDEX idx_viajes_origen ON viajes(origen);
 CREATE INDEX idx_viajes_destino ON viajes(destino);
 
--- ============================================
--- COMENTARIOS EN TABLAS
--- ============================================
+-- Índice único compuesto para evitar que un chofer tenga 2 viajes el mismo día (sin importar la hora)
+-- Solo aplica a viajes pendientes o en curso
+CREATE UNIQUE INDEX idx_viajes_chofer_fecha_unico 
+ON viajes(id_chofer, fecha_viaje_programada) 
+WHERE estado IN ('pendiente', 'en_curso');
 
-COMMENT ON TABLE empresas IS 'Empresas de transporte que contratan choferes';
-COMMENT ON TABLE usuarios IS 'Usuarios del sistema con rol admin o chofer';
-COMMENT ON TABLE sesiones_viaje IS 'Sesiones de monitoreo activas o finalizadas';
-COMMENT ON TABLE alertas_somnolencia IS 'Eventos de somnolencia detectados en tiempo real';
-COMMENT ON TABLE metricas_sesion IS 'Métricas faciales y de comportamiento capturadas';
-COMMENT ON TABLE ubicaciones_gps IS 'Tracking GPS durante las sesiones de viaje';
-COMMENT ON TABLE configuracion_usuario IS 'Configuraciones personalizadas por chofer';
-COMMENT ON TABLE reportes IS 'Metadata de reportes PDF/CSV generados';
-COMMENT ON TABLE viajes IS 'Asignación de viajes/rutas a choferes con información de origen y destino';
+-- Comentarios
+COMMENT ON TABLE eventos_somnolencia IS 'Registro de eventos de somnolencia detectados por la app móvil';
+COMMENT ON COLUMN eventos_somnolencia.sincronizado_offline IS 'Indica si el evento se guardó localmente y se sincronizó después';
+
+
 
 -- ============================================
 -- DATOS INICIALES
@@ -382,19 +261,15 @@ VALUES (
 );
 
 -- Chofer de EMPRESA de ejemplo
--- Usuario: mlopez | Password: chofer123
+-- Usuario: franz | Password: franz123
 INSERT INTO usuarios (
     usuario, password_hash, rol, nombre_completo, dni_ci, email, telefono,
     genero, nacionalidad, fecha_nacimiento, direccion, ciudad, codigo_postal,
     tipo_chofer, id_empresa, numero_licencia, categoria_licencia, activo, primer_inicio
 )
 VALUES (
-    'mlopez', '$2b$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'chofer',
-    'María López González', '87654321', 'maria.lopez@transcorp.com', '+591 70987654',
+    'franz', '$2b$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'chofer',
+    'Franz González', '87654321', 'franz.gonzalez@transcorp.com', '+591 70987654',
     'femenino', 'Boliviana', '1990-07-22', 'Calle Comercio #456', 'Cochabamba', '00001',
     'empresa', 1, 'LIC-789012', 'Categoría D - Transporte Público', TRUE, TRUE
 );
-
--- -- Configuración por defecto para los choferes
--- INSERT INTO configuracion_usuario (id_usuario) 
--- SELECT id_usuario FROM usuarios WHERE rol = 'chofer';

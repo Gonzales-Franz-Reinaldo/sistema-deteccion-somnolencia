@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.driverdrowsinessdetectorapp.presentation.auth.ui.LoginScreen
 import com.example.driverdrowsinessdetectorapp.presentation.dashboard.ui.DashboardScreen
+import com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui.MonitoringScreen
 
 @Composable
 fun NavGraph(
@@ -32,6 +33,18 @@ fun NavGraph(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onStartMonitoring = {
+                    navController.navigate(Screen.Monitoring.route)
+                }
+            )
+        }
+
+        //  RUTA: Monitoring
+        composable(Screen.Monitoring.route) {
+            MonitoringScreen(
+                onNavigateBack = {  // ← CORRECCIÓN AQUÍ
+                    navController.popBackStack()
                 }
             )
         }

@@ -52,6 +52,19 @@ class CRUDUser(CRUDBase[Usuario, UserCreate, UserUpdate]):
         """
         return db.query(Usuario).filter(Usuario.dni_ci == dni_ci).first()
     
+    def get_by_id(self, db: Session, *, user_id: int) -> Optional[Usuario]:
+        """
+        Obtener usuario por ID
+        
+        Args:
+            db: Sesión de BD
+            user_id: ID del usuario
+            
+        Returns:
+            Instancia de Usuario o None
+        """
+        return db.query(Usuario).filter(Usuario.id_usuario == user_id).first()
+    
     def create(self, db: Session, *, obj_in: UserCreate) -> Usuario:
         """
         Crear usuario con password hasheado
@@ -234,3 +247,12 @@ class CRUDUser(CRUDBase[Usuario, UserCreate, UserUpdate]):
 
 # Instancia global de CRUD para usuarios
 user = CRUDUser(Usuario)
+
+
+#  Función helper para usar en otros módulos
+def get_user_by_id(db: Session, user_id: int) -> Optional[Usuario]:
+    """
+    Función helper para obtener usuario por ID.
+    Usa la instancia global de CRUD.
+    """
+    return user.get_by_id(db, user_id=user_id)

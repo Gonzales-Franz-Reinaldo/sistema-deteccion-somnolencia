@@ -30,7 +30,7 @@ def regenerate_passwords():
     users_to_update = [
         ('admin', 'admin123'),
         ('jperez', 'chofer123'),
-        ('mlopez', 'chofer123'),
+        ('franz', 'franz123'),
     ]
     
     with engine.connect() as conn:

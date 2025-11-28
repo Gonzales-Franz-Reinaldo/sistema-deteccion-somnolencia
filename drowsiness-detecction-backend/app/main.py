@@ -15,6 +15,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:%(name)s:%(message)s"
 )
+=======
+from app.api.v1.routers import eventos
+
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -172,13 +175,18 @@ app.include_router(
     tags=["📹 Monitoreo en Tiempo Real (Choferes)"]
 )
 
-# Inicializar tablas (crea nuevas si no existen, p.ej. posiciones_viaje)
-@app.on_event("startup")
-def init_db_tables():
-    # Importar modelos para que se registren en el metadata antes de create_all
-    from app.models import sesion, posicion_viaje, user, empresa  # noqa: F401
-    Base.metadata.create_all(bind=engine)
+# # Inicializar tablas (crea nuevas si no existen, p.ej. posiciones_viaje)
+# @app.on_event("startup")
+# def init_db_tables():
+#     # Importar modelos para que se registren en el metadata antes de create_all
+#     from app.models import sesion, posicion_viaje, user, empresa  # noqa: F401
+#     Base.metadata.create_all(bind=engine)
 
+app.include_router(
+    eventos.router,
+    prefix=f"{settings.API_V1_PREFIX}/eventos",
+    tags=["📊 Eventos de Somnolencia"]
+)
 
 @app.get("/", tags=["ℹ️ Info"])
 def root():
