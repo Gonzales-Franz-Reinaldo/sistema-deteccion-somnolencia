@@ -15,7 +15,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:%(name)s:%(message)s"
 )
-=======
+
 from app.api.v1.routers import eventos
 
 
