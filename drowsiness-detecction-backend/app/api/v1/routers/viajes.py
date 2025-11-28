@@ -1,4 +1,4 @@
-from typing import List, Optional
+﻿from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from sqlalchemy.orm import Session
 
@@ -707,3 +707,4 @@ def get_choferes_disponibles(
         total=len(choferes_response),
         choferes=choferes_response
     )
+

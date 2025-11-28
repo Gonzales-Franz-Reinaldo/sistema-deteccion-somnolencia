@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+﻿from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime, date, time
 from enum import Enum
@@ -242,3 +242,4 @@ class ChoferesDisponiblesResponse(BaseModel):
                 ]
             }
         }
+

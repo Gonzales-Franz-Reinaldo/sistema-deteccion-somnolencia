@@ -101,6 +101,50 @@ SELECT usuario, rol, activo FROM usuarios;
 #### Usar uvicorn
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
+## Endpoints Monitoreo de Viajes (nuevo módulo)
+
+Base: `/api/v1/monitoring`
+
+- `GET /status`  Verifica operatividad y rol del usuario autenticado.
+- `GET /viajes-activos` (admin) Lista sesiones activas con última posición.
+- `GET /metrics` (admin) Métricas agregadas para cabecera (totales de sesiones, alertas, etc.).
+- `GET /viaje/{id_sesion}/posiciones?skip&limit` (admin) Posiciones paginadas de una sesión.
+- `POST /viaje/{id_sesion}/posicion` (chofer) Registra posición real del chofer (requiere sesión activa y pertenencia).
+- `POST /viaje/{id_sesion}/posicion-test` (admin) Inserta posición dummy para pruebas rápidas (desplazamiento ligero).
+- `POST /viaje/{id_sesion}/finalizar` (chofer) Finaliza la sesión activa y calcula duración.
+- `GET /viaje/{id_sesion}/info` (admin) Información consolidada: chofer, estado, contadores, distancia calculada (Haversine).
+- `WS  /viaje/{id_sesion}/stream` Stream en tiempo real de nuevas posiciones y alertas:
+	- Cliente envía `ping` cada 5s.
+	- Servidor responde con listas incrementales y `heartbeat:true` cuando no hay novedades.
+	- Campos: `posiciones[]`, `alertas[]`, `heartbeat`.
+
+### Notas Técnicas
+- Distancia acumulada calculada en backend usando fórmula Haversine sobre posiciones consecutivas.
+- WebSocket refactorizado: timeout 2s, manejo desconexión limpia, evita excepciones ASGI previas.
+- Endpoint `posicion-test` facilita QA sin dispositivo de GPS (solo admin, preserva reglas de sesión activa).
+- Para posiciones reales: el chofer debe consumir `POST /viaje/{id}/posicion` pasando `lat,lng,velocidad,heading`.
+
+### Variables de Entorno Frontend (Vite)
+Agregar en `.env` del frontend:
+```
+VITE_API_URL=http://localhost:8000
+VITE_GOOGLE_MAPS_API_KEY=TU_API_KEY
+```
+
+### Flujo Básico de Prueba Rápida
+1. Autenticarse como admin y como chofer (en dos navegadores o sesiones).
+2. Crear/iniciar sesión de viaje para el chofer (según UI existente).
+3. Abrir detalle del viaje en vista admin: `/admin/monitoreo-viajes/{id_sesion}`.
+4. Presionar "Posición Test" varias veces para simular movimiento (o enviar posiciones reales desde chofer).
+5. Ver polyline del mapa crecer y panel actualizar distancia y contadores.
+6. Observar badges: conexión (verde), latencia estimada (ms), tiempo desde último heartbeat (segundos) y nivel alerta.
+
+### Posibles Extensiones Futuras
+- Acumulación de distancia incremental en DB para evitar recomputar todo el trayecto.
+- Filtro temporal en `/posiciones` (desde_timestamp).
+- Estado de precisión GPS y pérdida de señal.
+- Exportación de trayecto a GeoJSON.
+
+
 ## Para que funcione el login con las credenciales válidas ejecutar el scrip test/regenerate_password
 - python test/regenerate_passwords.py
-

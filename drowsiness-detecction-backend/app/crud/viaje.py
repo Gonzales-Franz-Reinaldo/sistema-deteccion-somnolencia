@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+﻿from typing import Optional, List, Dict, Any
 from datetime import date, time
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_
@@ -406,3 +406,4 @@ class CRUDViaje(CRUDBase[Viaje, ViajeCreate, ViajeUpdate]):
 
 # Instancia global de CRUD para viajes
 viaje = CRUDViaje(Viaje)
+

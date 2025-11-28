@@ -12,6 +12,31 @@
 - **Dockerizable:** Facilita la ejecución en servidores remotos.
 - **API robusta:** Utiliza FastAPI para ofrecer un backend modular y extensible.
 
+### Monitoreo de Viajes (Nuevo Módulo)
+
+Permite observar en tiempo real la ubicación (GPS) y las alertas de somnolencia de cada chofer durante sus viajes.
+
+Flujo resumido:
+1. El chofer inicia un viaje creando una `SesionViaje` (estado `activa`).
+2. El dispositivo del chofer envía su posición cada 30–60 segundos: `POST /api/v1/monitoring/viaje/{id}/posicion`.
+3. El administrador visualiza viajes activos en `/admin/monitoreo-viajes` (métricas + tarjetas).
+4. Al abrir un viaje específico `/admin/monitoreo-viajes/:id` se abre WebSocket `ws /api/v1/monitoring/viaje/{id}/stream` que entrega nuevas posiciones y alertas.
+5. El chofer finaliza el viaje con `POST /api/v1/monitoring/viaje/{id}/finalizar` (registra `fecha_fin`, `ubicacion_fin` y duración).
+
+Endpoints clave:
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/monitoring/viajes-activos` | Viajes activos con última posición |
+| GET | `/api/v1/monitoring/viaje/{id}/posiciones` | Posiciones paginadas cronológicas |
+| POST | `/api/v1/monitoring/viaje/{id}/posicion` | Registrar nueva posición (rol chofer) |
+| POST | `/api/v1/monitoring/viaje/{id}/finalizar` | Finalizar sesión de viaje |
+| GET | `/api/v1/monitoring/metrics` | Métricas: choferes totales, activos, alertas hoy |
+| WS | `/api/v1/monitoring/viaje/{id}/stream` | Stream de posiciones y alertas en vivo |
+
+Modelo posición (`PosicionViaje`): lat, lng, velocidad, heading, timestamp, origen. Índice compuesto `(id_sesion, timestamp)` optimiza consultas.
+
+Frontend: páginas `MonitoreoViajesPage` (lista + métricas) y `MonitoreoViajeDetallePage` (mapa Google + ruta + alertas en tiempo real). Requiere variable `VITE_GOOGLE_MAPS_API_KEY` en `.env` del frontend.
+
 
 ## Requisitos:
 Para utilizar este código, asegúrese de cumplir con los siguientes requisitos previos:

@@ -1,4 +1,4 @@
-from typing import List
+﻿from typing import List, Optional, Union, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from sqlalchemy.orm import Session
 
@@ -20,6 +20,31 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def parse_bool_query(value: Any) -> Optional[bool]:
+    """
+    Convierte parámetros de query string a boolean
+    Acepta: 'true', 'false', '1', '0', True, False, None
+    """
+    logger.info(f"🔧 parse_bool_query llamada con: {repr(value)} (tipo: {type(value).__name__})")
+    
+    if value is None or value == '':
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        value_lower = value.lower().strip()
+        if value_lower in ('true', '1', 'yes', 't'):
+            logger.info(f"✅ Convertido a True")
+            return True
+        elif value_lower in ('false', '0', 'no', 'f'):
+            logger.info(f"✅ Convertido a False")
+            return False
+    
+    # Si llega aquí, el valor no es válido - retornar None en lugar de error
+    logger.warning(f"⚠️ Valor no reconocido para boolean: {value}, retornando None")
+    return None
 
 
 @router.post(
@@ -169,11 +194,19 @@ def list_users(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0, description="Registros a saltar (paginación)"),
     limit: int = Query(100, ge=1, le=100, description="Límite de resultados"),
-    activo: bool = Query(None, description="Filtrar por estado activo/inactivo"),
-    tipo_chofer: str = Query(None, description="Filtrar por tipo (individual/empresa)"),
-    id_empresa: int = Query(None, description="Filtrar por empresa"),
+    activo: Any = Query(None, description="Filtrar por estado activo/inactivo"),
+    tipo_chofer: Optional[str] = Query(None, description="Filtrar por tipo (individual/empresa)"),
+    id_empresa: Optional[int] = Query(None, description="Filtrar por empresa"),
     current_user: Usuario = Depends(get_current_admin_user)
 ):
+    logger.info("🔥 ENDPOINT /users/ EJECUTÁNDOSE - CÓDIGO NUEVO CARGADO")
+    logger.info(f"📥 Parámetro activo recibido: {repr(activo)} (tipo: {type(activo).__name__})")
+    
+    # Convertir parámetro activo a boolean usando función helper
+    activo_bool = parse_bool_query(activo)
+    
+    if activo_bool is not None:
+        logger.info(f"✅ Filtro activo convertido: '{activo}' -> {activo_bool} (tipo: {type(activo_bool).__name__})")
     
     # Query con LEFT JOIN para obtener nombre de empresa
     query = db.query(
@@ -185,8 +218,8 @@ def list_users(
     ).filter(user_crud.model.rol == "chofer")
     
     # Aplicar filtros
-    if activo is not None:
-        query = query.filter(user_crud.model.activo == activo)
+    if activo_bool is not None:
+        query = query.filter(user_crud.model.activo == activo_bool)
     
     if tipo_chofer:
         query = query.filter(user_crud.model.tipo_chofer == tipo_chofer)
@@ -196,8 +229,8 @@ def list_users(
     
     # Obtener total (contar solo usuarios, no el JOIN)
     total_query = db.query(user_crud.model).filter(user_crud.model.rol == "chofer")
-    if activo is not None:
-        total_query = total_query.filter(user_crud.model.activo == activo)
+    if activo_bool is not None:
+        total_query = total_query.filter(user_crud.model.activo == activo_bool)
     if tipo_chofer:
         total_query = total_query.filter(user_crud.model.tipo_chofer == tipo_chofer)
     if id_empresa:

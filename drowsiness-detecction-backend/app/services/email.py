@@ -1,4 +1,4 @@
-# ============================================
+﻿# ============================================
 # SERVICIO DE ENVÍO DE EMAILS
 # Maneja el envío de correos electrónicos usando SMTP
 # ============================================
@@ -590,3 +590,4 @@ class EmailService:
 
 # Instancia global del servicio
 email_service = EmailService()
+

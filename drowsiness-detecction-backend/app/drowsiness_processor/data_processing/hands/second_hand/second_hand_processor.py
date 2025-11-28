@@ -1,4 +1,4 @@
-from app.drowsiness_processor.data_processing.processors.hands_processor import ProcesadorManos
+﻿from app.drowsiness_processor.data_processing.processors.hands_processor import ProcesadorManos
 from app.drowsiness_processor.data_processing.hands.second_hand.second_hand_processing import (
     CalculadoraDistanciaEuclidiana, 
     ProcesamientoPuntosSegundaMano

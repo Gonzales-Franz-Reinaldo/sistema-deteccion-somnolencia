@@ -1,4 +1,4 @@
-from sqlalchemy import (
+﻿from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, Date, Text, 
     ForeignKey, CheckConstraint
 )

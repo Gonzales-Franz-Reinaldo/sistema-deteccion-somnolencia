@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+﻿from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
@@ -48,9 +48,11 @@ class Empresa(Base):
     @property
     def total_choferes(self) -> int:
         """Contar choferes de esta empresa"""
+
         return len(self.usuarios) if self.usuarios else 0
     
     @property
     def choferes(self):
         """Alias para compatibilidad - retorna usuarios que son choferes"""
         return [u for u in self.usuarios if u.rol == "chofer"] if self.usuarios else []
+
