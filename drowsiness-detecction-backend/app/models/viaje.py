@@ -60,9 +60,10 @@ class Viaje(Base):
     # NOTAS ADICIONALES
     observaciones = Column(Text)
     
-    # RELACIONES
-    chofer = relationship("Usuario", foreign_keys=[id_chofer], backref="viajes_asignados")
-    empresa = relationship("Empresa", foreign_keys=[id_empresa], backref="viajes")
+    # RELACIONES 
+    chofer = relationship("Usuario", foreign_keys=[id_chofer], back_populates="viajes_asignados")
+    empresa = relationship("Empresa", foreign_keys=[id_empresa], back_populates="viajes")
+    eventos_somnolencia = relationship("EventoSomnolencia", back_populates="viaje")
     
     # VALIDACIONES A NIVEL DE MODELO
     __table_args__ = (

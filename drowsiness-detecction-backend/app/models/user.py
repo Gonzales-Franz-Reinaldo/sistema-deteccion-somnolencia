@@ -67,10 +67,32 @@ class Usuario(Base):
     ultima_sesion = Column(DateTime(timezone=True))
     
     # RELACIONES
-    empresa = relationship("Empresa", back_populates="choferes")
+    empresa = relationship("Empresa", back_populates="usuarios")
+    viajes_asignados = relationship(
+        "Viaje", 
+        foreign_keys="[Viaje.id_chofer]",
+        back_populates="chofer",
+        cascade="all, delete-orphan"
+    )
+    
+    eventos_somnolencia = relationship(
+        "EventoSomnolencia", 
+        back_populates="chofer", 
+        cascade="all, delete-orphan"
+    )
+    
+    # Constraints
+    __table_args__ = (
+        CheckConstraint("rol IN ('admin', 'chofer')", name='chk_rol_valido'),
+        CheckConstraint("genero IN ('masculino', 'femenino', 'otro') OR genero IS NULL", name='chk_genero_valido'),
+        CheckConstraint("tipo_chofer IN ('individual', 'empresa') OR tipo_chofer IS NULL", name='chk_tipo_chofer_valido'),
+    )
+    
+    # def __repr__(self):
+    #     return f"<Usuario {self.usuario} ({self.rol})>"
     
     def __repr__(self):
-        return f"<Usuario {self.usuario} ({self.rol})>"
+        return f"<Usuario(id={self.id_usuario}, usuario={self.usuario}, rol={self.rol})>"
     
     @property
     def is_admin(self) -> bool:
