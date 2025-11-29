@@ -1,4 +1,4 @@
-package com.example.driverdrowsinessdetectorapp.domain.usecase.metrics
+package com.example.driverdrowsinessdetectorapp.domain.metrics
 
 import android.util.Log
 import com.example.driverdrowsinessdetectorapp.data.local.entity.MetricsEntity
@@ -10,7 +10,7 @@ import javax.inject.Inject
 /**
  * Caso de Uso: Guardar Métricas en Room Database
  *
- * Equivalente a: reports/main.py → ReportesSomnolencia.principal()
+ * Guarda métricas de detección cuando hay alertas relevantes.
  */
 class SaveMetricsUseCase @Inject constructor(
     private val metricsRepository: MetricsRepository
@@ -27,33 +27,38 @@ class SaveMetricsUseCase @Inject constructor(
      */
     suspend operator fun invoke(sessionId: Long, metrics: MetricasSomnolencia): Result<Long> {
         return try {
-            // Solo guardar si hay alerta (como en el backend Python)
+            // Solo guardar si hay alerta
             if (shouldSaveMetrics(metrics)) {
                 val entity = MetricsEntity(
-                    timestamp = metrics.timestamp,
                     sessionId = sessionId,
-                    ear = metrics.ear,
+                    timestamp = metrics.timestamp,
+
+                    // Métricas de ojos
+                    earAverage = metrics.ear,
+                    eyesClosed = metrics.isMicrosleep,
+
+                    // Métricas de boca
                     mar = metrics.mar,
+                    mouthOpen = metrics.isYawning,
+
+                    // Métricas de cabeza
                     headPitch = metrics.headPose.pitch,
                     headYaw = metrics.headPose.yaw,
                     headRoll = metrics.headPose.roll,
-                    isMicrosleep = metrics.isMicrosleep,
-                    microsleepCount = metrics.microsleepCount,
-                    microsleepDurations = metrics.microsleepDurations,
-                    isYawning = metrics.isYawning,
+                    noddingDetected = metrics.isNodding,
+
+                    // Contadores
+                    blinkCount = metrics.blinkCount,
                     yawnCount = metrics.yawnCount,
-                    yawnDurations = metrics.yawnDurations,
-                    isNodding = metrics.isNodding,
                     noddingCount = metrics.noddingCount,
-                    noddingDurations = metrics.noddingDurations,
-                    eyeRubFirstHandDetected = metrics.eyeRubFirstHand.first,
-                    eyeRubFirstHandCount = metrics.eyeRubFirstHand.second,
-                    eyeRubFirstHandDurations = metrics.eyeRubFirstHand.third,
-                    eyeRubSecondHandDetected = metrics.eyeRubSecondHand.first,
-                    eyeRubSecondHandCount = metrics.eyeRubSecondHand.second,
-                    eyeRubSecondHandDurations = metrics.eyeRubSecondHand.third,
+                    eyeRubCount = if (metrics.eyeRubFirstHand.first || metrics.eyeRubSecondHand.first) 1 else 0,
+
+                    // Detección de manos
+                    handNearEyes = metrics.eyeRubFirstHand.first || metrics.eyeRubSecondHand.first,
+
+                    // Estado
                     alertLevel = metrics.alertLevel.name,
-                    alertType = metrics.alertType?.name
+                    faceDetected = true
                 )
 
                 val id = metricsRepository.saveMetrics(entity)
@@ -73,9 +78,6 @@ class SaveMetricsUseCase @Inject constructor(
 
     /**
      * Determinar si las métricas deben guardarse
-     *
-     * Equivalente a la condición del backend Python:
-     * if (reporte_frotamiento_ojos_primera_mano or ... or reporte_bostezo)
      */
     private fun shouldSaveMetrics(metrics: MetricasSomnolencia): Boolean {
         return metrics.alertLevel != AlertLevel.NORMAL ||

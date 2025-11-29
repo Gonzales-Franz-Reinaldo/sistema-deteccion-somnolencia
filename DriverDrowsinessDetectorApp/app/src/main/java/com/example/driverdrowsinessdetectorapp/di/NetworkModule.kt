@@ -2,6 +2,7 @@ package com.example.driverdrowsinessdetectorapp.di
 
 import com.example.driverdrowsinessdetectorapp.data.local.preferences.PreferencesManager
 import com.example.driverdrowsinessdetectorapp.data.remote.api.AuthApi
+import com.example.driverdrowsinessdetectorapp.data.remote.api.EventosApi
 import com.example.driverdrowsinessdetectorapp.data.remote.interceptor.AuthInterceptor
 import com.example.driverdrowsinessdetectorapp.data.remote.interceptor.LoggingInterceptor
 import com.example.driverdrowsinessdetectorapp.data.repository.AuthRepositoryImpl
@@ -19,15 +20,29 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
+/**
+ * Módulo Hilt para configuración de red (Retrofit, OkHttp).
+ * 
+ * Proporciona:
+ * - OkHttpClient configurado con interceptores
+ * - Retrofit configurado
+ * - APIs: AuthApi, EventosApi
+ * 
+ * @author Sistema de Detección de Somnolencia
+ * @version 2.0
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    // CONFIGURACIÓN BASE
 
     @Provides
     @Singleton
     fun provideGson(): Gson {
         return GsonBuilder()
             .setLenient()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
             .create()
     }
 
@@ -66,11 +81,24 @@ object NetworkModule {
             .build()
     }
 
+    // APIs
+
     @Provides
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
     }
+
+    /**
+     *  Provee EventosApi para sincronización de eventos.
+     */
+    @Provides
+    @Singleton
+    fun provideEventosApi(retrofit: Retrofit): EventosApi {
+        return retrofit.create(EventosApi::class.java)
+    }
+
+    // REPOSITORIES
 
     @Provides
     @Singleton
