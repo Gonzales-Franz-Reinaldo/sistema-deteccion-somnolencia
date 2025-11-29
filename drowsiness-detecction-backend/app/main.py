@@ -5,9 +5,8 @@ from fastapi.openapi.utils import get_openapi
 
 from app.core.config import settings
 from app.core.middleware import setup_middlewares
-from app.api.v1.routers import auth, empresas, users, viajes
-# from app.api.v1.routers import monitoring  
-from app.api.v1.routers import eventos
+from app.api.v1.routers import auth, empresas, users, viajes, eventos
+from app.api.v1.routers import websocket as ws_router 
 
 # Configuración básica de logging (asegura nivel INFO global y formato compacto)
 logging.basicConfig(
@@ -157,23 +156,20 @@ app.include_router(
 app.include_router(
     viajes.router,
     prefix=f"{settings.API_V1_PREFIX}/viajes",
-    tags=["Gestión de Viajes (Solo Admin)"]
+    tags=["🚗 Gestión de Viajes (Solo Admin)"]
 )
-
-
-
-# ←  ROUTER DE MONITOREO
-# app.include_router(
-#     monitoring.router,
-#     prefix=f"{settings.API_V1_PREFIX}/monitoring",
-#     tags=["📹 Monitoreo en Tiempo Real (Choferes)"]
-# )
-
 
 app.include_router(
     eventos.router,
     prefix=f"{settings.API_V1_PREFIX}/eventos",
     tags=["📊 Eventos de Somnolencia"]
+)
+
+# ✅ NUEVO: Router WebSocket
+app.include_router(
+    ws_router.router,
+    prefix=f"{settings.API_V1_PREFIX}/ws",
+    tags=["🔌 WebSocket (Tiempo Real)"]
 )
 
 @app.get("/", tags=["ℹ️ Info"])

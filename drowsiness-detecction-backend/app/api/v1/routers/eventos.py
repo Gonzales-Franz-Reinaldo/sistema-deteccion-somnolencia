@@ -1,9 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+"""
+Router de Eventos de Somnolencia.
+
+Endpoints para crear, consultar y gestionar eventos de somnolencia
+detectados por la aplicación móvil.
+
+"""
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, Body, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, get_current_admin_user, get_current_chofer_user
 from app.models.user import Usuario
 from app.crud import evento_somnolencia as crud_eventos
 from app.crud.user import user as crud_user  
@@ -19,22 +26,31 @@ from app.schemas.evento_somnolencia import (
     NivelSeveridad
 )
 
+# Import del servicio de notificaciones
+from app.services.notification_service import notification_service
+
 router = APIRouter()
 
 
-# ═══════════════════════════════════════════════════════════════
 # ENDPOINTS PARA CHOFERES (crear eventos)
-# ═══════════════════════════════════════════════════════════════
 
 @router.post(
     "/",
     response_model=EventoSomnolenciaResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Crear evento de somnolencia",
-    description="Registra un nuevo evento de somnolencia detectado por la app móvil."
+    description="""
+    Registra un nuevo evento de somnolencia detectado.
+    
+    **Requiere autenticación como chofer.**
+    
+    El evento se asocia automáticamente al chofer autenticado.
+    Si el evento es crítico, se notifica a los administradores en tiempo real.
+    """
 )
-def crear_evento_somnolencia(
+async def crear_evento_somnolencia(  
     evento: EventoSomnolenciaCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
@@ -65,6 +81,14 @@ def crear_evento_somnolencia(
         id_chofer=current_user.id_usuario
     )
     
+    # Notificar a admins en background si es crítico
+    background_tasks.add_task(
+        notification_service.notify_evento_somnolencia,
+        evento=db_evento,
+        chofer=current_user,
+        db=db
+    )
+    
     return db_evento
 
 
@@ -75,8 +99,9 @@ def crear_evento_somnolencia(
     summary="Crear eventos en lote (sync offline)",
     description="Sincroniza múltiples eventos acumulados durante periodo offline."
 )
-def crear_eventos_batch(
+async def crear_eventos_batch(  
     batch: EventoSomnolenciaBatch,
+    background_tasks: BackgroundTasks, 
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
@@ -103,12 +128,17 @@ def crear_eventos_batch(
         id_chofer=current_user.id_usuario
     )
     
+    # Notificar eventos críticos en background
+    background_tasks.add_task(
+        notification_service.notify_evento_batch,
+        eventos=db_eventos,
+        db=db
+    )
+    
     return db_eventos
 
 
-# ═══════════════════════════════════════════════════════════════
 # ENDPOINTS PARA CONSULTAR EVENTOS
-# ═══════════════════════════════════════════════════════════════
 
 @router.get(
     "/mis-eventos",
@@ -282,9 +312,7 @@ def obtener_eventos_recientes(
     return resultado
 
 
-# ═══════════════════════════════════════════════════════════════
 # ENDPOINTS DE ESTADÍSTICAS
-# ═══════════════════════════════════════════════════════════════
 
 @router.get(
     "/estadisticas/mis-estadisticas",
@@ -340,7 +368,6 @@ def obtener_estadisticas_chofer(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo el administrador puede acceder a este endpoint"
         )
-    
     
     chofer = crud_user.get_by_id(db, user_id=id_chofer)
     if not chofer:

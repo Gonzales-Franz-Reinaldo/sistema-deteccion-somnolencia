@@ -1,58 +1,143 @@
 package com.example.driverdrowsinessdetectorapp.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import com.example.driverdrowsinessdetectorapp.data.local.converter.Converters
 
 /**
- * Entidad Room: Métricas de Somnolencia
+ * Entidad para almacenar métricas de detección en tiempo real.
  * 
- * Equivalente al CSV generado en: reports/main.py
+ * Almacena snapshots de las métricas de MediaPipe durante el monitoreo.
+ * Útil para análisis posterior y debugging.
+ * 
+ * @author Sistema de Detección de Somnolencia
+ * @version 2.0
  */
-@Entity(tableName = "metrics")
-@TypeConverters(Converters::class)
+@Entity(
+    tableName = "metrics",
+    foreignKeys = [
+        ForeignKey(
+            entity = SessionEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["session_id"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["session_id"]),
+        Index(value = ["timestamp"]),
+        Index(value = ["session_id", "timestamp"])
+    ]
+)
 data class MetricsEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+
+    @ColumnInfo(name = "session_id")
+    val sessionId: Long,
+
+    @ColumnInfo(name = "timestamp")
+    val timestamp: Long = System.currentTimeMillis(),
+
+    // MÉTRICAS DE OJOS (EAR - Eye Aspect Ratio)
     
-    // Timestamp
-    val timestamp: Long,
-    val sessionId: Long, // FK a SessionEntity
+    /** EAR del ojo izquierdo (0.0 - 1.0) */
+    @ColumnInfo(name = "ear_left")
+    val earLeft: Float? = null,
+
+    /** EAR del ojo derecho (0.0 - 1.0) */
+    @ColumnInfo(name = "ear_right")
+    val earRight: Float? = null,
+
+    /** EAR promedio de ambos ojos */
+    @ColumnInfo(name = "ear_average")
+    val earAverage: Float? = null,
+
+    /** Indica si los ojos están cerrados en este frame */
+    @ColumnInfo(name = "eyes_closed")
+    val eyesClosed: Boolean = false,
+
+    /** Duración acumulada con ojos cerrados (ms) */
+    @ColumnInfo(name = "eyes_closed_duration_ms")
+    val eyesClosedDurationMs: Long? = null,
+
+    // MÉTRICAS DE BOCA (MAR - Mouth Aspect Ratio)
     
-    // Métricas básicas
-    val ear: Float,
-    val mar: Float,
-    val headPitch: Float,
-    val headYaw: Float,
-    val headRoll: Float,
+    /** MAR - Relación de aspecto de la boca (0.0 - 1.0) */
+    @ColumnInfo(name = "mar")
+    val mar: Float? = null,
+
+    /** Indica si la boca está abierta (posible bostezo) */
+    @ColumnInfo(name = "mouth_open")
+    val mouthOpen: Boolean = false,
+
+    /** Duración acumulada con boca abierta (ms) */
+    @ColumnInfo(name = "mouth_open_duration_ms")
+    val mouthOpenDurationMs: Long? = null,
+
+    // MÉTRICAS DE CABEZA (Head Pose)
     
-    // Microsueño
-    val isMicrosleep: Boolean,
-    val microsleepCount: Int,
-    val microsleepDurations: List<Long>,
+    /** Ángulo de inclinación vertical (pitch) en grados */
+    @ColumnInfo(name = "head_pitch")
+    val headPitch: Float? = null,
+
+    /** Ángulo de rotación horizontal (yaw) en grados */
+    @ColumnInfo(name = "head_yaw")
+    val headYaw: Float? = null,
+
+    /** Ángulo de inclinación lateral (roll) en grados */
+    @ColumnInfo(name = "head_roll")
+    val headRoll: Float? = null,
+
+    /** Indica si se detectó cabeceo */
+    @ColumnInfo(name = "nodding_detected")
+    val noddingDetected: Boolean = false,
+
+    // CONTADORES DE EVENTOS
     
-    // Bostezo
-    val isYawning: Boolean,
-    val yawnCount: Int,
-    val yawnDurations: List<Long>,
+    /** Número de parpadeos en ventana de tiempo */
+    @ColumnInfo(name = "blink_count")
+    val blinkCount: Int = 0,
+
+    /** Número de bostezos en ventana de tiempo */
+    @ColumnInfo(name = "yawn_count")
+    val yawnCount: Int = 0,
+
+    /** Número de cabeceos en ventana de tiempo */
+    @ColumnInfo(name = "nodding_count")
+    val noddingCount: Int = 0,
+
+    /** Número de frotamientos de ojos en ventana de tiempo */
+    @ColumnInfo(name = "eye_rub_count")
+    val eyeRubCount: Int = 0,
+
+    // DETECCIÓN DE MANOS
     
-    // Cabeceo
-    val isNodding: Boolean,
-    val noddingCount: Int,
-    val noddingDurations: List<Long>,
+    /** Indica si se detectó mano cerca de los ojos */
+    @ColumnInfo(name = "hand_near_eyes")
+    val handNearEyes: Boolean = false,
+
+    // ESTADO GENERAL
     
-    // Frotamiento primera mano
-    val eyeRubFirstHandDetected: Boolean,
-    val eyeRubFirstHandCount: Int,
-    val eyeRubFirstHandDurations: List<Long>,
-    
-    // Frotamiento segunda mano
-    val eyeRubSecondHandDetected: Boolean,
-    val eyeRubSecondHandCount: Int,
-    val eyeRubSecondHandDurations: List<Long>,
-    
-    // Nivel de alerta
-    val alertLevel: String, // NORMAL, MEDIUM, HIGH, CRITICAL
-    val alertType: String? // MICROSLEEP, YAWNING, HEAD_NODDING, EYE_RUB
-)
+    /** Nivel de alerta calculado (NORMAL, MEDIUM, HIGH, CRITICAL) */
+    @ColumnInfo(name = "alert_level")
+    val alertLevel: String = "NORMAL",
+
+    /** Indica si se detectó rostro en este frame */
+    @ColumnInfo(name = "face_detected")
+    val faceDetected: Boolean = true,
+
+    /** Confianza de la detección facial (0.0 - 1.0) */
+    @ColumnInfo(name = "face_confidence")
+    val faceConfidence: Float? = null
+) {
+    companion object {
+        // Constantes para niveles de alerta
+        const val ALERT_NORMAL = "NORMAL"
+        const val ALERT_MEDIUM = "MEDIUM"
+        const val ALERT_HIGH = "HIGH"
+        const val ALERT_CRITICAL = "CRITICAL"
+    }
+}

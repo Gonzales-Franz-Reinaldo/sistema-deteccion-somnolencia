@@ -30,7 +30,9 @@ sealed class MonitoringUiState {
         val headPose: HeadPose,
         val alertLevel: AlertLevel,
         val gpsEnabled: Boolean,
-        val isProcessing: Boolean
+        val isProcessing: Boolean,
+        // Estadísticas de eventos guardados
+        val eventosGuardados: EventosStats = EventosStats()
     ) : MonitoringUiState()
     
     /**
@@ -45,4 +47,19 @@ sealed class MonitoringUiState {
      * Error en la sesión
      */
     data class Error(val message: String) : MonitoringUiState()
+}
+
+/**
+ * Estadísticas de eventos guardados en la sesión actual.
+ */
+data class EventosStats(
+    val microsueños: Int = 0,
+    val cabeceos: Int = 0,
+    val bostezos: Int = 0,
+    val parpadeos: Int = 0,
+    val frotamientos: Int = 0,
+    val totalEventos: Int = 0,
+    val eventosPendientesSync: Int = 0
+) {
+    val tieneEventos: Boolean get() = totalEventos > 0
 }
