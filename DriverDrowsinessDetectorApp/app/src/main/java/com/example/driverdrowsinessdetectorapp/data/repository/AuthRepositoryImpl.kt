@@ -16,25 +16,14 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun login(username: String, password: String): Result<User> {
         return try {
-            // LOG 1: Datos que se van a enviar
             Log.d("AuthRepository", "=== INICIO LOGIN ===")
-            Log.d("AuthRepository", "Username: $username")
-            Log.d("AuthRepository", "Password length: ${password.length}")
             
             val loginRequest = LoginRequest(username, password)
-            
-            // LOG 2: Request preparado
-            Log.d("AuthRepository", "Request creado: $loginRequest")
-            
-            // Realizar llamada a la API
             val response = authApi.login(loginRequest)
             
-            // LOG 3: Respuesta recibida
             Log.d("AuthRepository", "=== RESPUESTA EXITOSA ===")
             Log.d("AuthRepository", "Access Token: ${response.accessToken.take(20)}...")
-            Log.d("AuthRepository", "User ID: ${response.user.id}")
-            Log.d("AuthRepository", "Username: ${response.user.username}")
-            Log.d("AuthRepository", "Role: ${response.user.role}")
+            Log.d("AuthRepository", "Refresh Token: ${response.refreshToken?.take(20) ?: "NULL"}...")  
             
             val user = User(
                 id = response.user.id,
@@ -45,8 +34,12 @@ class AuthRepositoryImpl @Inject constructor(
                 active = response.user.active
             )
             
-            // Guardar token y datos del usuario
-            preferencesManager.saveAuthData(response.accessToken, user)
+            // Guardar AMBOS tokens
+            preferencesManager.saveAuthData(
+                accessToken = response.accessToken,
+                refreshToken = response.refreshToken ?: "",  
+                user = user
+            )
             
             Log.d("AuthRepository", "Login completado exitosamente")
             Result.success(user)

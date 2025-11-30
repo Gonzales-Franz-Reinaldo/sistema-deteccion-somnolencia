@@ -708,3 +708,153 @@ def get_choferes_disponibles(
         choferes=choferes_response
     )
 
+
+@router.patch(
+    "/{id_viaje}/iniciar",
+    response_model=ViajeResponse,
+    summary="Iniciar viaje asignado",
+    description="**Chofer** puede iniciar su propio viaje asignado (cambia estado a en_curso)"
+)
+def iniciar_viaje_chofer(
+    *,
+    db: Session = Depends(get_db),
+    id_viaje: int,
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Permite al chofer iniciar su viaje asignado.
+    
+    Validaciones:
+    - El viaje debe existir
+    - El viaje debe pertenecer al chofer autenticado
+    - El viaje debe estar en estado 'pendiente'
+    """
+    from datetime import datetime
+    
+    # Obtener el viaje
+    viaje = viaje_crud.get(db, id=id_viaje)
+    
+    if not viaje:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Viaje no encontrado"
+        )
+    
+    # Validar que el viaje pertenece al chofer autenticado
+    if viaje.id_chofer != current_user.id_usuario:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para iniciar este viaje"
+        )
+    
+    # Validar que el viaje está pendiente
+    if viaje.estado != "pendiente":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El viaje no puede iniciarse. Estado actual: {viaje.estado}"
+        )
+    
+    # Actualizar estado a en_curso
+    viaje.estado = "en_curso"
+    viaje.fecha_inicio = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(viaje)
+    
+    logger.info(f"✅ Viaje {id_viaje} iniciado por chofer {current_user.id_usuario}")
+    
+    return ViajeResponse(
+        id_viaje=viaje.id_viaje,
+        id_chofer=viaje.id_chofer,
+        id_empresa=viaje.id_empresa,
+        origen=viaje.origen,
+        destino=viaje.destino,
+        duracion_estimada=viaje.duracion_estimada,
+        distancia_km=viaje.distancia_km,
+        estado=viaje.estado,
+        fecha_asignacion=viaje.fecha_asignacion,
+        fecha_viaje_programada=viaje.fecha_viaje_programada,
+        hora_viaje_programada=viaje.hora_viaje_programada,
+        fecha_inicio=viaje.fecha_inicio,
+        fecha_fin=viaje.fecha_fin,
+        observaciones=viaje.observaciones,
+        nombre_chofer=viaje.chofer.nombre_completo if viaje.chofer else None,
+        categoria_licencia=viaje.chofer.categoria_licencia if viaje.chofer else None,
+        nombre_empresa=viaje.empresa.nombre_empresa if viaje.empresa else None
+    )
+
+
+@router.patch(
+    "/{id_viaje}/finalizar",
+    response_model=ViajeResponse,
+    summary="Finalizar viaje",
+    description="**Chofer** puede finalizar su propio viaje (cambia estado a completada)"
+)
+def finalizar_viaje_chofer(
+    *,
+    db: Session = Depends(get_db),
+    id_viaje: int,
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Permite al chofer finalizar su viaje en curso.
+    
+    Validaciones:
+    - El viaje debe existir
+    - El viaje debe pertenecer al chofer autenticado
+    - El viaje debe estar en estado 'en_curso'
+    """
+    from datetime import datetime
+    
+    # Obtener el viaje
+    viaje = viaje_crud.get(db, id=id_viaje)
+    
+    if not viaje:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Viaje no encontrado"
+        )
+    
+    # Validar que el viaje pertenece al chofer autenticado
+    if viaje.id_chofer != current_user.id_usuario:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para finalizar este viaje"
+        )
+    
+    # Validar que el viaje está en curso
+    if viaje.estado != "en_curso":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El viaje no puede finalizarse. Estado actual: {viaje.estado}"
+        )
+    
+    # Actualizar estado a completada
+    viaje.estado = "completada"
+    viaje.fecha_fin = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(viaje)
+    
+    logger.info(f"✅ Viaje {id_viaje} finalizado por chofer {current_user.id_usuario}")
+    
+    return ViajeResponse(
+        id_viaje=viaje.id_viaje,
+        id_chofer=viaje.id_chofer,
+        id_empresa=viaje.id_empresa,
+        origen=viaje.origen,
+        destino=viaje.destino,
+        duracion_estimada=viaje.duracion_estimada,
+        distancia_km=viaje.distancia_km,
+        estado=viaje.estado,
+        fecha_asignacion=viaje.fecha_asignacion,
+        fecha_viaje_programada=viaje.fecha_viaje_programada,
+        hora_viaje_programada=viaje.hora_viaje_programada,
+        fecha_inicio=viaje.fecha_inicio,
+        fecha_fin=viaje.fecha_fin,
+        observaciones=viaje.observaciones,
+        nombre_chofer=viaje.chofer.nombre_completo if viaje.chofer else None,
+        categoria_licencia=viaje.chofer.categoria_licencia if viaje.chofer else None,
+        nombre_empresa=viaje.empresa.nombre_empresa if viaje.empresa else None
+    )
+

@@ -4,10 +4,11 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.driverdrowsinessdetectorapp.data.local.entity.EventoSomnolenciaEntity
+import com.example.driverdrowsinessdetectorapp.data.local.entity.SessionEntity
 import com.example.driverdrowsinessdetectorapp.domain.model.AlertLevel
 import com.example.driverdrowsinessdetectorapp.domain.model.AlertType
 import com.example.driverdrowsinessdetectorapp.domain.model.MetricasSomnolencia
+import com.example.driverdrowsinessdetectorapp.domain.repository.ViajeRepository
 import com.example.driverdrowsinessdetectorapp.domain.session.SessionManager
 import com.example.driverdrowsinessdetectorapp.domain.usecase.evento.SaveEventoSomnolenciaUseCase
 import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.DetectDrowsinessUseCase
@@ -31,9 +32,9 @@ class MonitoringViewModel @Inject constructor(
     private val processFrameUseCase: ProcessFrameUseCase,
     private val detectDrowsinessUseCase: DetectDrowsinessUseCase,
     private val alarmUtil: AlarmUtil,
-    // ✅ NUEVAS DEPENDENCIAS PARA FASE 4
     private val sessionManager: SessionManager,
-    private val saveEventoSomnolenciaUseCase: SaveEventoSomnolenciaUseCase
+    private val saveEventoSomnolenciaUseCase: SaveEventoSomnolenciaUseCase,
+    private val viajeRepository: ViajeRepository  
 ) : ViewModel() {
 
     companion object {
@@ -53,10 +54,17 @@ class MonitoringViewModel @Inject constructor(
 
     private val _currentMetrics = MutableStateFlow<MetricasSomnolencia?>(null)
     val currentMetrics: StateFlow<MetricasSomnolencia?> = _currentMetrics.asStateFlow()
+    
+    //  Estado para finalización de viaje
+    private val _finalizarViajeState = MutableStateFlow<FinalizarViajeState>(FinalizarViajeState.Idle)
+    val finalizarViajeState: StateFlow<FinalizarViajeState> = _finalizarViajeState.asStateFlow()
 
     private var sessionStartTime: Long = 0
     private var frameCount = 0
     private var isProcessingFrame = false
+    
+    //  ID del viaje actual
+    private var currentViajeId: Int? = null
     
     // Control de alertas
     private var activeAlertLevel: AlertLevel = AlertLevel.NORMAL
@@ -73,6 +81,14 @@ class MonitoringViewModel @Inject constructor(
     
     // Estadísticas de eventos en sesión
     private var eventosStats = EventosStats()
+
+    /**
+     *  Establece el ID del viaje actual
+     */
+    fun setViajeId(idViaje: Int) {
+        currentViajeId = idViaje
+        Log.d(TAG, "📍 Viaje ID establecido: $idViaje")
+    }
 
     /**
      * Inicia el viaje/sesión de monitoreo.
@@ -109,7 +125,7 @@ class MonitoringViewModel @Inject constructor(
                 
                 startTimer()
                 
-                Log.d(TAG, "✅ Sesión iniciada: ID=${session.id}")
+                Log.d(TAG, "✅ Sesión iniciada: ID=${session.id}, ViajeID=$currentViajeId")
                 
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Error al iniciar sesión: ${e.message}", e)
@@ -165,15 +181,13 @@ class MonitoringViewModel @Inject constructor(
     }
 
     /**
-     * ✅ Manejo de alerta MEJORADO con guardado de eventos
+     *  Manejo de alerta MEJORADO con guardado de eventos
      */
     private fun handleAlertWithDuration(metrics: MetricasSomnolencia) {
         val currentTime = System.currentTimeMillis()
         val newAlertLevel = metrics.alertLevel
         
-        // ═══════════════════════════════════════════════════════════
         // MICROSUEÑO O CABECEO (CRÍTICO)
-        // ═══════════════════════════════════════════════════════════
         if (newAlertLevel == AlertLevel.CRITICAL) {
             val timeSinceLastCritical = currentTime - lastCriticalAlertTime
             
@@ -182,29 +196,25 @@ class MonitoringViewModel @Inject constructor(
                     lastCriticalAlertTime = currentTime
                     startAlert(AlertLevel.CRITICAL)
                     
-                    // ✅ GUARDAR EVENTO CRÍTICO
+                    // GUARDAR EVENTO CRÍTICO
                     saveEventoSomnolencia(metrics)
                 }
             }
             return
         }
         
-        // ═══════════════════════════════════════════════════════════
         // ADVERTENCIAS (MEDIUM/HIGH)
-        // ═══════════════════════════════════════════════════════════
         if (newAlertLevel == AlertLevel.HIGH || newAlertLevel == AlertLevel.MEDIUM) {
             if (activeAlertLevel == AlertLevel.NORMAL) {
                 startAlert(newAlertLevel)
                 
-                // ✅ GUARDAR EVENTO DE ADVERTENCIA
+                // GUARDAR EVENTO DE ADVERTENCIA
                 saveEventoSomnolencia(metrics)
             }
             return
         }
         
-        // ═══════════════════════════════════════════════════════════
         // NORMAL: Verificar si la alerta actual debe continuar
-        // ═══════════════════════════════════════════════════════════
         if (newAlertLevel == AlertLevel.NORMAL && activeAlertLevel != AlertLevel.NORMAL) {
             val alertDuration = currentTime - alertStartTime
             val requiredDuration = getAlertDuration(activeAlertLevel)
@@ -226,7 +236,7 @@ class MonitoringViewModel @Inject constructor(
             try {
                 val alertType = metrics.alertType ?: return@launch
                 
-                // ✅ LOG ANTES DE VERIFICAR COOLDOWN
+                // LOG ANTES DE VERIFICAR COOLDOWN
                 Log.d(TAG, "🔔 Intentando guardar evento: ${alertType.name}")
                 
                 if (!shouldSaveEvent(alertType, currentTime)) {
@@ -239,7 +249,7 @@ class MonitoringViewModel @Inject constructor(
                     return@launch
                 }
                 
-                // ✅ LOG ANTES DE GUARDAR
+                //  LOG ANTES DE GUARDAR
                 Log.d(TAG, "💾 Guardando evento: tipo=${alertType.name}, userId=$userId, sessionId=$sessionId")
                 
                 // Determinar datos del evento
@@ -297,7 +307,7 @@ class MonitoringViewModel @Inject constructor(
                 }
                 
                 result.onSuccess { eventoId ->
-                    // ✅ LOG DE ÉXITO CON ID
+                    //  LOG DE ÉXITO CON ID
                     Log.d(TAG, "✅ ═══════════════════════════════════════")
                     Log.d(TAG, "✅ EVENTO GUARDADO EN ROOM:")
                     Log.d(TAG, "✅   ID: $eventoId")
@@ -341,24 +351,19 @@ class MonitoringViewModel @Inject constructor(
     private fun updateEventosStats(alertType: AlertType) {
         eventosStats = when (alertType) {
             AlertType.MICROSLEEP -> eventosStats.copy(
-                microsueños = eventosStats.microsueños + 1,
-                totalEventos = eventosStats.totalEventos + 1
+                microsueños = eventosStats.microsueños + 1
             )
             AlertType.HEAD_NODDING -> eventosStats.copy(
-                cabeceos = eventosStats.cabeceos + 1,
-                totalEventos = eventosStats.totalEventos + 1
+                cabeceos = eventosStats.cabeceos + 1
             )
             AlertType.YAWNING -> eventosStats.copy(
-                bostezos = eventosStats.bostezos + 1,
-                totalEventos = eventosStats.totalEventos + 1
+                bostezos = eventosStats.bostezos + 1
             )
             AlertType.EXCESSIVE_BLINKING -> eventosStats.copy(
-                parpadeos = eventosStats.parpadeos + 1,
-                totalEventos = eventosStats.totalEventos + 1
+                parpadeos = eventosStats.parpadeos + 1
             )
             AlertType.EYE_RUB -> eventosStats.copy(
-                frotamientos = eventosStats.frotamientos + 1,
-                totalEventos = eventosStats.totalEventos + 1
+                frotamientos = eventosStats.frotamientos + 1
             )
         }
         
@@ -482,7 +487,8 @@ class MonitoringViewModel @Inject constructor(
     }
 
     /**
-     * Pausa el viaje.
+     *  PAUSAR VIAJE - Solo pausa localmente, NO cambia estado en backend
+     * El viaje sigue en "en_curso" en el servidor
      */
     fun pauseTrip() {
         viewModelScope.launch {
@@ -493,11 +499,12 @@ class MonitoringViewModel @Inject constructor(
                 
                 _uiState.value = MonitoringUiState.Paused(
                     sessionId = currentState.sessionId,
-                    duration = currentState.duration
+                    duration = currentState.duration,
+                    eventosGuardados = eventosStats
                 )
                 
                 stopAlert()
-                Log.d(TAG, "⏸️ Viaje pausado")
+                Log.d(TAG, "⏸️ Viaje PAUSADO (estado en servidor sigue en_curso)")
             }
         }
     }
@@ -530,7 +537,67 @@ class MonitoringViewModel @Inject constructor(
     }
 
     /**
-     * Detiene el viaje.
+     *  FINALIZAR VIAJE - Llama al backend para cambiar estado a "completada"
+     */
+    fun finalizarViaje(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val viajeId = currentViajeId
+        
+        if (viajeId == null) {
+            Log.e(TAG, "❌ No hay viaje ID para finalizar")
+            onError("No se encontró el viaje activo")
+            return
+        }
+        
+        viewModelScope.launch {
+            _finalizarViajeState.value = FinalizarViajeState.Loading
+            
+            Log.d(TAG, "🏁 Finalizando viaje ID: $viajeId")
+            
+            viajeRepository.finalizarViaje(viajeId)
+                .onSuccess { viaje ->
+                    Log.d(TAG, "✅ Viaje finalizado exitosamente: ${viaje.estado}")
+                    
+                    // Finalizar sesión local
+                    stopAlert()
+                    detectDrowsinessUseCase.reset()
+                    resetEventCooldowns()
+                    sessionManager.endSession()
+                    
+                    _finalizarViajeState.value = FinalizarViajeState.Success
+                    _uiState.value = MonitoringUiState.Idle
+                    
+                    onSuccess()
+                }
+                .onFailure { error ->
+                    Log.e(TAG, "❌ Error finalizando viaje: ${error.message}")
+                    _finalizarViajeState.value = FinalizarViajeState.Error(error.message ?: "Error desconocido")
+                    onError(error.message ?: "Error al finalizar viaje")
+                }
+        }
+    }
+
+    /**
+     * DETENER VIAJE SIN FINALIZAR - Para cuando se pausa y vuelve al dashboard
+     */
+    fun stopTripWithoutFinalize() {
+        viewModelScope.launch {
+            try {
+                stopAlert()
+                // NO finalizar sesión, solo pausar
+                sessionManager.pauseSession()
+                
+                _uiState.value = MonitoringUiState.Idle
+                
+                Log.d(TAG, "⏹️ Monitoreo detenido (viaje sigue en_curso)")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al detener monitoreo: ${e.message}")
+                _uiState.value = MonitoringUiState.Idle
+            }
+        }
+    }
+
+    /**
+     * Detiene el viaje completamente (para cancelaciones).
      */
     fun stopTrip() {
         viewModelScope.launch {
@@ -544,8 +611,7 @@ class MonitoringViewModel @Inject constructor(
                 
                 _uiState.value = MonitoringUiState.Idle
                 
-                Log.d(TAG, "🛑 Viaje detenido - Eventos guardados: ${eventosStats.totalEventos}")
-                
+                Log.d(TAG, "⏹️ Viaje detenido completamente")
             } catch (e: Exception) {
                 Log.e(TAG, "Error al detener viaje: ${e.message}")
                 _uiState.value = MonitoringUiState.Idle
@@ -590,10 +656,20 @@ class MonitoringViewModel @Inject constructor(
         // Finalizar sesión si está activa
         viewModelScope.launch {
             if (sessionManager.hasActiveSession()) {
-                sessionManager.endSession(com.example.driverdrowsinessdetectorapp.data.local.entity.SessionEntity.STATUS_CANCELLED)
+                sessionManager.endSession(SessionEntity.STATUS_CANCELLED)
             }
         }
         
         Log.d(TAG, "🧹 ViewModel cleared")
     }
+}
+
+/**
+ * Estados para finalización de viaje
+ */
+sealed class FinalizarViajeState {
+    data object Idle : FinalizarViajeState()
+    data object Loading : FinalizarViajeState()
+    data object Success : FinalizarViajeState()
+    data class Error(val message: String) : FinalizarViajeState()
 }

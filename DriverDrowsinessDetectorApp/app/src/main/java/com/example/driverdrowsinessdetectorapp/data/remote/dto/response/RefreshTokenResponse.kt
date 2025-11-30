@@ -2,16 +2,10 @@ package com.example.driverdrowsinessdetectorapp.data.remote.dto.response
 
 import com.google.gson.annotations.SerializedName
 
-data class LoginResponse(
+data class RefreshTokenResponse(
     @SerializedName("access_token")
     val accessToken: String,
-
-    @SerializedName("refresh_token")
-    val refreshToken: String? = null,
-
+    
     @SerializedName("token_type")
-    val tokenType: String,
-
-    @SerializedName("user")
-    val user: UserResponse
+    val tokenType: String = "bearer"
 )
