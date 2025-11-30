@@ -1,6 +1,7 @@
 package com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui
 
 import android.Manifest
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -10,9 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.driverdrowsinessdetectorapp.domain.model.AlertLevel
+import com.example.driverdrowsinessdetectorapp.presentation.monitoring.FinalizarViajeState
 import com.example.driverdrowsinessdetectorapp.presentation.monitoring.MonitoringViewModel
 import com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui.components.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -21,11 +24,22 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MonitoringScreen(
+    idViaje: Int,  // Recibir ID del viaje
+    origen: String,
+    destino: String,
     onNavigateBack: () -> Unit,
+    onViajeCompletado: () -> Unit,
+    onViajePausado: () -> Unit,  
     viewModel: MonitoringViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val currentMetrics by viewModel.currentMetrics.collectAsState()
+    val finalizarState by viewModel.finalizarViajeState.collectAsState()
+
+    // Estado para diálogos
+    var showFinalizarDialog by remember { mutableStateOf(false) }
+    var showPausarDialog by remember { mutableStateOf(false) }
 
     // Permisos necesarios
     val permissionsState = rememberMultiplePermissionsState(
@@ -35,12 +49,16 @@ fun MonitoringScreen(
         )
     )
 
-    // Solicitar permisos al entrar
+    //  Establecer el ID del viaje al entrar
+    LaunchedEffect(idViaje) {
+        viewModel.setViajeId(idViaje)
+    }
+
+    // Solicitar permisos e iniciar
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
         } else {
-            // Iniciar viaje automáticamente cuando hay permisos
             viewModel.startTrip()
         }
     }
@@ -62,9 +80,7 @@ fun MonitoringScreen(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // =========================================
         // CÁMARA
-        // =========================================
         CameraPreview(
             modifier = Modifier.fillMaxSize(),
             onFrameCaptured = { bitmap ->
@@ -72,25 +88,22 @@ fun MonitoringScreen(
             }
         )
 
-        // =========================================
         // UI OVERLAY
-        // =========================================
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // ========== HEADER ==========
+            // HEADER
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Botón volver
                 IconButton(
                     onClick = {
-                        viewModel.stopTrip()
-                        onNavigateBack()
+                        // Mostrar diálogo para pausar
+                        showPausarDialog = true
                     }
                 ) {
                     Icon(
@@ -100,29 +113,27 @@ fun MonitoringScreen(
                     )
                 }
 
-                // Título
                 Text(
                     text = "Monitoreo en Vivo",
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White
                 )
 
-                // GPS Indicator
                 GPSIndicator(isActive = true)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ========== SUBTÍTULO ==========
+            // Ruta actual
             Text(
-                text = "Procesamiento en tiempo real con IA",
+                text = "$origen → $destino",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.7f)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ========== TIMER ==========
+            // TIMER
             if (uiState is MonitoringUiState.Active) {
                 TimerDisplay(
                     formattedTime = (uiState as MonitoringUiState.Active).duration
@@ -131,16 +142,14 @@ fun MonitoringScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ========== STATUS INDICATOR ==========
+            // STATUS INDICATOR
             currentMetrics?.let { metrics ->
-                StatusIndicator(
-                    alertLevel = metrics.alertLevel
-                )
+                StatusIndicator(alertLevel = metrics.alertLevel)
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // ========== ALERT BANNER ==========
+            // ALERT BANNER
             currentMetrics?.let { metrics ->
                 if (metrics.alertLevel != AlertLevel.NORMAL) {
                     AlertBanner(
@@ -151,7 +160,7 @@ fun MonitoringScreen(
                 }
             }
 
-            // ========== METRICS DISPLAY ==========
+            // METRICS DISPLAY
             if (uiState is MonitoringUiState.Active) {
                 currentMetrics?.let { metrics ->
                     MetricsDisplay(metrics = metrics)
@@ -160,33 +169,67 @@ fun MonitoringScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ========== CONTROLES ==========
-            SessionControls(
+            //  CONTROLES ACTUALIZADOS
+            MonitoringControls(
                 isPaused = uiState is MonitoringUiState.Paused,
                 onPauseResume = {
-                    when (uiState) {
-                        is MonitoringUiState.Active -> viewModel.pauseTrip()
-                        is MonitoringUiState.Paused -> viewModel.resumeTrip()
-                        else -> {}
+                    if (uiState is MonitoringUiState.Paused) {
+                        viewModel.resumeTrip()
+                    } else {
+                        viewModel.pauseTrip()
                     }
                 },
-                onStop = {
-                    viewModel.stopTrip()
-                    onNavigateBack()
+                onPausarViaje = {
+                    showPausarDialog = true
+                },
+                onFinalizarViaje = {
+                    showFinalizarDialog = true
                 }
             )
         }
+    }
 
-        // ========== LOADING OVERLAY ==========
-        if (uiState is MonitoringUiState.Loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.7f)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.White)
+    //  DIÁLOGO PAUSAR VIAJE
+    if (showPausarDialog) {
+        PausarViajeDialog(
+            onConfirm = {
+                showPausarDialog = false
+                viewModel.stopTripWithoutFinalize()
+                onViajePausado()
+            },
+            onDismiss = {
+                showPausarDialog = false
             }
-        }
+        )
+    }
+
+    //  DIÁLOGO FINALIZAR VIAJE
+    if (showFinalizarDialog) {
+        val activeState = uiState as? MonitoringUiState.Active
+
+        FinalizarViajeDialog(
+            origen = origen,
+            destino = destino,
+            duracion = activeState?.duration ?: "00:00:00",
+            eventosDetectados = activeState?.eventosGuardados?.total ?: 0,
+            isLoading = finalizarState is FinalizarViajeState.Loading,
+            onConfirm = {
+                viewModel.finalizarViaje(
+                    onSuccess = {
+                        showFinalizarDialog = false
+                        Toast.makeText(context, " Viaje finalizado", Toast.LENGTH_SHORT).show()
+                        onViajeCompletado()
+                    },
+                    onError = { error ->
+                        Toast.makeText(context, "❌ $error", Toast.LENGTH_LONG).show()
+                    }
+                )
+            },
+            onDismiss = {
+                if (finalizarState !is FinalizarViajeState.Loading) {
+                    showFinalizarDialog = false
+                }
+            }
+        )
     }
 }

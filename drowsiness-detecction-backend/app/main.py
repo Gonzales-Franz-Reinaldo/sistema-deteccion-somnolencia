@@ -165,7 +165,7 @@ app.include_router(
     tags=["📊 Eventos de Somnolencia"]
 )
 
-# ✅ NUEVO: Router WebSocket
+#  Router WebSocket
 app.include_router(
     ws_router.router,
     prefix=f"{settings.API_V1_PREFIX}/ws",

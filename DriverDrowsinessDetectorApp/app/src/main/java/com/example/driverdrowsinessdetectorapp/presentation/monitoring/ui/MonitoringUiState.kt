@@ -1,65 +1,56 @@
 package com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui
 
 import com.example.driverdrowsinessdetectorapp.domain.model.AlertLevel
+import com.example.driverdrowsinessdetectorapp.domain.model.AlertType
 import com.example.driverdrowsinessdetectorapp.domain.model.HeadPose
 
 sealed class MonitoringUiState {
-    /**
-     * Estado inactivo - Sin sesión iniciada
-     */
+    
+    /** Estado inicial, sin monitoreo activo */
     data object Idle : MonitoringUiState()
     
-    /**
-     * Estado de inicio - Inicializando cámara y permisos
-     */
+    /** Iniciando el monitoreo */
     data object Starting : MonitoringUiState()
     
-    /**
-     * Estado de carga
-     */
+    /** Estado de carga */
     data object Loading : MonitoringUiState()
     
-    /**
-     * Sesión activa - Monitoreo en progreso
-     */
+    /** Monitoreo activo - ESTE ES EL QUE USA EL VIEWMODEL */
     data class Active(
         val sessionId: Long,
-        val duration: String,
-        val currentEAR: Float,
-        val currentMAR: Float,
-        val headPose: HeadPose,
-        val alertLevel: AlertLevel,
-        val gpsEnabled: Boolean,
-        val isProcessing: Boolean,
-        // Estadísticas de eventos guardados
+        val duration: String = "00:00:00",
+        val currentEAR: Float = 0f,
+        val currentMAR: Float = 0f,
+        val headPose: HeadPose = HeadPose.NEUTRAL,
+        val alertLevel: AlertLevel = AlertLevel.NORMAL,
+        val alertType: AlertType? = null,
+        val gpsEnabled: Boolean = true,
+        val isProcessing: Boolean = false,
         val eventosGuardados: EventosStats = EventosStats()
     ) : MonitoringUiState()
     
-    /**
-     * Sesión pausada
-     */
+    /** Monitoreo pausado */
     data class Paused(
         val sessionId: Long,
-        val duration: String
+        val duration: String = "00:00:00",
+        val eventosGuardados: EventosStats = EventosStats()
     ) : MonitoringUiState()
     
-    /**
-     * Error en la sesión
-     */
+    /** Error en el monitoreo */
     data class Error(val message: String) : MonitoringUiState()
 }
 
 /**
- * Estadísticas de eventos guardados en la sesión actual.
+ * Estadísticas de eventos durante la sesión.
  */
 data class EventosStats(
     val microsueños: Int = 0,
     val cabeceos: Int = 0,
     val bostezos: Int = 0,
     val parpadeos: Int = 0,
-    val frotamientos: Int = 0,
-    val totalEventos: Int = 0,
-    val eventosPendientesSync: Int = 0
+    val frotamientos: Int = 0
 ) {
-    val tieneEventos: Boolean get() = totalEventos > 0
+    val total: Int get() = microsueños + cabeceos + bostezos + parpadeos + frotamientos
+    val totalEventos: Int get() = total  // Alias para compatibilidad
+    val criticos: Int get() = microsueños + cabeceos
 }

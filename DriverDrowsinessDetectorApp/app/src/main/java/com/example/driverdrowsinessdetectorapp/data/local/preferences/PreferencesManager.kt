@@ -27,25 +27,44 @@ class PreferencesManager @Inject constructor(
 
     // Keys
     private val KEY_TOKEN = stringPreferencesKey(Constants.KEY_AUTH_TOKEN)
+    private val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token") 
     private val KEY_USER_ID = intPreferencesKey(Constants.KEY_USER_ID)
     private val KEY_USERNAME = stringPreferencesKey(Constants.KEY_USERNAME)
     private val KEY_FULL_NAME = stringPreferencesKey(Constants.KEY_FULL_NAME)
     private val KEY_ROLE = stringPreferencesKey(Constants.KEY_ROLE)
 
-    // Save auth data
-    suspend fun saveAuthData(token: String, user: User) {
+    // Save auth data (con refresh token)
+    suspend fun saveAuthData(accessToken: String, refreshToken: String, user: User) {
         dataStore.edit { prefs ->
-            prefs[KEY_TOKEN] = token
+            prefs[KEY_TOKEN] = accessToken
+            prefs[KEY_REFRESH_TOKEN] = refreshToken
             prefs[KEY_USER_ID] = user.id
             prefs[KEY_USERNAME] = user.username
             prefs[KEY_FULL_NAME] = user.fullName
             prefs[KEY_ROLE] = user.role
         }
     }
+    
+    // Método de compatibilidad (sin refresh token)
+    suspend fun saveAuthData(token: String, user: User) {
+        saveAuthData(token, "", user)
+    }
+
+    // Update only access token (para refresh)
+    suspend fun updateAccessToken(newToken: String) {
+        dataStore.edit { prefs ->
+            prefs[KEY_TOKEN] = newToken
+        }
+    }
 
     // Get auth token
     fun getAuthToken(): Flow<String?> = dataStore.data.map { prefs ->
         prefs[KEY_TOKEN]
+    }
+    
+    // Get refresh token
+    fun getRefreshToken(): Flow<String?> = dataStore.data.map { prefs ->
+        prefs[KEY_REFRESH_TOKEN]
     }
 
     // Get user ID

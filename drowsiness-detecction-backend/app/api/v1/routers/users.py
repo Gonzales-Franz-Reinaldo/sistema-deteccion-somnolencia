@@ -27,7 +27,6 @@ def parse_bool_query(value: Any) -> Optional[bool]:
     Convierte parámetros de query string a boolean
     Acepta: 'true', 'false', '1', '0', True, False, None
     """
-    logger.info(f"🔧 parse_bool_query llamada con: {repr(value)} (tipo: {type(value).__name__})")
     
     if value is None or value == '':
         return None
@@ -36,10 +35,8 @@ def parse_bool_query(value: Any) -> Optional[bool]:
     if isinstance(value, str):
         value_lower = value.lower().strip()
         if value_lower in ('true', '1', 'yes', 't'):
-            logger.info(f"✅ Convertido a True")
             return True
         elif value_lower in ('false', '0', 'no', 'f'):
-            logger.info(f"✅ Convertido a False")
             return False
     
     # Si llega aquí, el valor no es válido - retornar None en lugar de error
@@ -199,14 +196,9 @@ def list_users(
     id_empresa: Optional[int] = Query(None, description="Filtrar por empresa"),
     current_user: Usuario = Depends(get_current_admin_user)
 ):
-    logger.info("🔥 ENDPOINT /users/ EJECUTÁNDOSE - CÓDIGO NUEVO CARGADO")
-    logger.info(f"📥 Parámetro activo recibido: {repr(activo)} (tipo: {type(activo).__name__})")
     
     # Convertir parámetro activo a boolean usando función helper
     activo_bool = parse_bool_query(activo)
-    
-    if activo_bool is not None:
-        logger.info(f"✅ Filtro activo convertido: '{activo}' -> {activo_bool} (tipo: {type(activo_bool).__name__})")
     
     # Query con LEFT JOIN para obtener nombre de empresa
     query = db.query(
