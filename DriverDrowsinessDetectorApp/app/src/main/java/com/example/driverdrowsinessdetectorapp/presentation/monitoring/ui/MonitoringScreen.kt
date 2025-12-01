@@ -1,6 +1,7 @@
 package com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui
 
 import android.Manifest
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,12 +25,12 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MonitoringScreen(
-    idViaje: Int,  // Recibir ID del viaje
+    idViaje: Int,
     origen: String,
     destino: String,
     onNavigateBack: () -> Unit,
     onViajeCompletado: () -> Unit,
-    onViajePausado: () -> Unit,  
+    onViajePausado: () -> Unit,
     viewModel: MonitoringViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -49,9 +50,10 @@ fun MonitoringScreen(
         )
     )
 
-    //  Establecer el ID del viaje al entrar
+    // Establecer el ID del viaje al entrar
     LaunchedEffect(idViaje) {
-        viewModel.setViajeId(idViaje)
+        viewModel.setViajeId(idViaje)  
+        Log.d("MonitoringScreen", "📋 Viaje ID establecido: $idViaje")
     }
 
     // Solicitar permisos e iniciar

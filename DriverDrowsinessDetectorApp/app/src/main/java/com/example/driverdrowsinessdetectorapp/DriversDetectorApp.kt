@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.example.driverdrowsinessdetectorapp.data.sync.ConnectivitySyncService
 import com.example.driverdrowsinessdetectorapp.data.sync.SyncManager
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -13,7 +14,8 @@ import javax.inject.Inject
  *
  * Inicializa:
  * - Hilt para inyección de dependencias
- * - WorkManager para sincronización en background
+ * - WorkManager para sincronización periódica (backup)
+ * - ConnectivitySyncService para sincronización INMEDIATA al recuperar conexión
  *
  * @author Sistema de Detección de Somnolencia
  * @version 2.0
@@ -30,6 +32,9 @@ class DriversDetectorApp : Application(), Configuration.Provider {
 
     @Inject
     lateinit var syncManager: SyncManager
+    
+    @Inject
+    lateinit var connectivitySyncService: ConnectivitySyncService
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -40,26 +45,41 @@ class DriversDetectorApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
+        Log.d(TAG, "")
         Log.d(TAG, "═══════════════════════════════════════")
         Log.d(TAG, "🚀 INICIANDO APLICACIÓN")
         Log.d(TAG, "═══════════════════════════════════════")
 
-        // Iniciar sincronización periódica
+        // Iniciar servicios de sincronización
         initializeSync()
     }
 
     /**
-     * Inicializa la sincronización de eventos.
+     * Inicializa todos los servicios de sincronización.
      */
     private fun initializeSync() {
         try {
-            // Iniciar sincronización periódica
+            Log.d(TAG, "")
+            Log.d(TAG, "📡 Inicializando servicios de sincronización...")
+            
+            // 1. WorkManager: Sincronización periódica cada 15 min (backup)
             syncManager.startPeriodicSync()
+            Log.d(TAG, "✅ WorkManager iniciado (cada 15 min - backup)")
+            
+            // 2. ConnectivitySyncService - Sincronización INMEDIATA al recuperar conexión
+            connectivitySyncService.start()
+            Log.d(TAG, "✅ ConnectivitySyncService iniciado")
+            Log.d(TAG, "   ├── isRunning: ${connectivitySyncService.isRunning()}")
 
-            // Programar sincronización inicial con delay
+            // 3. Sincronización inicial con delay (por si hay eventos pendientes)
             syncManager.scheduleSyncWithDelay()
-
-            Log.d(TAG, "✅ Sincronización inicializada")
+            Log.d(TAG, "✅ Sincronización inicial programada")
+            
+            Log.d(TAG, "")
+            Log.d(TAG, "═══════════════════════════════════════")
+            Log.d(TAG, "✅ TODOS LOS SERVICIOS DE SYNC INICIADOS")
+            Log.d(TAG, "═══════════════════════════════════════")
+            
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error inicializando sync: ${e.message}", e)
         }

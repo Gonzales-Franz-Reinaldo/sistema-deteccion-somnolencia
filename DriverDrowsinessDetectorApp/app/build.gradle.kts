@@ -21,6 +21,19 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        
+        // ═══════════════════════════════════════════════════════════
+        // 🌐 CONFIGURACIÓN DE URL DEL BACKEND
+        // ═══════════════════════════════════════════════════════════
+        // Cambiar esta IP según tu red local
+        // Para encontrar tu IP en Linux: hostname -I | awk '{print $1}'
+        // ═══════════════════════════════════════════════════════════
+        buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.17:8000/\"")
+        
+        // Configuración de timeouts (en segundos)
+        buildConfigField("long", "CONNECT_TIMEOUT", "30L")
+        buildConfigField("long", "READ_TIMEOUT", "30L")
+        buildConfigField("long", "WRITE_TIMEOUT", "30L")
     }
 
     buildTypes {
@@ -30,10 +43,17 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            
+            // URL de producción (cuando tengas servidor real)
+            buildConfigField("String", "API_BASE_URL", "\"https://api.tu-dominio.com/\"")
         }
         debug {
             isDebuggable = true
             isMinifyEnabled = false
+            
+            // URL de desarrollo (red local)
+            // Esta sobrescribe la de defaultConfig para debug
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.17:8000/\"")
         }
     }
 

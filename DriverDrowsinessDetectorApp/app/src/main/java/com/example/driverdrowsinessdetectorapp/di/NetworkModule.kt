@@ -1,5 +1,6 @@
 package com.example.driverdrowsinessdetectorapp.di
 
+import com.example.driverdrowsinessdetectorapp.BuildConfig
 import com.example.driverdrowsinessdetectorapp.data.local.preferences.PreferencesManager
 import com.example.driverdrowsinessdetectorapp.data.remote.api.AuthApi
 import com.example.driverdrowsinessdetectorapp.data.remote.api.EventosApi
@@ -11,6 +12,7 @@ import com.example.driverdrowsinessdetectorapp.data.repository.AuthRepositoryImp
 import com.example.driverdrowsinessdetectorapp.data.repository.ViajeRepositoryImpl
 import com.example.driverdrowsinessdetectorapp.domain.repository.AuthRepository
 import com.example.driverdrowsinessdetectorapp.domain.repository.ViajeRepository
+import com.example.driverdrowsinessdetectorapp.util.Constants
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -29,7 +31,9 @@ import javax.inject.Singleton
  * Proporciona:
  * - OkHttpClient configurado con interceptores
  * - Retrofit configurado
- * - APIs: AuthApi, EventosApi
+ * - APIs: AuthApi, EventosApi, ViajesApi
+ * 
+ * La URL base se obtiene de BuildConfig (configurada en build.gradle.kts)
  * 
  * @author Sistema de Detección de Somnolencia
  * @version 2.0
@@ -38,9 +42,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // URL base del backend - cambiar según entorno
-    private const val BASE_URL = "http://192.168.1.17:8000/"  // Para emulador Android
-    // private const val BASE_URL = "http://192.168.X.X:8000/"  // Para dispositivo físico
+    //  URL obtenida de BuildConfig (configurada en build.gradle.kts)
+    // Ya no necesitas cambiar nada aquí, solo en build.gradle.kts
 
     // CONFIGURACIÓN BASE
 
@@ -61,7 +64,6 @@ object NetworkModule {
         return AuthInterceptor(preferencesManager)
     }
     
-    // Proveer TokenAuthenticator
     @Provides
     @Singleton
     fun provideTokenAuthenticator(
@@ -81,9 +83,9 @@ object NetworkModule {
             .addInterceptor(authInterceptor)
             .addInterceptor(LoggingInterceptor.create())
             .authenticator(tokenAuthenticator)  
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(Constants.CONNECT_TIMEOUT, TimeUnit.SECONDS)
+            .readTimeout(Constants.READ_TIMEOUT, TimeUnit.SECONDS)
+            .writeTimeout(Constants.WRITE_TIMEOUT, TimeUnit.SECONDS)
             .build()
     }
 
@@ -91,7 +93,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BuildConfig.API_BASE_URL)  //  Usa BuildConfig directamente
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
@@ -105,9 +107,6 @@ object NetworkModule {
         return retrofit.create(AuthApi::class.java)
     }
 
-    /**
-     *  Provee EventosApi para sincronización de eventos.
-     */
     @Provides
     @Singleton
     fun provideEventosApi(retrofit: Retrofit): EventosApi {

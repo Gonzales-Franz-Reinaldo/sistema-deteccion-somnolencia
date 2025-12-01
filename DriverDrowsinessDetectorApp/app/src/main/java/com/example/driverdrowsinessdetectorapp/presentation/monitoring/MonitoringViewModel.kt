@@ -87,7 +87,7 @@ class MonitoringViewModel @Inject constructor(
      */
     fun setViajeId(idViaje: Int) {
         currentViajeId = idViaje
-        Log.d(TAG, "📍 Viaje ID establecido: $idViaje")
+        Log.d(TAG, "📋 Viaje establecido: $idViaje")
     }
 
     /**
@@ -226,7 +226,7 @@ class MonitoringViewModel @Inject constructor(
     }
 
     /**
-     *  Guarda un evento de somnolencia en Room
+     *  Guarda un evento de somnolencia en Room + intenta sync inmediato
      */
     private fun saveEventoSomnolencia(metrics: MetricasSomnolencia) {
         val sessionId = sessionManager.getCurrentSessionId() ?: return
@@ -249,16 +249,17 @@ class MonitoringViewModel @Inject constructor(
                     return@launch
                 }
                 
-                //  LOG ANTES DE GUARDAR
-                Log.d(TAG, "💾 Guardando evento: tipo=${alertType.name}, userId=$userId, sessionId=$sessionId")
+                // ✅ LOG CON ID DE VIAJE
+                Log.d(TAG, "💾 Guardando evento: tipo=${alertType.name}, userId=$userId, sessionId=$sessionId, viajeId=$currentViajeId")
                 
-                // Determinar datos del evento
+                // ✅ TODOS LOS MÉTODOS AHORA INCLUYEN idViaje
                 val result = when (alertType) {
                     AlertType.MICROSLEEP -> {
                         lastMicrosleepSaveTime = currentTime
                         saveEventoSomnolenciaUseCase.saveMicrosleep(
                             idChofer = userId,
                             sessionId = sessionId,
+                            idViaje = currentViajeId,  
                             duracionSegundos = metrics.microsleepDurations.lastOrNull()?.div(1000f) ?: 2.5f,
                             nivelSeveridad = metrics.alertLevel
                         )
@@ -269,6 +270,7 @@ class MonitoringViewModel @Inject constructor(
                         saveEventoSomnolenciaUseCase.saveNodding(
                             idChofer = userId,
                             sessionId = sessionId,
+                            idViaje = currentViajeId,  
                             duracionSegundos = metrics.noddingDurations.lastOrNull()?.div(1000f) ?: 3.0f,
                             nivelSeveridad = metrics.alertLevel
                         )
@@ -279,6 +281,7 @@ class MonitoringViewModel @Inject constructor(
                         saveEventoSomnolenciaUseCase.saveYawn(
                             idChofer = userId,
                             sessionId = sessionId,
+                            idViaje = currentViajeId,  
                             cantidadBostezos = metrics.yawnCount,
                             nivelSeveridad = metrics.alertLevel
                         )
@@ -289,6 +292,7 @@ class MonitoringViewModel @Inject constructor(
                         saveEventoSomnolenciaUseCase.saveExcessiveBlink(
                             idChofer = userId,
                             sessionId = sessionId,
+                            idViaje = currentViajeId,  
                             cantidadParpadeos = metrics.blinkCount,
                             nivelSeveridad = metrics.alertLevel
                         )
@@ -296,36 +300,25 @@ class MonitoringViewModel @Inject constructor(
                     
                     AlertType.EYE_RUB -> {
                         lastEyeRubSaveTime = currentTime
-                        val totalFrotamientos = metrics.eyeRubFirstHandCount + metrics.eyeRubSecondHandCount
                         saveEventoSomnolenciaUseCase.saveEyeRub(
                             idChofer = userId,
                             sessionId = sessionId,
-                            cantidadFrotamientos = totalFrotamientos,
+                            idViaje = currentViajeId,  
+                            cantidadFrotamientos = metrics.eyeRubSecondHandCount,
                             nivelSeveridad = metrics.alertLevel
                         )
                     }
                 }
                 
                 result.onSuccess { eventoId ->
-                    //  LOG DE ÉXITO CON ID
-                    Log.d(TAG, "✅ ═══════════════════════════════════════")
-                    Log.d(TAG, "✅ EVENTO GUARDADO EN ROOM:")
-                    Log.d(TAG, "✅   ID: $eventoId")
-                    Log.d(TAG, "✅   Tipo: ${alertType.name}")
-                    Log.d(TAG, "✅   Session: $sessionId")
-                    Log.d(TAG, "✅   Usuario: $userId")
-                    Log.d(TAG, "✅ ═══════════════════════════════════════")
-                    
+                    Log.d(TAG, "✅ Evento guardado exitosamente: ID=$eventoId")
                     updateEventosStats(alertType)
-                    updateSessionStats(alertType)
-                    
                 }.onFailure { error ->
                     Log.e(TAG, "❌ Error guardando evento: ${error.message}")
-                    error.printStackTrace()
                 }
                 
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Error en saveEventoSomnolencia: ${e.message}", e)
+                Log.e(TAG, "❌ Excepción guardando evento: ${e.message}", e)
             }
         }
     }
