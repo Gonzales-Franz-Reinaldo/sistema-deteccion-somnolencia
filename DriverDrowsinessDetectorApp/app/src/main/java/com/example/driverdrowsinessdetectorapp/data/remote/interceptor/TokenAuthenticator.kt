@@ -1,6 +1,7 @@
 package com.example.driverdrowsinessdetectorapp.data.remote.interceptor
 
 import android.util.Log
+import com.example.driverdrowsinessdetectorapp.BuildConfig
 import com.example.driverdrowsinessdetectorapp.data.local.preferences.PreferencesManager
 import com.example.driverdrowsinessdetectorapp.data.remote.dto.request.RefreshTokenRequest
 import com.example.driverdrowsinessdetectorapp.data.remote.dto.response.RefreshTokenResponse
@@ -24,6 +25,9 @@ import javax.inject.Inject
  * 2. Usa el refresh token para obtener nuevo access token
  * 3. Reintenta la petición original con el nuevo token
  * 4. Si el refresh también falla, limpia la sesión
+ * 
+ * @author Sistema de Detección de Somnolencia
+ * @version 2.0
  */
 class TokenAuthenticator @Inject constructor(
     private val preferencesManager: PreferencesManager,
@@ -32,8 +36,11 @@ class TokenAuthenticator @Inject constructor(
     
     companion object {
         private const val TAG = "TokenAuthenticator"
-        private const val BASE_URL = "http://192.168.1.17:8000"  // Debe coincidir con NetworkModule
     }
+    
+    //  URL obtenida de BuildConfig (sin el slash final para concatenar endpoints)
+    private val baseUrl: String
+        get() = BuildConfig.API_BASE_URL.removeSuffix("/")
     
     @Volatile
     private var isRefreshing = false
@@ -105,7 +112,7 @@ class TokenAuthenticator @Inject constructor(
                 .toRequestBody("application/json".toMediaType())
             
             val request = Request.Builder()
-                .url("$BASE_URL/api/v1/auth/refresh")
+                .url("$baseUrl/api/v1/auth/refresh")  //  Usa la variable local
                 .post(requestBody)
                 .build()
             

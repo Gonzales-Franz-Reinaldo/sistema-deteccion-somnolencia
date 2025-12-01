@@ -1,160 +1,104 @@
 # 🧪 Guía de Pruebas - Sistema Edge → Cloud
 
-## 📋 Resumen del Sistema
+┌─────────────────────────────────────────────────────────────────┐
+│  EVENTO DE SOMNOLENCIA DETECTADO                                │
+│       │                                                         │
+│       ▼                                                         │
+│  ┌─────────────────────────────────────────┐                    │
+│  │ 1. SIEMPRE guardar en Room primero      │ ◄── GARANTÍA      │
+│  │    - sincronizado = false               │     LOCAL         │
+│  └─────────────────┬───────────────────────┘                    │
+│                    │                                            │
+│                    ▼                                            │
+│           ┌─────────────┐                                       │
+│           │ ¿Hay        │  (SyncImmediateUseCase)               │
+│           │ Internet?   │                                       │
+│           └──────┬──────┘                                       │
+│                  │                                              │
+│        ┌─────────┴─────────┐                                    │
+│        │                   │                                    │
+│        ▼                   ▼                                    │
+│       ✅ SÍ              ❌ NO                                  │
+│        │                   │                                    │
+│        ▼                   │                                    │
+│  ┌───────────────┐         │                                    │
+│  │ 2. Enviar     │         │                                    │
+│  │    INMEDIATO  │         │ Eventos quedan en Room             │
+│  │    POST /api  │         │ con sincronizado=false             │
+│  └───────┬───────┘         │                                    │
+│          │                 │                                    │
+│     ┌────┴────┐            │                                    │
+│     ▼         ▼            │                                    │
+│   ✅ OK    ❌ FAIL         │                                    │
+│     │         │            │                                    │
+│     ▼         └────────────┼───────┐                            │
+│ ┌──────────────┐           │       │                            │
+│ │ sincronizado │           │       │                            │
+│ │ = true       │           │       │                            │
+│ └──────────────┘           │       │                            │
+│                            │       │                            │
+│ ════════════════════════════════════════════════════════════    │
+│                            │       │                            │
+│  CONEXIÓN RECUPERADA       │       │                            │
+│  (ConnectivitySyncService) ◄───────┘                            │
+│            │                                                    │
+│            ▼                                                    │
+│  ┌──────────────────────────────────────┐                       │
+│  │ ⚡ SINCRONIZACIÓN INMEDIATA          │                       │
+│  │    - Detecta Status.Available        │                       │
+│  │    - Obtiene eventos pendientes      │                       │
+│  │    - POST /api/v1/eventos/batch      │                       │
+│  │    - Marca sincronizado = true       │                       │
+│  └──────────────────────────────────────┘                       │
+│                                                                 │
+│ ════════════════════════════════════════════════════════════    │
+│                                                                 │
+│  BACKUP: WorkManager cada 15 min                                │
+│  (Por si ConnectivitySyncService falla)                         │
+└─────────────────────────────────────────────────────────────────┘
 
-```
-📱 APP ANDROID                    ☁️ BACKEND                    🖥️ ADMIN
-┌─────────────┐                  ┌─────────────┐               ┌─────────────┐
-│ 1. Detecta  │                  │             │               │             │
-│    evento   │                  │             │               │             │
-│             │                  │             │               │             │
-│ 2. Guarda   │───── SYNC ──────►│ 4. Recibe   │── WebSocket ─►│ 5. Ve       │
-│    en Room  │                  │    eventos  │               │    alertas  │
-│    + GPS    │                  │             │               │             │
-│             │                  │             │               │             │
-│ 3. Alarma   │                  │             │               │             │
-│    local    │                  │             │               │             │
-└─────────────┘                  └─────────────┘               └─────────────┘
-     ▲                                                              
-     │ Funciona OFFLINE                                             
-```
 
----
+### 🧪 PRUEBAS ACTUALIZADAS
+Prueba 1: CON Internet (Sync Inmediato)
+1. Iniciar viaje como chofer
+2. Provocar microsueño (cerrar ojos 3+ segundos)
+3. Verificar en Logcat:
 
-## 🔧 Preparación
+📝 Guardando evento: microsueno
+✅ Evento guardado en Room: ID=1
+📤 Enviando evento 1 al servidor...
+✅ Evento 1 sincronizado → ID servidor: 42
 
-### Iniciar Backend
-```bash
-cd drowsiness-detecction-backend
-source venv/bin/activate
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+Verificar en backend: GET /api/v1/eventos/chofer/{id} muestra el evento
 
-### Verificar
-- Swagger: `http://localhost:8000/docs`
-- Health: `http://localhost:8000/health`
 
----
+### Prueba 2: SIN Internet → Recuperar Conexión
+1. Activar modo avión
+2. Iniciar viaje y provocar 3 eventos
+3. Verificar en Logcat
 
-## 👨‍✈️ Pruebas como CHOFER
+📝 Guardando evento: microsueno
+✅ Evento guardado en Room: ID=1
+📵 Sin conexión - Evento 1 queda pendiente
 
-### 1. Login en App Android
-| Paso | Acción | Resultado Esperado |
-|------|--------|-------------------|
-| 1 | Abrir app | Pantalla de login |
-| 2 | Ingresar: `jperez` / `chofer123` | Login exitoso |
-| 3 | Ver dashboard | Botón "Iniciar Monitoreo" visible |
+4. Desactivar modo avión
+5. INMEDIATAMENTE verificar en Logcat:
 
-### 2. Detección de Eventos (CON Internet)
-| Paso | Acción | Resultado Esperado |
-|------|--------|-------------------|
-| 1 | Iniciar monitoreo | Cámara activa, métricas visibles |
-| 2 | Cerrar ojos 3+ segundos | 🔴 Alarma + Banner "MICROSUEÑO" |
-| 3 | Verificar en Room* | Evento guardado con `sincronizado=true` |
+🌐 Conexión DISPONIBLE
+═══════════════════════════════════════
+⚡ CONEXIÓN RECUPERADA - SINCRONIZANDO
+═══════════════════════════════════════
+📤 Enviando batch: 3 eventos
+✅ SYNC EXITOSA: 3 eventos
 
-### 3. Detección de Eventos (SIN Internet)
-| Paso | Acción | Resultado Esperado |
-|------|--------|-------------------|
-| 1 | Activar modo avión | Sin conexión |
-| 2 | Provocar 3 eventos | Alarmas suenan normalmente |
-| 3 | Verificar en Room* | Eventos con `sincronizado=false` |
-| 4 | Desactivar modo avión | Esperar 1-2 minutos |
-| 5 | Verificar en Room* | Eventos cambian a `sincronizado=true` |
+6. Verificar: Eventos aparecen en backend INMEDIATAMENTE
 
-> *Usar Database Inspector en Android Studio
+### Prueba 3: Sin eventos pendientes
+1. Tener conexión estable
+2. No provocar ningún evento
+3. Desconectar y reconectar WiFi
+4. Verificar en Logcat:
 
-### Tipos de Eventos a Probar
-| Evento | Cómo Provocarlo | Severidad |
-|--------|-----------------|-----------|
-| Microsueño | Cerrar ojos 3+ seg | CRITICAL |
-| Cabeceo | Inclinar cabeza 3+ seg | CRITICAL |
-| Bostezo | Abrir boca ampliamente 3+ veces | HIGH |
-| Parpadeo | Parpadear rápido 20+ veces/min | MEDIUM |
-
----
-
-## 👔 Pruebas como ADMIN
-
-### 1. Login en Swagger
-| Paso | Acción | Resultado Esperado |
-|------|--------|-------------------|
-| 1 | `POST /api/v1/auth/login` con `admin`/`admin123` | Token JWT |
-| 2 | Click "Authorize" → pegar token | Endpoints accesibles |
-
-### 2. Ver Eventos
-| Endpoint | Descripción |
-|----------|-------------|
-| `GET /api/v1/eventos/recientes?minutos=60` | Eventos última hora |
-| `GET /api/v1/eventos/chofer/{id}` | Eventos de un chofer |
-| `GET /api/v1/eventos/estadisticas/generales` | Resumen general |
-
-### 3. WebSocket (Notificaciones Tiempo Real)
-```python
-# Test con Python
-import asyncio
-import websockets
-
-async def test():
-    uri = "ws://localhost:8000/api/v1/ws/admin?token=TU_JWT_TOKEN"
-    async with websockets.connect(uri) as ws:
-        print("Conectado, esperando eventos...")
-        while True:
-            msg = await ws.recv()
-            print(f"🔔 {msg}")
-
-asyncio.run(test())
-```
-
-| Paso | Acción | Resultado Esperado |
-|------|--------|-------------------|
-| 1 | Conectar WebSocket | Mensaje "connection_established" |
-| 2 | Provocar microsueño en app | Mensaje instantáneo con datos del evento |
-
----
-
-## ✅ Checklist de Verificación
-
-### Backend
-- [ ] Login retorna token JWT
-- [ ] `POST /eventos` crea evento
-- [ ] `POST /eventos/batch` procesa múltiples
-- [ ] `GET /eventos/recientes` filtra correctamente
-- [ ] WebSocket notifica eventos críticos
-
-### Android
-- [ ] Login guarda token
-- [ ] Detección de microsueño funciona
-- [ ] Eventos se guardan en Room
-- [ ] GPS captura ubicación
-- [ ] Sincronización automática funciona
-- [ ] Modo offline no crashea
-
-### Integración
-- [ ] Evento detectado → Room → Backend → WebSocket
-- [ ] Eventos offline se sincronizan al reconectar
-
----
-
-## 🐛 Problemas Comunes
-
-| Problema | Causa | Solución |
-|----------|-------|----------|
-| Sync no funciona | Token expirado | Re-login |
-| GPS siempre NULL | Sin permisos | Verificar permisos en Settings |
-| WebSocket no conecta | Token inválido | Usar token reciente |
-| Eventos no se guardan | Sesión no iniciada | Verificar `SessionManager` |
-
----
-
-## 📱 Logs Importantes
-
-### Android (Logcat)
-```
-TAG: MonitoringViewModel, SyncWorker, EventoSomnolenciaRepository
-```
-
-### Backend (Terminal)
-```
-INFO: POST /api/v1/eventos
-INFO: Broadcasting to X admins
-```
+🌐 Conexión DISPONIBLE
+✅ No hay eventos pendientes de sincronización
+(No hace nada porque no hay eventos)

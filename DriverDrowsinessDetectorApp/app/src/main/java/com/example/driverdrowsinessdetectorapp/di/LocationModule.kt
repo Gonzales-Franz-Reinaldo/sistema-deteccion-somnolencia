@@ -5,11 +5,13 @@ import com.example.driverdrowsinessdetectorapp.data.location.LocationService
 import com.example.driverdrowsinessdetectorapp.data.local.dao.EventoSomnolenciaDao
 import com.example.driverdrowsinessdetectorapp.data.local.dao.SessionDao
 import com.example.driverdrowsinessdetectorapp.data.local.preferences.PreferencesManager
+import com.example.driverdrowsinessdetectorapp.data.remote.api.EventosApi
 import com.example.driverdrowsinessdetectorapp.data.repository.EventoSomnolenciaRepositoryImpl
 import com.example.driverdrowsinessdetectorapp.domain.repository.EventoSomnolenciaRepository
 import com.example.driverdrowsinessdetectorapp.domain.session.SessionManager
 import com.example.driverdrowsinessdetectorapp.domain.usecase.evento.SaveEventoSomnolenciaUseCase
 import com.example.driverdrowsinessdetectorapp.domain.usecase.location.GetCurrentLocationUseCase
+import com.example.driverdrowsinessdetectorapp.domain.usecase.sync.SyncImmediateUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -61,9 +63,14 @@ object LocationModule {
     @Singleton
     fun provideSaveEventoSomnolenciaUseCase(
         eventoRepository: EventoSomnolenciaRepository,
-        getCurrentLocationUseCase: GetCurrentLocationUseCase
+        getCurrentLocationUseCase: GetCurrentLocationUseCase,
+        syncImmediateUseCase: SyncImmediateUseCase  
     ): SaveEventoSomnolenciaUseCase {
-        return SaveEventoSomnolenciaUseCase(eventoRepository, getCurrentLocationUseCase)
+        return SaveEventoSomnolenciaUseCase(
+            eventoRepository,
+            getCurrentLocationUseCase,
+            syncImmediateUseCase
+        )
     }
     
     //: SESSION MANAGER
@@ -76,5 +83,16 @@ object LocationModule {
         locationService: LocationService
     ): SessionManager {
         return SessionManager(sessionDao, preferencesManager, locationService)
+    }
+    
+    // Proveer SyncImmediateUseCase
+    @Provides
+    @Singleton
+    fun provideSyncImmediateUseCase(
+        @ApplicationContext context: Context,
+        eventoRepository: EventoSomnolenciaRepository,
+        eventosApi: EventosApi
+    ): SyncImmediateUseCase {
+        return SyncImmediateUseCase(context, eventoRepository, eventosApi)
     }
 }

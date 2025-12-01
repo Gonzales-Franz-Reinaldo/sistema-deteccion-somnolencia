@@ -1,48 +1,58 @@
 package com.example.driverdrowsinessdetectorapp.util
 
+import com.example.driverdrowsinessdetectorapp.BuildConfig
+
+/**
+ * Constantes globales de la aplicación.
+ * 
+ * Las URLs y configuraciones de red se obtienen de BuildConfig,
+ * que se genera desde build.gradle.kts.
+ * 
+ * Para cambiar la IP del servidor:
+ * 1. Abre app/build.gradle.kts
+ * 2. Modifica API_BASE_URL en buildConfigField
+ * 3. Rebuild el proyecto (Build > Rebuild Project)
+ * 
+ * @author Sistema de Detección de Somnolencia
+ * @version 2.0
+ */
 object Constants {
+    
     // =========================================
-    // 🔧 CONFIGURACIÓN DE RED
+    // 🔧 CONFIGURACIÓN DE RED (desde BuildConfig)
     // =========================================
     
     /**
-     * BASE_URL del backend FastAPI
+     * URL base del backend FastAPI.
      * 
-     * IMPORTANTE: Cambiar según tu entorno de desarrollo
-     * 
-     * OPCIONES:
-     * 
-     * 1️⃣ EMULADOR DE ANDROID STUDIO (backend en la misma PC):
-     *    const val BASE_URL = "http://10.0.2.2:8000/"
-     *    ✅ Usa 10.0.2.2 que apunta al localhost de tu PC
-     * 
-     * 2️⃣ DISPOSITIVO FÍSICO conectado por USB o WiFi (backend en PC local):
-     *    const val BASE_URL = "http://192.168.1.XXX:8000/"
-     *    ✅ Reemplaza 192.168.1.XXX con la IP de tu PC en la red local
-     *    ⚠️  Para obtener tu IP en Linux: hostname -I | awk '{print $1}'
-     * 
-     * 3️⃣ SERVIDOR REMOTO EN PRODUCCIÓN:
-     *    const val BASE_URL = "https://api.tu-dominio.com/"
-     *    ✅ Cambia http:// por https:// en producción
+     * Configurada en: app/build.gradle.kts
+     * - Debug: URL de desarrollo (red local)
+     * - Release: URL de producción
      */
+    val BASE_URL: String = BuildConfig.API_BASE_URL
     
-    // 👇 CAMBIA ESTA LÍNEA SEGÚN TU CASO
-    const val BASE_URL = "http://192.168.1.17:8000/"  // ← REEMPLAZA 192.168.1.100 CON TU IP
-    
-    // =========================================
-    // ⏱️ CONFIGURACIÓN DE TIMEOUTS
-    // =========================================
-    const val CONNECT_TIMEOUT = 30L
-    const val READ_TIMEOUT = 30L
-    const val WRITE_TIMEOUT = 30L
+    /**
+     * Timeouts de conexión (en segundos).
+     */
+    val CONNECT_TIMEOUT: Long = BuildConfig.CONNECT_TIMEOUT
+    val READ_TIMEOUT: Long = BuildConfig.READ_TIMEOUT
+    val WRITE_TIMEOUT: Long = BuildConfig.WRITE_TIMEOUT
     
     // =========================================
     // 💾 DATASTORE KEYS
     // =========================================
     const val PREFS_NAME = "driver_drowsiness_prefs"
     const val KEY_AUTH_TOKEN = "auth_token"
+    const val KEY_REFRESH_TOKEN = "refresh_token"
     const val KEY_USER_ID = "user_id"
     const val KEY_USERNAME = "username"
     const val KEY_FULL_NAME = "full_name"
     const val KEY_ROLE = "role"
+    
+    // =========================================
+    // 📊 INFORMACIÓN DE LA APP
+    // =========================================
+    val APP_VERSION: String = BuildConfig.VERSION_NAME
+    val APP_VERSION_CODE: Int = BuildConfig.VERSION_CODE
+    val IS_DEBUG: Boolean = BuildConfig.DEBUG
 }

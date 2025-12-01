@@ -8,23 +8,27 @@ import com.example.driverdrowsinessdetectorapp.data.location.LocationService
 import com.example.driverdrowsinessdetectorapp.domain.model.AlertLevel
 import com.example.driverdrowsinessdetectorapp.domain.repository.EventoSomnolenciaRepository
 import com.example.driverdrowsinessdetectorapp.domain.usecase.location.GetCurrentLocationUseCase
+import com.example.driverdrowsinessdetectorapp.domain.usecase.sync.SyncImmediateUseCase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * Caso de Uso: Guardar Evento de Somnolencia
  * 
- * Encapsula la lógica de negocio para crear y guardar eventos de somnolencia
- * en la base de datos local, incluyendo:
- * - Captura de ubicación GPS
- * - Validación de datos
- * - Generación de metadatos
+ * Implementa la Estrategia C (Híbrida):
+ * 1. SIEMPRE guarda en Room primero (garantía local)
+ * 2. Intenta sincronizar inmediatamente si hay conexión
+ * 3. Si falla, queda pendiente para WorkManager
  * 
  * @author Sistema de Detección de Somnolencia
- * @version 1.0
+ * @version 2.0
  */
 class SaveEventoSomnolenciaUseCase @Inject constructor(
     private val eventoRepository: EventoSomnolenciaRepository,
-    private val getCurrentLocationUseCase: GetCurrentLocationUseCase
+    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
+    private val syncImmediateUseCase: SyncImmediateUseCase 
 ) {
     companion object {
         private const val TAG = "SaveEventoUseCase"
@@ -33,6 +37,12 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
     /**
      * Guarda un evento de somnolencia con todos los datos necesarios.
      * 
+     * Flujo:
+     * 1. Obtener ubicación GPS
+     * 2. Crear entidad con todos los datos
+     * 3. Guardar en Room (sincronizado = false)
+     * 4. Intentar sincronización inmediata (async, no bloquea)
+     * 
      * @param params Parámetros del evento a guardar
      * @return Result con el ID del evento guardado o error
      */
@@ -40,29 +50,29 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
         return try {
             Log.d(TAG, "📝 Guardando evento: ${params.tipoEvento}, Severidad: ${params.nivelSeveridad}")
             
-            // Obtener ubicación GPS actual
+            // 1. Obtener ubicación GPS actual
             val location = obtenerUbicacion()
             
-            // Crear entidad del evento
+            // 2. Crear entidad del evento
             val evento = crearEvento(params, location)
             
-            // Validar evento
-            if (!evento.validar()) {
-                Log.e(TAG, "❌ Evento inválido: $evento")
-                return Result.failure(IllegalArgumentException("Datos del evento inválidos"))
-            }
-            
-            // Guardar en Room
+            // 3. SIEMPRE guardar en Room primero (offline-first)
             val id = eventoRepository.saveEvento(evento)
             
-            Log.d(TAG, "✅ Evento guardado exitosamente: ID=$id, Tipo=${params.tipoEvento}")
+            Log.d(TAG, "✅ Evento guardado en Room: ID=$id, GPS=${location != null}")
             
-            // Log de ubicación si disponible
-            if (location != null) {
-                Log.d(TAG, "📍 Con ubicación: ${location.latitude}, ${location.longitude}, " +
-                          "Velocidad: ${location.getSpeedInKmh()} km/h")
-            } else {
-                Log.w(TAG, "⚠️ Sin ubicación GPS disponible")
+            // 4. Intentar sincronización inmediata (NO bloquea el flujo principal)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val synced = syncImmediateUseCase(id)
+                    if (synced) {
+                        Log.d(TAG, "⚡ Sincronización inmediata exitosa para evento $id")
+                    } else {
+                        Log.d(TAG, "📵 Evento $id pendiente de sincronización (WorkManager lo reintentará)")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "⚠️ Error en sync inmediata: ${e.message} - WorkManager lo reintentará")
+                }
             }
             
             Result.success(id)
@@ -72,13 +82,15 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
         }
     }
     
+    // ========== MÉTODOS ESPECÍFICOS POR TIPO DE EVENTO ==========
+    
     /**
      * Guarda un evento de microsueño.
      */
     suspend fun saveMicrosleep(
         idChofer: Int,
         sessionId: Long,
-        idViaje: Int? = null,
+        idViaje: Int? = null,  // ✅ Ahora se usa
         duracionSegundos: Float,
         nivelSeveridad: AlertLevel = AlertLevel.CRITICAL
     ): Result<Long> {
@@ -187,22 +199,32 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
         )
     }
     
+    // ========== MÉTODOS PRIVADOS ==========
+    
     /**
-     * Obtiene la ubicación actual de forma segura.
+     * Obtiene la ubicación GPS actual.
      */
     private suspend fun obtenerUbicacion(): LocationService.LocationData? {
         return try {
             val result = getCurrentLocationUseCase()
-            result.getOrNull()
+            when (result) {
+                is GetCurrentLocationUseCase.LocationResult.Success -> {
+                    Log.d(TAG, "📍 GPS: ${result.location.latitude}, ${result.location.longitude}")
+                    result.location
+                }
+                else -> {
+                    Log.w(TAG, "⚠️ No se pudo obtener ubicación GPS")
+                    null
+                }
+            }
         } catch (e: Exception) {
-            Log.w(TAG, "⚠️ No se pudo obtener ubicación: ${e.message}")
-            // Intentar usar última ubicación conocida
-            getCurrentLocationUseCase.getLastKnown()
+            Log.e(TAG, "❌ Error obteniendo GPS: ${e.message}")
+            null
         }
     }
     
     /**
-     * Crea la entidad del evento con todos los datos.
+     * Crea la entidad EventoSomnolenciaEntity con todos los datos.
      */
     private fun crearEvento(
         params: EventoParams,
@@ -256,9 +278,6 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
             require(sessionId > 0) { "ID de sesión debe ser positivo" }
             require(tipoEvento in EventoSomnolenciaEntity.TIPOS_VALIDOS) { 
                 "Tipo de evento inválido: $tipoEvento" 
-            }
-            require(nivelSeveridad in EventoSomnolenciaEntity.SEVERIDADES_VALIDAS) { 
-                "Nivel de severidad inválido: $nivelSeveridad" 
             }
         }
     }
