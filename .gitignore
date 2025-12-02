@@ -1,5 +1,43 @@
+# Python
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
 examples/video_example.mp4
+
+# ============================================
+# PROTOTIPO GPS - Ignorar archivos innecesarios
+# ============================================
+
+# Node modules del prototipo
+prototipo-gps/frontend/node_modules/
+prototipo-gps/frontend/dist/
+prototipo-gps/frontend/.vite/
+prototipo-gps/frontend/package-lock.json
+
+# Python cache del prototipo
+prototipo-gps/backend/__pycache__/
+prototipo-gps/backend/app/__pycache__/
+prototipo-gps/backend/*.pyc
+prototipo-gps/backend/.env
+
+# Logs del prototipo
+prototipo-gps/**/*.log
+prototipo-gps/**/logs/
