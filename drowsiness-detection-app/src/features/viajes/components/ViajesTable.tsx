@@ -153,7 +153,7 @@ export const ViajesTable = ({
                 📅 Fecha Programada
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                🕐 Hora
+                🕐 Hora Programada
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 📋 Fecha Asignación
@@ -243,30 +243,30 @@ export const ViajesTable = ({
                 </td>
 
                 {/* Fecha Programada */}
-                <td className="px-4 py-3 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="text-sm font-semibold text-indigo-600">
-                      {formatDate(viaje.fecha_viaje_programada)}
-                    </span>
-                  </div>
+                <td className="px-4 py-3 whitespace-nowrap text-center">
+                  <span className="text-sm font-semibold text-indigo-600">
+                    {viaje.fecha_viaje_programada
+                      ? (() => {
+                          // Parsear string directamente sin Date object para evitar timezone issues
+                          const [year, month, day] = viaje.fecha_viaje_programada.split('-');
+                          return `${day}/${month}/${year}`;
+                        })()
+                      : '-'}
+                  </span>
                 </td>
 
                 {/* Hora Programada */}
-                <td className="px-4 py-3 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium text-gray-900">
-                      {viaje.hora_viaje_programada ? viaje.hora_viaje_programada.substring(0, 5) : '-'}
-                    </span>
-                  </div>
+                <td className="px-4 py-3 whitespace-nowrap text-center">
+                  <span className="text-sm font-medium text-gray-900">
+                    {viaje.hora_viaje_programada ? viaje.hora_viaje_programada.substring(0, 5) : '-'}
+                  </span>
                 </td>
 
                 {/* Fecha Asignación */}
-                <td className="px-4 py-3 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-500">
-                      {formatDate(viaje.fecha_asignacion)}
-                    </span>
-                  </div>
+                <td className="px-4 py-3 whitespace-nowrap text-center">
+                  <span className="text-sm text-gray-500">
+                    {formatDate(viaje.fecha_asignacion)}
+                  </span>
                 </td>
 
                 {/* Acciones */}

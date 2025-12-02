@@ -300,6 +300,25 @@ export const viajesApi = {
       throw error;
     }
   },
+
+  /**
+   * Obtiene todos los viajes que están actualmente en curso
+   * 
+   * @returns Promise con la respuesta que incluye total y lista de viajes en curso
+   * 
+   * @example
+   * const response = await viajesApi.getEnCurso();
+   * console.log(response.viajes); // Lista de viajes con estado 'en_curso'
+   */
+  getEnCurso: async (): Promise<ViajesListResponse> => {
+    try {
+      const response = await apiClient.get<ViajesListResponse>('/viajes/en-curso');
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener viajes en curso:', error);
+      throw error;
+    }
+  },
 };
 
 export default viajesApi;
