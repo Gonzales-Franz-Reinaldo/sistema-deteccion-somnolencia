@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS - Planificador de Ruta</title>
+    
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS (Mapa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Leaflet Routing Machine CSS (Rutas) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+        
+        /* El mapa ocupa toda la pantalla */
+        #map {
+            height: 100vh;
+            width: 100%;
+            z-index: 0;
+        }
+
+        /* Panel flotante estilo Google Maps */
+        .search-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 380px;
+            max-width: 90%;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        /* Ocultar el panel de instrucciones nativo de Leaflet Routing Machine para mantener el diseño limpio */
+        .leaflet-routing-container {
+            display: none !important;
+        }
+
+        /* Animación para los inputs */
+        .input-group:focus-within {
+            border-color: #3B82F6;
+        }
+
+        /* Loader */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3498db;
+            width: 20px;
+            height: 20px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animación de pulso para el marcador de usuario */
+        .user-location-pulse {
+            animation: pulse-blue 2s infinite;
+        }
+        @keyframes pulse-blue {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 overflow-hidden">
+
+    <!-- Panel de Control Flotante -->
+    <div class="search-panel p-5">
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 7m0 13V7"></path></svg>
+                Ruta GPS
+            </h1>
+            <div id="loading-indicator" class="loader"></div>
+        </div>
+
+        <form id="routeForm" class="space-y-3">
+            <!-- Origen -->
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div class="w-3 h-3 rounded-full border-2 border-gray-400"></div>
+                </div>
+                <input type="text" id="origin" placeholder="Lugar Origen (ej. Sucre, Bolivia)" 
+                    class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 transition-colors" required>
+            </div>
+
+            <!-- Conector visual (línea de puntos) -->
+            <div class="absolute left-8 -mt-2.5 h-4 border-l-2 border-dotted border-gray-300 z-10"></div>
+
+            <!-- Destino -->
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                </div>
+                <input type="text" id="destination" placeholder="Lugar Destino (ej. Potosí, Bolivia)" 
+                    class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 transition-colors" required>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="pt-2 flex flex-col gap-2">
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-full shadow-md transition-transform transform active:scale-95 flex justify-center items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Ver Mapa
+                    </button>
+                    <button type="button" id="clearBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-full transition-colors">
+                        Limpiar
+                    </button>
+                </div>
+                
+                <!-- Botón Mi Ubicación -->
+                <button type="button" id="locateBtn" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-2 px-4 rounded-lg border border-blue-200 transition-colors flex justify-center items-center gap-2 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    📍 Dónde estoy
+                </button>
+            </div>
+        </form>
+        
+        <!-- Info de Lat/Lon -->
+        <div id="coords-info" class="mt-4 text-xs text-gray-500 border-t pt-2 hidden">
+            <p><strong>Origen:</strong> <span id="lat-origin">...</span>, <span id="lon-origin">...</span></p>
+            <p><strong>Destino:</strong> <span id="lat-dest">...</span>, <span id="lon-dest">...</span></p>
+            <p class="mt-1 text-blue-600 font-semibold" id="distance-info"></p>
+        </div>
+    </div>
+
+    <!-- Contenedor del Mapa -->
+    <div id="map"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <script>
+        // 1. Inicializar el mapa
+        // Coordenadas por defecto (Centro de Bolivia aprox, o Sucre según tu imagen)
+        const defaultLat = -19.0353;
+        const defaultLon = -65.2592; // Sucre
+        
+        const map = L.map('map').setView([defaultLat, defaultLon], 13);
+
+        // Capa de OpenStreetMap (Estilo visual similar a Google Maps estándar)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Variables globales para control
+        let routingControl = null;
+        let originMarker = null;
+        let destMarker = null;
+        let userLocationMarker = null;
+
+        // Referencias DOM
+        const form = document.getElementById('routeForm');
+        const loader = document.getElementById('loading-indicator');
+        const coordsInfo = document.getElementById('coords-info');
+        const clearBtn = document.getElementById('clearBtn');
+        const locateBtn = document.getElementById('locateBtn');
+
+        // Función para buscar coordenadas (Geocoding) usando Nominatim (Gratuito)
+        async function getCoordinates(query) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    return {
+                        lat: parseFloat(data[0].lat),
+                        lon: parseFloat(data[0].lon),
+                        display_name: data[0].display_name
+                    };
+                }
+                return null;
+            } catch (error) {
+                console.error("Error buscando coordenadas:", error);
+                return null;
+            }
+        }
+
+        // Manejador del botón "Dónde estoy" (Geolocalización)
+        locateBtn.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                alert("Tu navegador no soporta geolocalización.");
+                return;
+            }
+
+            loader.style.display = 'block';
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    loader.style.display = 'none';
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    // Si ya existe un marcador de usuario, lo quitamos
+                    if (userLocationMarker) map.removeLayer(userLocationMarker);
+
+                    // Crear marcador azul tipo GPS
+                    userLocationMarker = L.circleMarker([lat, lon], {
+                        color: '#2563EB', // Borde Azul fuerte
+                        fillColor: '#3B82F6', // Relleno Azul
+                        fillOpacity: 1,
+                        radius: 8,
+                        weight: 3,
+                        className: 'user-location-pulse' // Clase para animación CSS
+                    }).addTo(map);
+
+                    // Añadir un círculo más grande semitransparente para representar precisión
+                    L.circle([lat, lon], {
+                        radius: position.coords.accuracy / 2, // Radio basado en la precisión del GPS
+                        color: 'transparent',
+                        fillColor: '#3B82F6',
+                        fillOpacity: 0.2
+                    }).addTo(map);
+
+                    userLocationMarker.bindPopup("<b>Estás aquí</b><br>Precisión: " + Math.round(position.coords.accuracy) + "m").openPopup();
+                    
+                    // Mover mapa a la ubicación
+                    map.flyTo([lat, lon], 16);
+
+                    // Opcional: Rellenar el campo Origen automáticamente
+                    // document.getElementById('origin').value = "Mi ubicación actual";
+                },
+                (error) => {
+                    loader.style.display = 'none';
+                    let msg = "No se pudo obtener tu ubicación.";
+                    if (error.code === 1) msg = "Has denegado el permiso de ubicación.";
+                    else if (error.code === 2) msg = "Ubicación no disponible.";
+                    else if (error.code === 3) msg = "Se agotó el tiempo de espera.";
+                    alert(msg);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        });
+
+        // Manejador del formulario de Ruta
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const originQuery = document.getElementById('origin').value;
+            const destQuery = document.getElementById('destination').value;
+
+            if(!originQuery || !destQuery) {
+                alert("Por favor introduce ambos lugares.");
+                return;
+            }
+
+            // UI Loading
+            loader.style.display = 'block';
+            coordsInfo.classList.add('hidden');
+            
+            // Limpiar mapa anterior (rutas y marcadores de búsqueda, pero NO el de usuario)
+            clearMap(false);
+
+            // Buscar coordenadas
+            const [originCoords, destCoords] = await Promise.all([
+                getCoordinates(originQuery),
+                getCoordinates(destQuery)
+            ]);
+
+            loader.style.display = 'none';
+
+            if (!originCoords) {
+                alert(`No pudimos encontrar: ${originQuery}`);
+                return;
+            }
+            if (!destCoords) {
+                alert(`No pudimos encontrar: ${destQuery}`);
+                return;
+            }
+
+            // Mostrar coordenadas en panel
+            document.getElementById('lat-origin').innerText = originCoords.lat.toFixed(5);
+            document.getElementById('lon-origin').innerText = originCoords.lon.toFixed(5);
+            document.getElementById('lat-dest').innerText = destCoords.lat.toFixed(5);
+            document.getElementById('lon-dest').innerText = destCoords.lon.toFixed(5);
+            coordsInfo.classList.remove('hidden');
+
+            // --- LÓGICA DE DIBUJADO ---
+
+            // 1. Puntos Rojos (Círculos) para Origen y Destino
+            const redMarkerOptions = {
+                color: 'red',
+                fillColor: '#f03',
+                fillOpacity: 0.8,
+                radius: 8,
+                weight: 2
+            };
+
+            originMarker = L.circleMarker([originCoords.lat, originCoords.lon], redMarkerOptions).addTo(map);
+            originMarker.bindPopup(`<b>Origen:</b><br>${originQuery}`).openPopup();
+
+            destMarker = L.circleMarker([destCoords.lat, destCoords.lon], redMarkerOptions).addTo(map);
+            destMarker.bindPopup(`<b>Destino:</b><br>${destQuery}`);
+
+            // 2. Trazar Trayectoria
+            routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(originCoords.lat, originCoords.lon),
+                    L.latLng(destCoords.lat, destCoords.lon)
+                ],
+                routeWhileDragging: false,
+                draggableWaypoints: false,
+                addWaypoints: false,
+                createMarker: function() { return null; }, 
+                lineOptions: {
+                    styles: [{color: '#3B82F6', opacity: 0.7, weight: 5}]
+                },
+                show: false
+            }).on('routesfound', function(e) {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                const km = (summary.totalDistance / 1000).toFixed(1);
+                const time = Math.round(summary.totalTime / 60);
+                document.getElementById('distance-info').innerText = `Distancia: ${km} km • Tiempo: ${time} min`;
+            }).addTo(map);
+            
+            const bounds = L.latLngBounds(
+                [originCoords.lat, originCoords.lon],
+                [destCoords.lat, destCoords.lon]
+            );
+            map.fitBounds(bounds, { padding: [50, 50] });
+        });
+
+        // Función Limpiar
+        clearBtn.addEventListener('click', () => {
+            document.getElementById('origin').value = '';
+            document.getElementById('destination').value = '';
+            clearMap(true); // true = limpiar todo, incluido usuario
+            coordsInfo.classList.add('hidden');
+            map.setView([defaultLat, defaultLon], 13);
+        });
+
+        function clearMap(clearUser = false) {
+            if (originMarker) map.removeLayer(originMarker);
+            if (destMarker) map.removeLayer(destMarker);
+            if (routingControl) map.removeControl(routingControl);
+            if (clearUser && userLocationMarker) {
+                map.removeLayer(userLocationMarker);
+                userLocationMarker = null;
+            }
+            document.getElementById('distance-info').innerText = '';
+        }
+
+    </script>
+</body>
+</html>
