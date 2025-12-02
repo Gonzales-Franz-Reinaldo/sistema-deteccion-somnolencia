@@ -19,20 +19,6 @@ export type CategoriaLicencia =
   | 'Categoría F - Transporte de Carga Especial';
 
 /**
- * Departamentos de Bolivia (para origen/destino)
- */
-export type Departamento = 
-  | 'La Paz'
-  | 'Santa Cruz'
-  | 'Cochabamba'
-  | 'Oruro'
-  | 'Potosí'
-  | 'Chuquisaca'
-  | 'Tarija'
-  | 'Beni'
-  | 'Pando';
-
-/**
  * Interfaz principal para un Viaje
  * Representa la asignación de un viaje a un chofer
  */
@@ -46,8 +32,8 @@ export interface Viaje {
   distancia_km: number | null;
   estado: EstadoViaje;
   fecha_asignacion: string;
-  fecha_viaje_programada: string; // Fecha para la que se programa el viaje (YYYY-MM-DD)
-  hora_viaje_programada: string;  // Hora para la que se programa el viaje (HH:MM:SS)
+  fecha_viaje_programada: string;
+  hora_viaje_programada: string;
   fecha_inicio: string | null;
   fecha_fin: string | null;
   observaciones: string | null;
@@ -89,7 +75,7 @@ export interface PaginationParams {
 }
 
 /**
- * Datos necesarios para crear un nuevo viaje (enviar al backend)
+ * Datos necesarios para crear un nuevo viaje
  */
 export interface ViajeCreateData {
   id_chofer: number;
@@ -101,11 +87,11 @@ export interface ViajeCreateData {
   fecha_viaje_programada: string; // YYYY-MM-DD
   hora_viaje_programada: string;  // HH:MM:SS
   observaciones?: string;
-  enviar_email: boolean; // No se guarda en BD, solo metadata
+  enviar_email: boolean;
 }
 
 /**
- * Datos para actualizar un viaje existente (enviar al backend)
+ * Datos para actualizar un viaje existente
  */
 export interface ViajeUpdateData {
   id_chofer?: number;
@@ -123,21 +109,22 @@ export interface ViajeUpdateData {
 }
 
 /**
- * Datos del formulario (incluye campos separados)
+ * Datos del formulario
+ * origen y destino ahora son strings libres (input text)
  */
 export interface ViajeFormData {
   // Filtros para chofer
   categoria_licencia: CategoriaLicencia | '';
-  id_chofer: string; // String en el form, se convierte a number
+  id_chofer: string;
   
-  // Información de empresa (solo lectura, obtenida del chofer seleccionado)
+  // Información de empresa (solo lectura)
   nombre_empresa_info: string;
   
-  // Detalles del viaje
-  origen: Departamento | '';
-  destino: Departamento | '';
+  // Detalles del viaje - Ahora son strings libres
+  origen: string;
+  destino: string;
   
-  // Duración (separada en horas y minutos)
+  // Duración
   horas: string;
   minutos: string;
   
@@ -145,7 +132,7 @@ export interface ViajeFormData {
   fecha_viaje_programada: string; // YYYY-MM-DD
   hora_viaje_programada: string;  // HH:MM
   
-  // Distancia (opcional)
+  // Distancia
   distancia_km: string;
   
   // Observaciones

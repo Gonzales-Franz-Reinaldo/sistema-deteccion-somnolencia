@@ -5,10 +5,10 @@
 // ============================================
 
 import { useViajeForm } from '../../hooks/useViajeForm';
-import { DEPARTAMENTOS_BOLIVIA, CATEGORIAS_LICENCIA } from '../../constants/departamentos';
+import { CATEGORIAS_LICENCIA } from '../../constants/constants';
 
 interface ViajeFormProps {
-  viajeId?: number; // Si existe, modo edición
+  viajeId?: number;
 }
 
 export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
@@ -29,7 +29,6 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
     handleCancel,
   } = useViajeForm({ viajeId });
 
-  // Mostrar spinner mientras carga datos iniciales (modo edición)
   if (loadingInitialData) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -87,7 +86,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
                 </p>
               </div>
 
-              {/* Chofer (dinámico según categoría) */}
+              {/* Chofer */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Chofer *
@@ -118,7 +117,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
                 )}
               </div>
 
-              {/* Información de Empresa (solo lectura) */}
+              {/* Información de Empresa */}
               {formData.nombre_empresa_info && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-center text-sm">
@@ -139,58 +138,55 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
             </h3>
 
             <div className="space-y-4">
-              {/* Origen */}
+              {/* Origen - Input de texto libre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Origen *
+                  Lugar de Origen *
                 </label>
-                <select
-                  value={formData.origen}
-                  onChange={(e) => handleChange('origen', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                    errors.origen ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Seleccionar origen...</option>
-                  {DEPARTAMENTOS_BOLIVIA.map((departamento) => (
-                    <option key={`origen-${departamento}`} value={departamento}>
-                      📍 {departamento}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">📍</span>
+                  <input
+                    type="text"
+                    value={formData.origen}
+                    onChange={(e) => handleChange('origen', e.target.value)}
+                    placeholder="Ej: La Paz, Bolivia / Terminal de Buses La Paz"
+                    maxLength={200}
+                    className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
+                      errors.origen ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                </div>
                 {errors.origen && (
                   <p className="text-red-500 text-xs mt-1">{errors.origen}</p>
                 )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Ingrese la ciudad, terminal o dirección de origen
+                </p>
               </div>
 
-              {/* Destino */}
+              {/* Destino - Input de texto libre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Destino *
+                  Lugar de Destino *
                 </label>
-                <select
-                  value={formData.destino}
-                  onChange={(e) => handleChange('destino', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                    errors.destino ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Seleccionar destino...</option>
-                  {DEPARTAMENTOS_BOLIVIA.map((departamento) => (
-                    <option 
-                      key={`destino-${departamento}`} 
-                      value={departamento}
-                      disabled={departamento === formData.origen}
-                    >
-                      🎯 {departamento}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🎯</span>
+                  <input
+                    type="text"
+                    value={formData.destino}
+                    onChange={(e) => handleChange('destino', e.target.value)}
+                    placeholder="Ej: Santa Cruz, Bolivia / Terminal Bimodal"
+                    maxLength={200}
+                    className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
+                      errors.destino ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                </div>
                 {errors.destino && (
                   <p className="text-red-500 text-xs mt-1">{errors.destino}</p>
                 )}
                 <p className="text-xs text-gray-500 mt-1">
-                  El origen y destino deben ser diferentes
+                  Ingrese la ciudad, terminal o dirección de destino
                 </p>
               </div>
 
@@ -203,7 +199,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
                   type="date"
                   value={formData.fecha_viaje_programada}
                   onChange={(e) => handleChange('fecha_viaje_programada', e.target.value)}
-                  min={new Date().toISOString().split('T')[0]} // No permitir fechas pasadas
+                  min={new Date().toISOString().split('T')[0]}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
                     errors.fecha_viaje_programada ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -237,7 +233,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
                 </p>
               </div>
 
-              {/* Badge de Validación de Disponibilidad - Solo valida FECHA */}
+              {/* Badge de Validación de Disponibilidad */}
               {formData.id_chofer && formData.fecha_viaje_programada && (
                 <div className="mt-4">
                   {validandoDisponibilidad && (
@@ -284,9 +280,8 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
             </h3>
 
             <div className="space-y-4">
-              {/* Duración: Horas y Minutos en una fila */}
+              {/* Duración: Horas y Minutos */}
               <div className="grid grid-cols-2 gap-4">
-                {/* Horas */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Horas *
@@ -307,7 +302,6 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
                   )}
                 </div>
 
-                {/* Minutos */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Minutos *
@@ -333,7 +327,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
                 Duración estimada del viaje (0-24 horas, 0-59 minutos)
               </p>
 
-              {/* Distancia en kilómetros (opcional) */}
+              {/* Distancia */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Distancia (km)
@@ -405,7 +399,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
                     Enviar viaje por email al chofer
                   </span>
                   <p className="text-xs text-gray-500 mt-1">
-                    Se enviará un correo con los detalles completos del viaje (origen, destino, fecha, hora, duración, etc.)
+                    Se enviará un correo con los detalles completos del viaje
                   </p>
                 </label>
               </div>
@@ -428,7 +422,6 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
           Cancelar
         </button>
 
-        {/* Botón Limpiar (solo en creación) */}
         {!isEditMode && (
           <button
             type="button"

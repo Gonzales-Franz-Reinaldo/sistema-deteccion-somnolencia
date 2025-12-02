@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Driver Drowsiness Detector</string>
+    <string name="app_name">AlertaCopilot</string>
     
     <!-- Login -->
     <string name="login_title">Iniciar Sesión</string>
