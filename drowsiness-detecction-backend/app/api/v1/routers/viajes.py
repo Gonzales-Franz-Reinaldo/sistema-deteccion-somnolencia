@@ -360,6 +360,60 @@ def list_viajes(
 
 
 @router.get(
+    "/en-curso",
+    response_model=ViajeListResponse,
+    summary="Listar viajes en curso",
+    description="**Solo Admin** - Obtiene todos los viajes que están actualmente en curso"
+)
+def list_viajes_en_curso(
+    *,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_admin_user)
+):
+    """
+    Obtiene todos los viajes con estado 'en_curso'.
+    
+    **Permisos**: Solo administradores
+    
+    **Returns**:
+    - Lista de viajes en curso con información completa de chofer y empresa
+    """
+    viajes = viaje_crud.get_by_estado(db, estado="en_curso")
+    
+    # Construir respuesta
+    viajes_response = []
+    for viaje in viajes:
+        viajes_response.append(
+            ViajeResponse(
+                id_viaje=viaje.id_viaje,
+                id_chofer=viaje.id_chofer,
+                id_empresa=viaje.id_empresa,
+                origen=viaje.origen,
+                destino=viaje.destino,
+                duracion_estimada=viaje.duracion_estimada,
+                distancia_km=viaje.distancia_km,
+                estado=viaje.estado,
+                fecha_asignacion=viaje.fecha_asignacion,
+                fecha_viaje_programada=viaje.fecha_viaje_programada,
+                hora_viaje_programada=viaje.hora_viaje_programada,
+                fecha_inicio=viaje.fecha_inicio,
+                fecha_fin=viaje.fecha_fin,
+                observaciones=viaje.observaciones,
+                nombre_chofer=viaje.chofer.nombre_completo if viaje.chofer else None,
+                categoria_licencia=viaje.chofer.categoria_licencia if viaje.chofer else None,
+                nombre_empresa=viaje.empresa.nombre_empresa if viaje.empresa else None
+            )
+        )
+    
+    return ViajeListResponse(
+        total=len(viajes),
+        skip=0,
+        limit=100,
+        viajes=viajes_response
+    )
+
+
+@router.get(
     "/{id_viaje}",
     response_model=ViajeResponse,
     summary="Obtener viaje por ID",
@@ -857,4 +911,5 @@ def finalizar_viaje_chofer(
         categoria_licencia=viaje.chofer.categoria_licencia if viaje.chofer else None,
         nombre_empresa=viaje.empresa.nombre_empresa if viaje.empresa else None
     )
+
 

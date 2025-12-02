@@ -28,7 +28,7 @@ android {
         // Cambiar esta IP según tu red local
         // Para encontrar tu IP en Linux: hostname -I | awk '{print $1}'
         // ═══════════════════════════════════════════════════════════
-        buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.17:8000/\"")
+        buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.107:8000/\"")
         
         // Configuración de timeouts (en segundos)
         buildConfigField("long", "CONNECT_TIMEOUT", "30L")
@@ -53,7 +53,7 @@ android {
             
             // URL de desarrollo (red local)
             // Esta sobrescribe la de defaultConfig para debug
-            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.17:8000/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.107:8000/\"")
         }
     }
 
