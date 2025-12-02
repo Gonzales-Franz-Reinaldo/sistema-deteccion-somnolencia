@@ -16,6 +16,13 @@ import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.Process
 import com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui.EventosStats
 import com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui.MonitoringUiState
 import com.example.driverdrowsinessdetectorapp.util.AlarmUtil
+
+import com.example.driverdrowsinessdetectorapp.data.local.preferences.PreferencesManager
+import com.example.driverdrowsinessdetectorapp.domain.usecase.gps.StartGPSTrackingUseCase
+import com.example.driverdrowsinessdetectorapp.domain.usecase.gps.StopGPSTrackingUseCase
+import com.example.driverdrowsinessdetectorapp.services.GPSTrackingState
+import kotlinx.coroutines.flow.first
+
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,7 +41,12 @@ class MonitoringViewModel @Inject constructor(
     private val alarmUtil: AlarmUtil,
     private val sessionManager: SessionManager,
     private val saveEventoSomnolenciaUseCase: SaveEventoSomnolenciaUseCase,
-    private val viajeRepository: ViajeRepository  
+    private val viajeRepository: ViajeRepository,
+    
+    // ═══ NUEVAS DEPENDENCIAS PARA GPS ═══
+    private val startGPSTrackingUseCase: StartGPSTrackingUseCase,
+    private val stopGPSTrackingUseCase: StopGPSTrackingUseCase,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     companion object {
@@ -81,6 +93,13 @@ class MonitoringViewModel @Inject constructor(
     
     // Estadísticas de eventos en sesión
     private var eventosStats = EventosStats()
+    
+    // ═══ NUEVO: Estado del GPS tracking ═══
+    private val _gpsTrackingState = MutableStateFlow(GPSTrackingState())
+    val gpsTrackingState: StateFlow<GPSTrackingState> = _gpsTrackingState.asStateFlow()
+    
+    // ═══ NUEVO: Job para observar estado GPS ═══
+    private var gpsObserverJob: Job? = null
 
     /**
      *  Establece el ID del viaje actual
@@ -88,6 +107,66 @@ class MonitoringViewModel @Inject constructor(
     fun setViajeId(idViaje: Int) {
         currentViajeId = idViaje
         Log.d(TAG, "📋 Viaje establecido: $idViaje")
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MÉTODOS PARA GPS TRACKING
+    // ═══════════════════════════════════════════════════════════════
+    
+    /**
+     * Inicia el tracking GPS via WebSocket
+     */
+    private suspend fun startGPSTracking() {
+        val viajeId = currentViajeId
+        if (viajeId == null) {
+            Log.w(TAG, "⚠️ No hay viaje ID para iniciar GPS tracking")
+            return
+        }
+        
+        try {
+            val choferId = preferencesManager.getUserId().first()
+            val token = preferencesManager.getAuthToken().first()
+            
+            if (choferId == null || token == null) {
+                Log.e(TAG, "❌ No hay chofer ID ($choferId) o token para GPS tracking")
+                return
+            }
+            
+            Log.d(TAG, "🛰️ Iniciando GPS tracking para viaje $viajeId, chofer $choferId")
+            
+            startGPSTrackingUseCase(viajeId, choferId, token)
+            
+            gpsObserverJob?.cancel()
+            gpsObserverJob = viewModelScope.launch {
+                startGPSTrackingUseCase.getTrackingState().collect { state ->
+                    _gpsTrackingState.value = state
+                    
+                    val currentState = _uiState.value
+                    if (currentState is MonitoringUiState.Active) {
+                        _uiState.value = currentState.copy(
+                            gpsEnabled = state.isTracking && state.isConnected
+                        )
+                    }
+                    
+                    Log.d(TAG, "📶 GPS State: tracking=${state.isTracking}, connected=${state.isConnected}")
+                }
+            }
+            
+            Log.d(TAG, "✅ GPS tracking iniciado correctamente")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error iniciando GPS tracking: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Detiene el tracking GPS
+     */
+    private fun stopGPSTracking() {
+        Log.d(TAG, "🛑 Deteniendo GPS tracking...")
+        gpsObserverJob?.cancel()
+        gpsObserverJob = null
+        stopGPSTrackingUseCase()
     }
 
     /**
@@ -110,6 +189,9 @@ class MonitoringViewModel @Inject constructor(
                 
                 sessionStartTime = System.currentTimeMillis()
                 frameCount = 0
+
+                // Iniciar  GPS Tracking WebSocket
+                startGPSTracking()
                 
                 _uiState.value = MonitoringUiState.Active(
                     sessionId = session.id,
@@ -249,10 +331,10 @@ class MonitoringViewModel @Inject constructor(
                     return@launch
                 }
                 
-                // ✅ LOG CON ID DE VIAJE
+                // LOG CON ID DE VIAJE
                 Log.d(TAG, "💾 Guardando evento: tipo=${alertType.name}, userId=$userId, sessionId=$sessionId, viajeId=$currentViajeId")
                 
-                // ✅ TODOS LOS MÉTODOS AHORA INCLUYEN idViaje
+                //  TODOS LOS MÉTODOS AHORA INCLUYEN idViaje
                 val result = when (alertType) {
                     AlertType.MICROSLEEP -> {
                         lastMicrosleepSaveTime = currentTime
@@ -545,6 +627,9 @@ class MonitoringViewModel @Inject constructor(
             _finalizarViajeState.value = FinalizarViajeState.Loading
             
             Log.d(TAG, "🏁 Finalizando viaje ID: $viajeId")
+
+            // Detener GPS Tracking 
+            stopGPSTracking()
             
             viajeRepository.finalizarViaje(viajeId)
                 .onSuccess { viaje ->
@@ -644,7 +729,10 @@ class MonitoringViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        stopGPSTracking()
         stopAlert()
+
+        gpsObserverJob?.cancel()
         
         // Finalizar sesión si está activa
         viewModelScope.launch {

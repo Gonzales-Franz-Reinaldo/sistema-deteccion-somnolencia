@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.core.middleware import setup_middlewares
 from app.api.v1.routers import auth, empresas, users, viajes, eventos
 from app.api.v1.routers import websocket as ws_router 
+from app.api.v1.routers import gps_realtime
 
 # Configuración básica de logging (asegura nivel INFO global y formato compacto)
 logging.basicConfig(
@@ -170,6 +171,20 @@ app.include_router(
     ws_router.router,
     prefix=f"{settings.API_V1_PREFIX}/ws",
     tags=["🔌 WebSocket (Tiempo Real)"]
+)
+
+#  Router WebSocket
+app.include_router(
+    ws_router.router,
+    prefix=f"{settings.API_V1_PREFIX}/ws",
+    tags=["🔌 WebSocket (Tiempo Real)"]
+)
+
+# ← NUEVO: Router GPS en Tiempo Real
+app.include_router(
+    gps_realtime.router,
+    prefix=f"{settings.API_V1_PREFIX}/gps",
+    tags=["🛰️ GPS Tiempo Real"]
 )
 
 @app.get("/", tags=["ℹ️ Info"])
