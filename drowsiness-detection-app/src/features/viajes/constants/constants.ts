@@ -2,23 +2,9 @@
 // CONSTANTES PARA FEATURE VIAJES
 // ============================================
 
-import type { Departamento, CategoriaLicencia } from '../types';
+import type { CategoriaLicencia } from '../types';
 
-/**
- * Lista de los 9 departamentos de Bolivia
- * Para seleccionar origen y destino en el formulario
- */
-export const DEPARTAMENTOS_BOLIVIA: Departamento[] = [
-  'La Paz',
-  'Santa Cruz',
-  'Cochabamba',
-  'Oruro',
-  'Potosí',
-  'Chuquisaca',
-  'Tarija',
-  'Beni',
-  'Pando'
-];
+
 
 /**
  * Categorías de licencia de conducir en Bolivia

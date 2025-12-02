@@ -93,7 +93,7 @@ export const AppRoutes = () => {
         />
         <Route path="reportes" element={<ReportesPage />} />
         <Route path="monitoreo-viajes" element={<MonitoreoViajesPage />} />
-        <Route path="monitoreo-viajes/:id_sesion" element={<MonitoreoViajeDetallePage />} />
+        <Route path="monitoreo-viajes/:idViaje" element={<MonitoreoViajeDetallePage />} />
         <Route
           path="configuracion"
           element={

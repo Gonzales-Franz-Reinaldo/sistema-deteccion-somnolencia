@@ -16,7 +16,7 @@ import type {
   ChoferDisponible,
   CategoriaLicencia
 } from '../types';
-import { HORAS_VALIDAS, MINUTOS_VALIDOS } from '../constants/departamentos';
+import { HORAS_VALIDAS, MINUTOS_VALIDOS } from '../constants/constants';
 
 /**
  * Props del hook
@@ -271,18 +271,19 @@ export const useViajeForm = ({ viajeId }: UseViajeFormProps = {}) => {
       newErrors.id_chofer = 'Seleccione un chofer';
     }
 
-    // Validar origen
-    if (!formData.origen) {
-      newErrors.origen = 'Seleccione un origen';
+    // Validar origen (texto libre, mínimo 3 caracteres)
+    if (!formData.origen || formData.origen.trim().length < 3) {
+      newErrors.origen = 'El origen debe tener al menos 3 caracteres';
     }
 
-    // Validar destino
-    if (!formData.destino) {
-      newErrors.destino = 'Seleccione un destino';
+    // Validar destino (texto libre, mínimo 3 caracteres)
+    if (!formData.destino || formData.destino.trim().length < 3) {
+      newErrors.destino = 'El destino debe tener al menos 3 caracteres';
     }
 
-    // Validar que origen != destino
-    if (formData.origen && formData.destino && formData.origen === formData.destino) {
+    // Validar que origen != destino (comparación insensible a mayúsculas)
+    if (formData.origen && formData.destino && 
+        formData.origen.trim().toLowerCase() === formData.destino.trim().toLowerCase()) {
       newErrors.destino = 'El origen y destino deben ser diferentes';
     }
 
@@ -305,7 +306,7 @@ export const useViajeForm = ({ viajeId }: UseViajeFormProps = {}) => {
       newErrors.hora_viaje_programada = 'Seleccione la hora programada';
     }
 
-    // Validar duración (al menos 1 hora o 1 minuto)
+    // Validar duración
     const horas = parseInt(formData.horas) || 0;
     const minutos = parseInt(formData.minutos) || 0;
     
@@ -321,7 +322,7 @@ export const useViajeForm = ({ viajeId }: UseViajeFormProps = {}) => {
       newErrors.horas = 'La duración debe ser mayor a 0';
     }
 
-    // Validar distancia (opcional, pero si se proporciona debe ser válida)
+    // Validar distancia
     if (formData.distancia_km) {
       const distancia = parseFloat(formData.distancia_km);
       if (isNaN(distancia) || distancia <= 0) {
