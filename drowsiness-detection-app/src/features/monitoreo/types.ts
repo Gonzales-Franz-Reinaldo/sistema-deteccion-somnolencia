@@ -31,6 +31,28 @@ export interface PosicionGPS {
 }
 
 /**
+ * Posición GPS extendida (desde WebSocket)
+ */
+export interface PosicionGPSRealtime {
+  lat: number;
+  lng: number;
+  velocidad_kmh: number | null;
+  heading: number | null;
+  precision_m: number | null;
+  timestamp: string;
+}
+
+/**
+ * Estado de conexión GPS en tiempo real
+ */
+export type GPSRealtimeStatus = 
+  | 'CONNECTING' 
+  | 'CONNECTED' 
+  | 'DISCONNECTED' 
+  | 'RECONNECTING'
+  | 'ERROR';
+
+/**
  * Evento de somnolencia en tiempo real
  */
 export interface EventoMonitoreo {

@@ -1,9 +1,9 @@
 // ============================================
 // PÁGINA DE MONITOREO DE VIAJE EN DETALLE
-// Vista completa con mapa GPS grande, eventos y datos del chofer
+// Vista completa con mapa GPS en tiempo real
 // ============================================
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../../lib/api/client';
 
@@ -13,6 +13,8 @@ import {
   ChoferInfoPanel,
   EventosRealTimeList,
   MapaGPS,
+  GPSConnectionStatus,
+  useGPSRealtime,
 } from '../../features/monitoreo';
 
 import type {
@@ -29,9 +31,59 @@ export const MonitoreoViajeDetallePage: React.FC = () => {
   // Estados
   const [viaje, setViaje] = useState<ViajeMonitoreo | null>(null);
   const [eventos, setEventos] = useState<EventoMonitoreo[]>([]);
-  const [posicionActual, setPosicionActual] = useState<PosicionGPS | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  //  Ref para actualizar posición sin causar re-render
+  const posicionCallbackRef = useRef<((pos: PosicionGPS) => void) | null>(null);
+  
+  //  Estado solo para mostrar en el panel de info (no afecta MapaGPS)
+  const [posicionDisplay, setPosicionDisplay] = useState<PosicionGPS | null>(null);
+
+  // Hook de GPS en tiempo real - ACTUALIZADO con nuevos callbacks
+  const {
+    connectionStatus,
+    isChoferOnline,
+    isChoferSignalWeak,  
+    lastUpdate,
+    choferInfo,
+    secondsSinceLastUpdate,  
+    reconnect,
+  } = useGPSRealtime({
+    idViaje: parseInt(idViaje || '0'),
+    enabled: !!idViaje && !!viaje,
+    onPositionUpdate: (position) => {
+      const posicion: PosicionGPS = {
+        lat: position.lat,
+        lng: position.lng,
+        velocidad: position.velocidad_kmh,
+        heading: position.heading,
+        timestamp: position.timestamp,
+        precision: position.precision_m ?? undefined,
+      };
+      
+      if (posicionCallbackRef.current) {
+        posicionCallbackRef.current(posicion);
+      }
+      
+      setPosicionDisplay(posicion);
+    },
+    onChoferConnected: (data) => {
+      console.log('🟢 Chofer conectado:', data.nombre_chofer);
+    },
+    onChoferDisconnected: () => {
+      console.log('🔴 Chofer desconectado');
+    },
+    //  Callback cuando se pierde señal por timeout
+    onChoferSignalLost: () => {
+      console.warn('📡 Señal GPS del chofer perdida (timeout)');
+    },
+  });
+
+  //  Callback que el MapaGPS registrará
+  const handlePosicionCallbackReady = useCallback((callback: (pos: PosicionGPS) => void) => {
+    posicionCallbackRef.current = callback;
+  }, []);
 
   // Cargar datos del viaje
   const cargarDatosViaje = useCallback(async () => {
@@ -58,7 +110,7 @@ export const MonitoreoViajeDetallePage: React.FC = () => {
       try {
         const eventosResponse = await apiClient.get(`/eventos/viaje/${idViaje}`);
         eventosData = eventosResponse.data || [];
-      } catch (eventosError) {
+      } catch {
         console.log('No hay eventos para este viaje aún');
       }
 
@@ -119,19 +171,22 @@ export const MonitoreoViajeDetallePage: React.FC = () => {
 
       setViaje(viajeCompleto);
       setEventos(eventosData);
+      
+      // Setear posición inicial si existe
       if (ultimaPosicion) {
-        setPosicionActual(ultimaPosicion);
+        setPosicionDisplay(ultimaPosicion);
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error cargando datos del viaje:', err);
-      setError(err.response?.data?.detail || 'Error cargando información del viaje');
+      const errorMessage = err instanceof Error ? err.message : 'Error cargando información del viaje';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   }, [idViaje]);
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales (solo una vez)
   useEffect(() => {
     cargarDatosViaje();
   }, [cargarDatosViaje]);
@@ -145,23 +200,6 @@ export const MonitoreoViajeDetallePage: React.FC = () => {
         const eventosResponse = await apiClient.get(`/eventos/viaje/${idViaje}`);
         const eventosActualizados = eventosResponse.data || [];
         setEventos(eventosActualizados);
-
-        // Actualizar posición del último evento con GPS
-        const eventoConGPS = eventosActualizados
-          .filter((e: EventoMonitoreo) => e.latitud && e.longitud)
-          .sort((a: EventoMonitoreo, b: EventoMonitoreo) => 
-            new Date(b.timestamp_evento).getTime() - new Date(a.timestamp_evento).getTime()
-          )[0];
-
-        if (eventoConGPS) {
-          setPosicionActual({
-            lat: eventoConGPS.latitud!,
-            lng: eventoConGPS.longitud!,
-            velocidad: eventoConGPS.velocidad_kmh,
-            heading: null,
-            timestamp: eventoConGPS.timestamp_evento,
-          });
-        }
       } catch (err) {
         console.error('Error actualizando eventos:', err);
       }
@@ -214,79 +252,105 @@ export const MonitoreoViajeDetallePage: React.FC = () => {
         Volver a viajes en curso
       </button>
 
-      {/* Header del Viaje */}
-      <ViajeHeader
-        origen={viaje.origen}
-        destino={viaje.destino}
-        enVivo={viaje.estado === 'en_curso'}
-      />
+      {/* Header del Viaje con estado de conexión GPS - ACTUALIZADO */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <ViajeHeader
+          origen={viaje.origen}
+          destino={viaje.destino}
+          enVivo={viaje.estado === 'en_curso'}
+        />
+        <GPSConnectionStatus
+          status={connectionStatus}
+          isChoferOnline={isChoferOnline}
+          isChoferSignalWeak={isChoferSignalWeak}  // ← NUEVO
+          lastUpdate={lastUpdate}
+          choferName={choferInfo?.nombre_chofer}
+          secondsSinceLastUpdate={secondsSinceLastUpdate}  // ← NUEVO
+          onReconnect={reconnect}
+        />
+      </div>
 
-      {/* Contenido Principal - LAYOUT MEJORADO: Mapa más grande */}
+      {/* Contenido Principal - LAYOUT: Mapa grande */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Columna Izquierda - Info del Chofer y Eventos (más angosta) */}
+        {/* Columna Izquierda - Info del Chofer y Eventos (1/4) */}
         <div className="lg:col-span-1 space-y-4">
-          {/* Panel de información del chofer - Compacto */}
           <ChoferInfoPanel chofer={viaje.chofer} />
-
-          {/* Lista de eventos en tiempo real */}
           <EventosRealTimeList eventos={eventos} maxEventos={8} />
         </div>
 
-        {/* Columna Derecha - Mapa GPS (más grande, 3/4 del ancho) */}
+        {/* Columna Derecha - Mapa GPS (3/4) */}
         <div className="lg:col-span-3">
           <div 
             className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" 
-            style={{ height: 'calc(100vh - 280px)', minHeight: '500px' }}
+            style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}
           >
             <MapaGPS
-              posicionActual={posicionActual}
+              // ← NO pasar posicionActual como prop que cambia
+              posicionInicial={viaje.ultima_posicion}
               eventos={eventos}
               origen={viaje.origen}
               destino={viaje.destino}
               rutaNombre={`${viaje.origen} → ${viaje.destino}`}
+              isChoferOnline={isChoferOnline}
+              connectionStatus={connectionStatus}
+              //  Callback para registrar el actualizador de posición
+              onPosicionCallbackReady={handlePosicionCallbackReady}
             />
           </div>
         </div>
       </div>
 
-      {/* Footer con estadísticas del viaje - Compacto */}
+      {/* Footer con estadísticas del viaje */}
       <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          {/* Contadores */}
-          <div className="flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 bg-red-50 px-3 py-2 rounded-lg">
-              <span className="text-lg">😴</span>
-              <span className="font-bold text-red-600">{viaje.contadores.microsuenos}</span>
-              <span className="text-xs text-gray-500">Microsueños</span>
-            </div>
-            <div className="flex items-center gap-2 bg-orange-50 px-3 py-2 rounded-lg">
-              <span className="text-lg">🙇</span>
-              <span className="font-bold text-orange-600">{viaje.contadores.cabeceos}</span>
-              <span className="text-xs text-gray-500">Cabeceos</span>
-            </div>
-            <div className="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded-lg">
-              <span className="text-lg">👁️</span>
-              <span className="font-bold text-yellow-600">{viaje.contadores.parpadeos_excesivos}</span>
-              <span className="text-xs text-gray-500">Parpadeos</span>
-            </div>
-            <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg">
-              <span className="text-lg">🥱</span>
-              <span className="font-bold text-blue-600">{viaje.contadores.bostezos}</span>
-              <span className="text-xs text-gray-500">Bostezos</span>
-            </div>
-            <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
-              <span className="text-lg">📊</span>
-              <span className="font-bold text-gray-700">{viaje.contadores.total_alertas}</span>
-              <span className="text-xs text-gray-500">Total</span>
-            </div>
+        <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <span>📊</span>
+          Resumen del Viaje
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="text-center p-2 bg-red-50 rounded-lg">
+            <p className="text-xl font-bold text-red-600">{viaje.contadores.microsuenos}</p>
+            <p className="text-xs text-gray-600">😴 Microsueños</p>
           </div>
+          <div className="text-center p-2 bg-orange-50 rounded-lg">
+            <p className="text-xl font-bold text-orange-600">{viaje.contadores.cabeceos}</p>
+            <p className="text-xs text-gray-600">🙇 Cabeceos</p>
+          </div>
+          <div className="text-center p-2 bg-yellow-50 rounded-lg">
+            <p className="text-xl font-bold text-yellow-600">{viaje.contadores.parpadeos_excesivos}</p>
+            <p className="text-xs text-gray-600">👁️ Parpadeos</p>
+          </div>
+          <div className="text-center p-2 bg-blue-50 rounded-lg">
+            <p className="text-xl font-bold text-blue-600">{viaje.contadores.bostezos}</p>
+            <p className="text-xs text-gray-600">🥱 Bostezos</p>
+          </div>
+          <div className="text-center p-2 bg-purple-50 rounded-lg">
+            <p className="text-xl font-bold text-purple-600">{viaje.contadores.frotamiento_ojos}</p>
+            <p className="text-xs text-gray-600">🤚 Frotamientos</p>
+          </div>
+          <div className="text-center p-2 bg-gray-100 rounded-lg">
+            <p className="text-xl font-bold text-gray-700">{viaje.contadores.total_alertas}</p>
+            <p className="text-xs text-gray-600">📈 Total</p>
+          </div>
+          <div className="text-center p-2 bg-green-50 rounded-lg">
+            <p className="text-xl font-bold text-green-600">{viaje.distancia_km?.toFixed(1) || '—'}</p>
+            <p className="text-xs text-gray-600">📍 km</p>
+          </div>
+        </div>
 
-          {/* Info del viaje */}
-          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-            <span><strong>Duración:</strong> {viaje.duracion_estimada}</span>
-            <span><strong>Fecha:</strong> {viaje.fecha_viaje_programada}</span>
-            <span><strong>Hora:</strong> {viaje.hora_viaje_programada?.slice(0, 5)}</span>
-          </div>
+        {/* Info adicional - Mostrar posición actual del display */}
+        <div className="mt-3 pt-3 border-t border-gray-200 flex flex-wrap gap-4 text-sm text-gray-600">
+          <span><strong>Duración:</strong> {viaje.duracion_estimada}</span>
+          <span><strong>Fecha:</strong> {viaje.fecha_viaje_programada}</span>
+          <span><strong>Hora:</strong> {viaje.hora_viaje_programada?.slice(0, 5)}</span>
+          {viaje.fecha_inicio && (
+            <span><strong>Inicio:</strong> {new Date(viaje.fecha_inicio).toLocaleString('es-BO')}</span>
+          )}
+          {posicionDisplay && (
+            <span className="text-indigo-600">
+              <strong>📍 GPS:</strong> {posicionDisplay.lat.toFixed(6)}, {posicionDisplay.lng.toFixed(6)}
+              {posicionDisplay.velocidad !== null && ` | ${posicionDisplay.velocidad.toFixed(1)} km/h`}
+            </span>
+          )}
         </div>
       </div>
     </div>

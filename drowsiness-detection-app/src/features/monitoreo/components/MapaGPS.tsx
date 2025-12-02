@@ -1,23 +1,21 @@
-// ============================================
 // MAPA GPS CON LEAFLET Y ROUTING MACHINE
-// Muestra ruta entre origen/destino y ubicación del chofer
-// Similar al ejemplo gps-maps.html
-// ============================================
+// Muestra ruta entre origen/destino y ubicación del chofer en tiempo real
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
-import type { PosicionGPS, EventoMonitoreo } from '../types';
-import { EVENTO_CONFIG } from '../types';
-import GPSStatusIndicator from './GPSStatusIndicator';
-import VelocidadIndicator from './VelocidadIndicator';
 
-// Arreglar iconos de Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
+import { GPSStatusIndicator } from './GPSStatusIndicator';
+import { VelocidadIndicator } from './VelocidadIndicator';
+import { EVENTO_CONFIG } from '../types';
+import type { PosicionGPS, EventoMonitoreo, GPSRealtimeStatus } from '../types';
+
+// Arreglar iconos de Leaflet
 const DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -27,11 +25,16 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapaGPSProps {
-  posicionActual: PosicionGPS | null;
+  //  posición inicial en lugar de posición que cambia constantemente
+  posicionInicial: PosicionGPS | null;
   eventos: EventoMonitoreo[];
   origen: string;
   destino: string;
   rutaNombre?: string;
+  isChoferOnline?: boolean;
+  connectionStatus?: GPSRealtimeStatus;
+  // Callback para registrar el actualizador de posición
+  onPosicionCallbackReady?: (callback: (pos: PosicionGPS) => void) => void;
 }
 
 interface CoordsResult {
@@ -46,12 +49,18 @@ interface RutaInfo {
   coordDestino: CoordsResult | null;
 }
 
+// Cache global para geocodificación (evita peticiones repetidas)
+const geocodeCache = new Map<string, CoordsResult | null>();
+
 export const MapaGPS: React.FC<MapaGPSProps> = ({
-  posicionActual,
+  posicionInicial,
   eventos,
   origen,
   destino,
   rutaNombre,
+  isChoferOnline = false,
+  connectionStatus = 'DISCONNECTED',
+  onPosicionCallbackReady,
 }) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -59,8 +68,17 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
   const choferMarkerRef = useRef<L.CircleMarker | null>(null);
   const originMarkerRef = useRef<L.CircleMarker | null>(null);
   const destMarkerRef = useRef<L.CircleMarker | null>(null);
-  const userMarkerRef = useRef<L.CircleMarker | null>(null);
   const eventMarkersRef = useRef<L.CircleMarker[]>([]);
+  
+  // Ref para controlar si la ruta ya fue calculada
+  const rutaCalculadaRef = useRef<boolean>(false);
+  const origenDestinoRef = useRef<string>('');
+  
+  // Estado para saber si el mapa está listo
+  const [mapReady, setMapReady] = useState(false);
+  
+  // Estado interno para la posición actual del chofer (para UI del panel)
+  const [posicionActual, setPosicionActual] = useState<PosicionGPS | null>(posicionInicial);
   
   const [rutaInfo, setRutaInfo] = useState<RutaInfo>({
     distanciaKm: 0,
@@ -81,31 +99,117 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
   const defaultLat = -17.5;
   const defaultLng = -65.0;
 
+  // Clave única para origen/destino
+  const rutaKey = useMemo(() => `${origen}|${destino}`, [origen, destino]);
+
   /**
-   * Geocodificar una ciudad usando Nominatim (igual que en el HTML)
+   * Función para actualizar la posición del chofer (llamada externamente)
+   * Esta función se llama desde el componente padre via callback
+   */
+  const actualizarPosicionChofer = useCallback((posicion: PosicionGPS) => {
+    if (!mapRef.current || !mapReady) return;
+    
+    if (!posicion || 
+        posicion.lat === null || 
+        posicion.lat === undefined ||
+        posicion.lng === null ||
+        posicion.lng === undefined ||
+        isNaN(posicion.lat) ||
+        isNaN(posicion.lng)) {
+      return;
+    }
+
+    const { lat, lng } = posicion;
+
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      console.warn('📍 Coordenadas fuera de rango:', lat, lng);
+      return;
+    }
+
+    console.log(`📍 Actualizando posición del chofer: (${lat}, ${lng})`);
+
+    const markerColor = isChoferOnline ? '#3B82F6' : '#9CA3AF';
+    const borderColor = isChoferOnline ? '#1E40AF' : '#6B7280';
+
+    if (choferMarkerRef.current) {
+      // Solo actualizar posición del marcador existente
+      choferMarkerRef.current.setLatLng([lat, lng]);
+      choferMarkerRef.current.setStyle({
+        fillColor: markerColor,
+        color: borderColor,
+      });
+    } else {
+      // Crear marcador solo si no existe
+      choferMarkerRef.current = L.circleMarker([lat, lng], {
+        radius: 12,
+        fillColor: markerColor,
+        fillOpacity: 1,
+        color: borderColor,
+        weight: 4,
+      }).addTo(mapRef.current);
+
+      choferMarkerRef.current.bindPopup(`
+        <div style="text-align: center; padding: 8px;">
+          <strong style="color: #1E40AF;">🚗 Chofer en Ruta</strong><br/>
+          <span>Posición actual</span>
+        </div>
+      `);
+    }
+
+    // Actualizar estado interno para mostrar en el panel
+    setPosicionActual(posicion);
+    
+    // Actualizar estado GPS
+    setEstadoGPS(prev => ({
+      ...prev,
+      conectado: isChoferOnline,
+      senal: isChoferOnline ? 8 : 0,
+      precision: posicion.precision || 0,
+      ultimaActualizacion: posicion.timestamp,
+    }));
+  }, [mapReady, isChoferOnline]);
+
+  /**
+   * Geocodificar una ciudad usando Nominatim CON CACHE
    */
   const geocodificarCiudad = useCallback(async (query: string): Promise<CoordsResult | null> => {
-    // Agregar ", Bolivia" para mejorar precisión
+    // Verificar cache primero
+    if (geocodeCache.has(query)) {
+      return geocodeCache.get(query) || null;
+    }
+    
     const searchQuery = query.toLowerCase().includes('bolivia') ? query : `${query}, Bolivia`;
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`;
     
     try {
+      await new Promise(resolve => setTimeout(resolve, 1100));
+      
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'SistemaDeteccionSomnolencia/1.0'
+          'User-Agent': 'SistemaDeteccionSomnolencia/1.0 (contacto@ejemplo.com)'
         }
       });
+      
+      if (!response.ok) {
+        if (response.status === 429) {
+          console.warn('⚠️ Rate limit de Nominatim alcanzado');
+          return null;
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
       
       const data = await response.json();
       
       if (data && data.length > 0) {
-        return {
+        const result = {
           lat: parseFloat(data[0].lat),
           lng: parseFloat(data[0].lon),
         };
+        geocodeCache.set(query, result);
+        return result;
       }
       
-      console.warn(`No se encontraron coordenadas para: ${query}`);
+      geocodeCache.set(query, null);
       return null;
     } catch (error) {
       console.error('Error geocodificando:', query, error);
@@ -114,31 +218,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
   }, []);
 
   /**
-   * Limpiar ruta y marcadores anteriores
-   */
-  const limpiarMapa = useCallback(() => {
-    if (routingControlRef.current && mapRef.current) {
-      try {
-        mapRef.current.removeControl(routingControlRef.current);
-      } catch (e) {
-        // Ignorar error si ya fue removido
-      }
-      routingControlRef.current = null;
-    }
-    
-    if (originMarkerRef.current) {
-      originMarkerRef.current.remove();
-      originMarkerRef.current = null;
-    }
-    
-    if (destMarkerRef.current) {
-      destMarkerRef.current.remove();
-      destMarkerRef.current = null;
-    }
-  }, []);
-
-  /**
-   * Inicializar mapa
+   * Inicializar mapa (solo una vez)
    */
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -149,26 +229,67 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
       zoomControl: true,
     });
 
-    // Capa de OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19,
     }).addTo(map);
 
     mapRef.current = map;
+    setMapReady(true);
 
     return () => {
-      limpiarMapa();
+      // Limpiar todo al desmontar
+      if (routingControlRef.current && map) {
+        try {
+          map.removeControl(routingControlRef.current);
+        } catch { /* ignorar */ }
+        routingControlRef.current = null;
+      }
+      if (choferMarkerRef.current) {
+        choferMarkerRef.current.remove();
+        choferMarkerRef.current = null;
+      }
+      if (originMarkerRef.current) {
+        originMarkerRef.current.remove();
+        originMarkerRef.current = null;
+      }
+      if (destMarkerRef.current) {
+        destMarkerRef.current.remove();
+        destMarkerRef.current = null;
+      }
+      eventMarkersRef.current.forEach(m => m.remove());
+      eventMarkersRef.current = [];
+      
       map.remove();
       mapRef.current = null;
+      setMapReady(false);
     };
-  }, [limpiarMapa]);
+  }, []);
 
   /**
-   * Calcular y mostrar ruta cuando cambian origen/destino
+   * Registrar el callback cuando el mapa esté listo
    */
   useEffect(() => {
-    if (!mapRef.current || !origen || !destino) return;
+    if (mapReady && onPosicionCallbackReady) {
+      console.log('🗺️ Registrando callback de posición GPS');
+      onPosicionCallbackReady(actualizarPosicionChofer);
+    }
+  }, [mapReady, onPosicionCallbackReady, actualizarPosicionChofer]);
+
+  /**
+   * Calcular ruta SOLO cuando cambian origen/destino y el mapa está listo
+   */
+  useEffect(() => {
+    // No hacer nada si el mapa no está listo
+    if (!mapReady || !mapRef.current || !origen || !destino) return;
+    
+    // Verificar si ya calculamos esta ruta
+    if (origenDestinoRef.current === rutaKey && rutaCalculadaRef.current) {
+      console.log('🗺️ Ruta ya calculada, omitiendo:', rutaKey);
+      return;
+    }
+
+    let isMounted = true;
 
     const calcularRuta = async () => {
       setCargandoRuta(true);
@@ -176,20 +297,18 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
 
       console.log(`🗺️ Calculando ruta: ${origen} → ${destino}`);
 
-      // Geocodificar origen y destino
       const [coordOrigen, coordDestino] = await Promise.all([
         geocodificarCiudad(origen),
         geocodificarCiudad(destino),
       ]);
 
-      if (!coordOrigen) {
-        setErrorRuta(`No se encontró: ${origen}`);
-        setCargandoRuta(false);
+      if (!isMounted || !mapRef.current) {
+        console.log('⚠️ Componente desmontado, cancelando actualización de ruta');
         return;
       }
 
-      if (!coordDestino) {
-        setErrorRuta(`No se encontró: ${destino}`);
+      if (!coordOrigen || !coordDestino) {
+        setErrorRuta(`No se encontró: ${!coordOrigen ? origen : destino}`);
         setCargandoRuta(false);
         return;
       }
@@ -203,58 +322,62 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
         coordDestino,
       }));
 
-      // Limpiar ruta anterior
-      limpiarMapa();
+      // Limpiar ruta anterior si existe
+      if (routingControlRef.current && mapRef.current) {
+        try {
+          mapRef.current.removeControl(routingControlRef.current);
+        } catch { /* ignorar */ }
+        routingControlRef.current = null;
+      }
+
+      if (originMarkerRef.current) {
+        originMarkerRef.current.remove();
+        originMarkerRef.current = null;
+      }
+      if (destMarkerRef.current) {
+        destMarkerRef.current.remove();
+        destMarkerRef.current = null;
+      }
 
       // Crear marcador de origen (verde)
-      const originMarkerOptions = {
-        radius: 10,
-        fillColor: '#22C55E',
-        fillOpacity: 1,
-        color: '#166534',
-        weight: 3,
-      };
-
       originMarkerRef.current = L.circleMarker(
         [coordOrigen.lat, coordOrigen.lng], 
-        originMarkerOptions
-      ).addTo(mapRef.current!);
-      
+        {
+          radius: 10,
+          fillColor: '#22C55E',
+          fillOpacity: 1,
+          color: '#166534',
+          weight: 3,
+        }
+      ).addTo(mapRef.current);
+
       originMarkerRef.current.bindPopup(`
         <div style="text-align: center; padding: 8px;">
           <strong style="color: #166534;">📍 Origen</strong><br/>
-          <span style="font-size: 14px; font-weight: bold;">${origen}</span><br/>
-          <small style="color: #666;">
-            ${coordOrigen.lat.toFixed(5)}, ${coordOrigen.lng.toFixed(5)}
-          </small>
+          <span>${origen}</span>
         </div>
       `);
 
       // Crear marcador de destino (rojo)
-      const destMarkerOptions = {
-        radius: 10,
-        fillColor: '#EF4444',
-        fillOpacity: 1,
-        color: '#B91C1C',
-        weight: 3,
-      };
-
       destMarkerRef.current = L.circleMarker(
         [coordDestino.lat, coordDestino.lng], 
-        destMarkerOptions
-      ).addTo(mapRef.current!);
-      
+        {
+          radius: 10,
+          fillColor: '#EF4444',
+          fillOpacity: 1,
+          color: '#B91C1C',
+          weight: 3,
+        }
+      ).addTo(mapRef.current);
+
       destMarkerRef.current.bindPopup(`
         <div style="text-align: center; padding: 8px;">
-          <strong style="color: #B91C1C;">🎯 Destino</strong><br/>
-          <span style="font-size: 14px; font-weight: bold;">${destino}</span><br/>
-          <small style="color: #666;">
-            ${coordDestino.lat.toFixed(5)}, ${coordDestino.lng.toFixed(5)}
-          </small>
+          <strong style="color: #B91C1C;">🏁 Destino</strong><br/>
+          <span>${destino}</span>
         </div>
       `);
 
-      // Crear control de routing (igual que en el HTML)
+      // Crear ruta con Leaflet Routing Machine
       try {
         routingControlRef.current = L.Routing.control({
           waypoints: [
@@ -262,9 +385,8 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
             L.latLng(coordDestino.lat, coordDestino.lng),
           ],
           routeWhileDragging: false,
-          draggableWaypoints: false,
           addWaypoints: false,
-          createMarker: () => null, // No crear marcadores adicionales
+          draggableWaypoints: false,
           lineOptions: {
             styles: [{ 
               color: '#3B82F6', 
@@ -274,12 +396,14 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
             extendToWaypoints: true,
             missingRouteTolerance: 0,
           },
-          show: false, // Ocultar panel de instrucciones
+          show: false,
           fitSelectedRoutes: true,
-        }).addTo(mapRef.current!);
+          createMarker: () => null,
+        }).addTo(mapRef.current);
 
-        // Escuchar cuando se encuentra la ruta
         routingControlRef.current.on('routesfound', (e: L.Routing.RoutingResultEvent) => {
+          if (!isMounted) return;
+          
           const routes = e.routes;
           if (routes && routes.length > 0) {
             const summary = routes[0].summary;
@@ -293,164 +417,116 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
             }));
 
             console.log(`✅ Ruta calculada: ${distanciaKm.toFixed(1)} km, ${tiempoMinutos} min`);
+            
+            // MARCAR COMO CALCULADA
+            rutaCalculadaRef.current = true;
+            origenDestinoRef.current = rutaKey;
           }
+          
           setCargandoRuta(false);
         });
 
-        routingControlRef.current.on('routingerror', (e: L.Routing.RoutingErrorEvent) => {
-          console.error('Error calculando ruta:', e.error);
-          
-          // Fallback: calcular distancia en línea recta con Haversine
-          const distanciaDirecta = calcularDistanciaHaversine(
-            coordOrigen.lat, coordOrigen.lng,
-            coordDestino.lat, coordDestino.lng
-          );
-          
-          // Estimar tiempo (promedio 50 km/h en carretera boliviana)
-          const tiempoEstimado = Math.round((distanciaDirecta / 50) * 60);
-
-          setRutaInfo(prev => ({
-            ...prev,
-            distanciaKm: distanciaDirecta,
-            tiempoMinutos: tiempoEstimado,
-          }));
-
-          // Dibujar línea directa como fallback
-          L.polyline([
-            [coordOrigen.lat, coordOrigen.lng],
-            [coordDestino.lat, coordDestino.lng]
-          ], {
-            color: '#9CA3AF',
-            weight: 4,
-            opacity: 0.6,
-            dashArray: '10, 10',
-          }).addTo(mapRef.current!);
-
-          setErrorRuta('No se pudo calcular ruta exacta. Mostrando línea directa.');
+        routingControlRef.current.on('routingerror', () => {
+          if (!isMounted) return;
+          setErrorRuta('No se pudo calcular la ruta');
           setCargandoRuta(false);
         });
 
       } catch (error) {
-        console.error('Error creando routing control:', error);
-        setCargandoRuta(false);
+        console.error('Error creando ruta:', error);
+        if (isMounted) {
+          setErrorRuta('Error al calcular la ruta');
+          setCargandoRuta(false);
+        }
       }
-
-      // Ajustar vista para mostrar origen y destino
-      const bounds = L.latLngBounds([
-        [coordOrigen.lat, coordOrigen.lng],
-        [coordDestino.lat, coordDestino.lng],
-      ]);
-      mapRef.current!.fitBounds(bounds, { padding: [80, 80] });
     };
 
     calcularRuta();
-  }, [origen, destino, geocodificarCiudad, limpiarMapa]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [mapReady, rutaKey, geocodificarCiudad, origen, destino]);
 
   /**
-   * Actualizar posición del chofer
+   * Actualizar estado GPS basado en conexión (sin afectar posición)
    */
   useEffect(() => {
-    if (!mapRef.current || !posicionActual) return;
+    setEstadoGPS(prev => ({
+      ...prev,
+      conectado: isChoferOnline,
+      senal: isChoferOnline ? (posicionActual ? 8 : 4) : 0,
+    }));
+  }, [isChoferOnline, posicionActual]);
 
-    const { lat, lng, velocidad, precision } = posicionActual;
-
-    // Actualizar o crear marcador del chofer
-    if (choferMarkerRef.current) {
-      choferMarkerRef.current.setLatLng([lat, lng]);
-    } else {
-      // Crear marcador con estilo azul pulsante
-      choferMarkerRef.current = L.circleMarker([lat, lng], {
-        radius: 12,
-        fillColor: '#3B82F6',
-        fillOpacity: 1,
-        color: '#1E40AF',
-        weight: 4,
-      }).addTo(mapRef.current);
-
-      choferMarkerRef.current.bindPopup(`
-        <div style="text-align: center; padding: 8px;">
-          <strong style="color: #1E40AF;">🚗 Chofer en Ruta</strong><br/>
-          <span>Posición actual</span><br/>
-          <small style="color: #666;">
-            ${lat.toFixed(6)}, ${lng.toFixed(6)}
-          </small>
-        </div>
-      `);
+  /**
+   * Mostrar posición inicial si existe (solo una vez al cargar)
+   */
+  useEffect(() => {
+    if (mapReady && posicionInicial && !choferMarkerRef.current) {
+      actualizarPosicionChofer(posicionInicial);
     }
-
-    // Actualizar estado GPS
-    setEstadoGPS({
-      conectado: true,
-      senal: 8,
-      precision: precision || 5,
-      ultimaActualizacion: posicionActual.timestamp,
-    });
-  }, [posicionActual]);
+  }, [mapReady, posicionInicial, actualizarPosicionChofer]);
 
   /**
-   * Mostrar marcadores de eventos de somnolencia
+   * Mostrar marcadores de eventos
    */
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !mapReady) return;
 
     // Limpiar marcadores anteriores
     eventMarkersRef.current.forEach(marker => marker.remove());
     eventMarkersRef.current = [];
 
-    // Agregar marcadores de eventos con GPS
     eventos
       .filter(e => e.latitud && e.longitud)
       .forEach(evento => {
-        const config = EVENTO_CONFIG[evento.tipo_evento];
-        const colorMap: Record<string, string> = {
+        const config = EVENTO_CONFIG[evento.tipo_evento] || { 
+          icon: '⚠️', 
+          color: 'text-gray-600', 
+          label: evento.tipo_evento 
+        };
+        
+        const severityColors: Record<string, string> = {
           CRITICAL: '#EF4444',
           HIGH: '#F97316',
           MEDIUM: '#EAB308',
           NORMAL: '#22C55E',
         };
+        
+        const color = severityColors[evento.nivel_severidad] || '#6B7280';
 
         const marker = L.circleMarker([evento.latitud!, evento.longitud!], {
           radius: 8,
-          fillColor: colorMap[evento.nivel_severidad] || '#6B7280',
-          fillOpacity: 0.9,
-          color: '#fff',
+          fillColor: color,
+          fillOpacity: 0.8,
+          color: '#FFF',
           weight: 2,
         }).addTo(mapRef.current!);
 
         marker.bindPopup(`
-          <div style="text-align: center; padding: 8px;">
-            <span style="font-size: 24px;">${config?.icon || '⚠️'}</span>
-            <strong style="display: block;">${config?.label || evento.tipo_evento}</strong>
+          <div style="text-align: center; padding: 8px; min-width: 120px;">
+            <span style="font-size: 24px;">${config.icon}</span>
+            <br/>
+            <strong>${config.label}</strong>
+            <br/>
+            <small style="color: ${color};">${evento.nivel_severidad}</small>
+            <br/>
             <small style="color: #666;">
-              ${new Date(evento.timestamp_evento).toLocaleTimeString('es-BO')}
+              ${new Date(evento.timestamp_evento).toLocaleTimeString()}
             </small>
           </div>
         `);
 
         eventMarkersRef.current.push(marker);
       });
-  }, [eventos]);
-
-  /**
-   * Calcular distancia Haversine (fallback)
-   */
-  const calcularDistanciaHaversine = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Radio de la Tierra en km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
+  }, [eventos, mapReady]);
 
   /**
    * Formatear tiempo
    */
   const formatearTiempo = (minutos: number): string => {
-    if (minutos < 60) return `${minutos} min`;
+    if (minutos < 60) return `${minutos}min`;
     const horas = Math.floor(minutos / 60);
     const mins = minutos % 60;
     return `${horas}h ${mins > 0 ? `${mins}min` : ''}`;
@@ -458,16 +534,16 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
 
   return (
     <div className="relative h-full w-full rounded-xl overflow-hidden shadow-lg border border-gray-200">
-      {/* Contenedor del mapa */}
+      {/* Contenedor del mapa - altura completa */}
       <div ref={mapContainerRef} className="h-full w-full" style={{ minHeight: '100%' }} />
 
-      {/* Panel de información GPS (arriba izquierda) */}
+      {/* Indicador de estado GPS (arriba izquierda) */}
       <div className="absolute top-4 left-4 z-[1000]">
         <GPSStatusIndicator estado={estadoGPS} />
       </div>
 
       {/* Panel de información de ruta (arriba derecha) */}
-      <div className="absolute top-4 right-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 min-w-[220px] max-w-[280px]">
+      <div className="absolute top-4 right-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 min-w-[220px] max-w-[300px]">
         <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
           <span>🗺️</span> Información de Ruta
         </h4>
@@ -487,8 +563,13 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
             <div className="flex items-start gap-2">
               <span className="w-3 h-3 bg-green-500 rounded-full mt-1 flex-shrink-0"></span>
               <div>
-                <span className="text-gray-500 text-xs">Origen:</span>
-                <p className="font-medium text-gray-800">{origen}</p>
+                <p className="text-xs text-gray-500">Origen:</p>
+                <p className="font-semibold text-gray-800">{origen}</p>
+                {rutaInfo.coordOrigen && (
+                  <p className="text-xs text-gray-400">
+                    {rutaInfo.coordOrigen.lat.toFixed(5)}, {rutaInfo.coordOrigen.lng.toFixed(5)}
+                  </p>
+                )}
               </div>
             </div>
             
@@ -496,8 +577,13 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
             <div className="flex items-start gap-2">
               <span className="w-3 h-3 bg-red-500 rounded-full mt-1 flex-shrink-0"></span>
               <div>
-                <span className="text-gray-500 text-xs">Destino:</span>
-                <p className="font-medium text-gray-800">{destino}</p>
+                <p className="text-xs text-gray-500">Destino:</p>
+                <p className="font-semibold text-gray-800">{destino}</p>
+                {rutaInfo.coordDestino && (
+                  <p className="text-xs text-gray-400">
+                    {rutaInfo.coordDestino.lat.toFixed(5)}, {rutaInfo.coordDestino.lng.toFixed(5)}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -509,43 +595,48 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
                 <span className="text-gray-600 flex items-center gap-1">
                   <span>📏</span> Distancia:
                 </span>
-                <span className="font-bold text-indigo-600 text-lg">
+                <span className="font-bold text-indigo-600">
                   {rutaInfo.distanciaKm.toFixed(1)} km
                 </span>
               </div>
-
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 flex items-center gap-1">
                   <span>⏱️</span> Tiempo est.:
                 </span>
-                <span className="font-bold text-indigo-600 text-lg">
+                <span className="font-bold text-indigo-600">
                   {formatearTiempo(rutaInfo.tiempoMinutos)}
                 </span>
               </div>
             </div>
-
-            {/* Coordenadas */}
-            {rutaInfo.coordOrigen && rutaInfo.coordDestino && (
-              <div className="text-xs text-gray-400 pt-2 border-t border-gray-100 space-y-1">
-                <p>
-                  <strong>Origen:</strong> {rutaInfo.coordOrigen.lat.toFixed(5)}, {rutaInfo.coordOrigen.lng.toFixed(5)}
-                </p>
-                <p>
-                  <strong>Destino:</strong> {rutaInfo.coordDestino.lat.toFixed(5)}, {rutaInfo.coordDestino.lng.toFixed(5)}
-                </p>
-              </div>
+            
+            {/* Posición actual del chofer */}
+            {posicionActual && posicionActual.lat && posicionActual.lng && (
+              <>
+                <hr className="border-gray-200" />
+                <div className="flex items-start gap-2">
+                  <span className="w-3 h-3 bg-blue-500 rounded-full mt-1 flex-shrink-0 animate-pulse"></span>
+                  <div>
+                    <p className="text-xs text-gray-500">Chofer en ruta</p>
+                    <p className="text-xs text-gray-600">
+                      📍 {posicionActual.lat.toFixed(6)}, {posicionActual.lng.toFixed(6)}
+                    </p>
+                    {posicionActual.velocidad !== null && posicionActual.velocidad !== undefined && (
+                      <p className="text-xs text-gray-600">
+                        🚗 {posicionActual.velocidad.toFixed(1)} km/h
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </>
             )}
           </div>
         )}
       </div>
 
-      {/* Badge de ruta (abajo izquierda) */}
+      {/* Nombre de ruta si existe */}
       {rutaNombre && (
-        <div className="absolute bottom-6 left-6 z-[1000] bg-white/95 backdrop-blur-sm rounded-lg shadow-md px-4 py-2">
-          <div className="flex items-center gap-2">
-            <span className="text-red-500">📍</span>
-            <span className="font-medium text-gray-800">{rutaNombre}</span>
-          </div>
+        <div className="absolute bottom-20 left-4 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg shadow-md px-3 py-2">
+          <span className="text-sm font-medium text-gray-700">🛣️ {rutaNombre}</span>
         </div>
       )}
 
@@ -554,12 +645,30 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
         <VelocidadIndicator velocidad={posicionActual.velocidad} />
       )}
 
-      {/* Mensaje si no hay posición del chofer pero sí hay ruta */}
-      {!posicionActual && !cargandoRuta && rutaInfo.distanciaKm > 0 && (
+      {/* Mensajes de estado */}
+      {isChoferOnline && (!posicionActual || !posicionActual.lat) && connectionStatus === 'CONNECTED' && (
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[1000] bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 shadow-md">
+          <div className="flex items-center gap-2 text-blue-700">
+            <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            <span className="text-sm">Esperando primera posición GPS...</span>
+          </div>
+        </div>
+      )}
+
+      {!isChoferOnline && (!posicionActual || !posicionActual.lat) && !cargandoRuta && rutaInfo.distanciaKm > 0 && (
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[1000] bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 shadow-md">
           <div className="flex items-center gap-2 text-amber-700">
             <span>📡</span>
             <span className="text-sm">Esperando señal GPS del chofer...</span>
+          </div>
+        </div>
+      )}
+
+      {connectionStatus === 'DISCONNECTED' && (
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[1000] bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 shadow-md">
+          <div className="flex items-center gap-2 text-gray-600">
+            <span>⚫</span>
+            <span className="text-sm">Sin conexión GPS</span>
           </div>
         </div>
       )}

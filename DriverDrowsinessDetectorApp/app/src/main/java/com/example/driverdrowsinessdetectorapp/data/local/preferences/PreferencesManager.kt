@@ -32,6 +32,7 @@ class PreferencesManager @Inject constructor(
     private val KEY_USERNAME = stringPreferencesKey(Constants.KEY_USERNAME)
     private val KEY_FULL_NAME = stringPreferencesKey(Constants.KEY_FULL_NAME)
     private val KEY_ROLE = stringPreferencesKey(Constants.KEY_ROLE)
+    private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
 
     // Save auth data (con refresh token)
     suspend fun saveAuthData(accessToken: String, refreshToken: String, user: User) {
@@ -113,5 +114,31 @@ class PreferencesManager @Inject constructor(
     // Check if user is logged in
     fun isLoggedIn(): Flow<Boolean> = dataStore.data.map { prefs ->
         !prefs[KEY_TOKEN].isNullOrBlank()
+    }
+
+    /**
+     * Obtiene el token de acceso guardado.
+     */
+    fun getAccessToken(): Flow<String?> = dataStore.data
+        .map { preferences ->
+            preferences[ACCESS_TOKEN_KEY]
+        }
+    
+    /**
+     * Guarda el token de acceso.
+     */
+    suspend fun saveAccessToken(token: String) {
+        dataStore.edit { preferences ->
+            preferences[ACCESS_TOKEN_KEY] = token
+        }
+    }
+    
+    /**
+     * Limpia el token de acceso.
+     */
+    suspend fun clearAccessToken() {
+        dataStore.edit { preferences ->
+            preferences.remove(ACCESS_TOKEN_KEY)
+        }
     }
 }
