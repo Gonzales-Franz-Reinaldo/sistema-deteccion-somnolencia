@@ -302,8 +302,8 @@ def obtener_eventos_viaje(
     description="Dashboard admin: eventos de los últimos X minutos."
 )
 def obtener_eventos_recientes(
-    minutos: int = Query(60, ge=5, le=1440, description="Últimos X minutos"),
-    limite: int = Query(100, ge=1, le=500),
+    minutos: int = Query(60, ge=5, le=10080, description="Últimos X minutos (máximo 7 días)"),
+    limite: int = Query(100, ge=1, le=500, description="Límite de resultados"),
     solo_criticos: bool = Query(False, description="Solo eventos CRITICAL y HIGH"),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
@@ -314,11 +314,14 @@ def obtener_eventos_recientes(
     Usado para monitoreo en tiempo real. Retorna eventos
     de todos los choferes en los últimos X minutos.
     """
+    # Verificar permisos
     if current_user.rol != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo el administrador puede acceder a este endpoint"
         )
+    
+    logger.info(f"📊 Consultando eventos recientes: minutos={minutos}, limite={limite}, solo_criticos={solo_criticos}")
     
     eventos = crud_eventos.obtener_eventos_recientes(
         db=db,
@@ -327,22 +330,27 @@ def obtener_eventos_recientes(
         solo_criticos=solo_criticos
     )
     
-    # Agregar nombre del chofer
+    logger.info(f"📊 Encontrados {len(eventos)} eventos")
+    
+    # Agregar nombre del chofer a cada evento
     resultado = []
     for evento in eventos:
-        evento_dict = {
-            "id_evento": evento.id_evento,
-            "tipo_evento": evento.tipo_evento,
-            "nivel_severidad": evento.nivel_severidad,
-            "duracion_segundos": float(evento.duracion_segundos) if evento.duracion_segundos else None,
-            "cantidad_eventos": evento.cantidad_eventos,
-            "timestamp_evento": evento.timestamp_evento,
-            "latitud": float(evento.latitud) if evento.latitud else None,
-            "longitud": float(evento.longitud) if evento.longitud else None,
-            "velocidad_kmh": evento.velocidad_kmh,
-            "nombre_chofer": evento.chofer.nombre_completo if evento.chofer else None
-        }
-        resultado.append(EventoConChofer(**evento_dict))
+        # Obtener nombre del chofer
+        chofer = db.query(Usuario).filter(Usuario.id_usuario == evento.id_chofer).first()
+        nombre_chofer = chofer.nombre_completo if chofer else "Desconocido"
+        
+        resultado.append(EventoConChofer(
+            id_evento=evento.id_evento,
+            tipo_evento=evento.tipo_evento,
+            nivel_severidad=evento.nivel_severidad,
+            duracion_segundos=float(evento.duracion_segundos) if evento.duracion_segundos else None,
+            cantidad_eventos=evento.cantidad_eventos,
+            timestamp_evento=evento.timestamp_evento,
+            latitud=float(evento.latitud) if evento.latitud else None,
+            longitud=float(evento.longitud) if evento.longitud else None,
+            velocidad_kmh=evento.velocidad_kmh,
+            nombre_chofer=nombre_chofer
+        ))
     
     return resultado
 
