@@ -129,10 +129,13 @@ class NotificationService:
         
         return sent_count
     
+    
+    
+
     async def notify_evento_batch(
         self,
-        eventos: List[EventoSomnolencia],
-        db: Optional[Session] = None
+        eventos: List,
+        db = None
     ) -> int:
         """
         Notifica sobre un batch de eventos sincronizados.
@@ -140,31 +143,77 @@ class NotificationService:
         Solo notifica si hay eventos críticos en el batch.
         
         Args:
-            eventos: Lista de eventos
+            eventos: Lista de eventos de somnolencia
             db: Sesión de base de datos
             
         Returns:
             Número de notificaciones enviadas
         """
+        if not eventos:
+            return 0
+        
         # Filtrar solo eventos críticos
         eventos_criticos = [
             e for e in eventos 
-            if self._requires_notification(e)
+            if e.nivel_severidad in ("CRITICAL", "HIGH") or 
+            e.tipo_evento in ("microsueno", "cabeceo")
         ]
         
         if not eventos_criticos:
+            logger.info(f"📦 Batch de {len(eventos)} eventos sin eventos críticos")
             return 0
+        
+        logger.info(f"🔔 Batch con {len(eventos_criticos)} eventos críticos de {len(eventos)} totales")
         
         # Si hay muchos eventos críticos, enviar resumen
         if len(eventos_criticos) > 3:
-            return await self._notify_batch_summary(eventos_criticos, db)
+            # Obtener info del chofer del primer evento
+            id_chofer = eventos[0].id_chofer
+            id_viaje = eventos[0].id_viaje
+            
+            # Contar por tipo
+            microsuenos = sum(1 for e in eventos_criticos if e.tipo_evento == "microsueno")
+            cabeceos = sum(1 for e in eventos_criticos if e.tipo_evento == "cabeceo")
+            
+            # Obtener nombre del chofer
+            nombre_chofer = "Chofer"
+            if db:
+                from app.models.user import Usuario
+                chofer = db.query(Usuario).filter(Usuario.id_usuario == id_chofer).first()
+                if chofer:
+                    nombre_chofer = chofer.nombre_completo
+            
+            # Crear mensaje de resumen
+            mensaje = {
+                "type": "NOTIF_BATCH_SOMNOLENCIA",
+                "data": {
+                    "id_viaje": id_viaje,
+                    "id_chofer": id_chofer,
+                    "nombre_chofer": nombre_chofer,
+                    "total_eventos": len(eventos),
+                    "eventos_criticos": len(eventos_criticos),
+                    "microsuenos": microsuenos,
+                    "cabeceos": cabeceos,
+                    "mensaje": f"⚠️ {nombre_chofer} sincronizó {len(eventos)} eventos offline ({len(eventos_criticos)} críticos)",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+            
+            sent_count = await self._broadcast_to_admins(mensaje)
+            logger.info(f"📤 Resumen de batch enviado a {sent_count} admins")
+            return sent_count
         
-        # Si son pocos, notificar individualmente
+        # Si son pocos eventos críticos, notificar individualmente
         total_sent = 0
-        for evento in eventos_criticos:
-            total_sent += await self.notify_evento_somnolencia(evento, db=db)
+        for evento in eventos_criticos[:5]:  # Máximo 5 notificaciones individuales
+            try:
+                sent = await self.notify_evento_somnolencia(evento, db=db)
+                total_sent += sent
+            except Exception as e:
+                logger.error(f"Error notificando evento {evento.id_evento}: {e}")
         
         return total_sent
+
     
     async def notify_alerta_chofer(
         self,

@@ -11,6 +11,7 @@ import com.example.driverdrowsinessdetectorapp.domain.model.MetricasSomnolencia
 import com.example.driverdrowsinessdetectorapp.domain.repository.ViajeRepository
 import com.example.driverdrowsinessdetectorapp.domain.session.SessionManager
 import com.example.driverdrowsinessdetectorapp.domain.usecase.evento.SaveEventoSomnolenciaUseCase
+import com.example.driverdrowsinessdetectorapp.domain.usecase.evento.SendEventoRealtimeUseCase
 import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.DetectDrowsinessUseCase
 import com.example.driverdrowsinessdetectorapp.domain.usecase.monitoring.ProcessFrameUseCase
 import com.example.driverdrowsinessdetectorapp.presentation.monitoring.ui.EventosStats
@@ -43,10 +44,13 @@ class MonitoringViewModel @Inject constructor(
     private val saveEventoSomnolenciaUseCase: SaveEventoSomnolenciaUseCase,
     private val viajeRepository: ViajeRepository,
     
-    // ═══ NUEVAS DEPENDENCIAS PARA GPS ═══
+    // ═══ DEPENDENCIAS PARA GPS ═══
     private val startGPSTrackingUseCase: StartGPSTrackingUseCase,
     private val stopGPSTrackingUseCase: StopGPSTrackingUseCase,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    
+    // ═══ NUEVO: DEPENDENCIA PARA WEBSOCKET DE EVENTOS ═══
+    private val sendEventoRealtimeUseCase: SendEventoRealtimeUseCase
 ) : ViewModel() {
 
     companion object {
@@ -94,11 +98,11 @@ class MonitoringViewModel @Inject constructor(
     // Estadísticas de eventos en sesión
     private var eventosStats = EventosStats()
     
-    // ═══ NUEVO: Estado del GPS tracking ═══
+    // ═══ Estado del GPS tracking ═══
     private val _gpsTrackingState = MutableStateFlow(GPSTrackingState())
     val gpsTrackingState: StateFlow<GPSTrackingState> = _gpsTrackingState.asStateFlow()
     
-    // ═══ NUEVO: Job para observar estado GPS ═══
+    // ═══ Job para observar estado GPS ═══
     private var gpsObserverJob: Job? = null
 
     /**
@@ -169,6 +173,36 @@ class MonitoringViewModel @Inject constructor(
         stopGPSTrackingUseCase()
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // ← NUEVO: MÉTODOS PARA WEBSOCKET DE EVENTOS
+    // ═══════════════════════════════════════════════════════════════
+    
+    /**
+     * Inicia la conexión WebSocket para eventos de somnolencia.
+     */
+    private suspend fun startEventosWebSocket() {
+        val viajeId = currentViajeId ?: run {
+            Log.e(TAG, "❌ No hay viaje ID para conectar WebSocket eventos")
+            return
+        }
+        
+        try {
+            Log.d(TAG, "🔌 Conectando WebSocket de eventos para viaje $viajeId")
+            sendEventoRealtimeUseCase.connect(viajeId)
+            Log.d(TAG, "✅ WebSocket de eventos conectado")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error conectando WebSocket de eventos: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Detiene la conexión WebSocket de eventos.
+     */
+    private fun stopEventosWebSocket() {
+        Log.d(TAG, "🔌 Desconectando WebSocket de eventos")
+        sendEventoRealtimeUseCase.disconnect()
+    }
+
     /**
      * Inicia el viaje/sesión de monitoreo.
      */
@@ -190,8 +224,11 @@ class MonitoringViewModel @Inject constructor(
                 sessionStartTime = System.currentTimeMillis()
                 frameCount = 0
 
-                // Iniciar  GPS Tracking WebSocket
+                // Iniciar GPS Tracking WebSocket
                 startGPSTracking()
+                
+                // ← NUEVO: Iniciar WebSocket de eventos
+                startEventosWebSocket()
                 
                 _uiState.value = MonitoringUiState.Active(
                     sessionId = session.id,
@@ -309,6 +346,7 @@ class MonitoringViewModel @Inject constructor(
 
     /**
      *  Guarda un evento de somnolencia en Room + intenta sync inmediato
+     *  + envía notificación en tiempo real via WebSocket
      */
     private fun saveEventoSomnolencia(metrics: MetricasSomnolencia) {
         val sessionId = sessionManager.getCurrentSessionId() ?: return
@@ -395,6 +433,34 @@ class MonitoringViewModel @Inject constructor(
                 result.onSuccess { eventoId ->
                     Log.d(TAG, "✅ Evento guardado exitosamente: ID=$eventoId")
                     updateEventosStats(alertType)
+                    
+                    // ═══════════════════════════════════════════════════════════════
+                    // ← NUEVO: Enviar evento via WebSocket para notificar al admin
+                    // ═══════════════════════════════════════════════════════════════
+                    currentViajeId?.let { viajeId ->
+                        try {
+                            val duracion = when (alertType) {
+                                AlertType.MICROSLEEP -> metrics.microsleepDurations.lastOrNull()?.div(1000f) ?: 2.5f
+                                AlertType.HEAD_NODDING -> metrics.noddingDurations.lastOrNull()?.div(1000f) ?: 3.0f
+                                else -> 1.0f
+                            }
+                            
+                            sendEventoRealtimeUseCase(
+                                idViaje = viajeId,
+                                idChofer = userId,
+                                tipoEvento = alertType,
+                                nivelSeveridad = metrics.alertLevel,
+                                duracionSegundos = duracion,
+                                earPromedio = metrics.ear,
+                                marPromedio = metrics.mar
+                            )
+                            Log.i(TAG, "📤 Evento enviado via WebSocket: ${alertType.name}")
+                        } catch (e: Exception) {
+                            Log.w(TAG, "⚠️ Error enviando via WebSocket: ${e.message}")
+                        }
+                    }
+                    // ═══════════════════════════════════════════════════════════════
+                    
                 }.onFailure { error ->
                     Log.e(TAG, "❌ Error guardando evento: ${error.message}")
                 }
@@ -631,6 +697,9 @@ class MonitoringViewModel @Inject constructor(
             // Detener GPS Tracking 
             stopGPSTracking()
             
+            // ← NUEVO: Detener WebSocket de eventos
+            stopEventosWebSocket()
+            
             viajeRepository.finalizarViaje(viajeId)
                 .onSuccess { viaje ->
                     Log.d(TAG, "✅ Viaje finalizado exitosamente: ${viaje.estado}")
@@ -687,6 +756,9 @@ class MonitoringViewModel @Inject constructor(
                 detectDrowsinessUseCase.reset()
                 resetEventCooldowns()
                 
+                // ← NUEVO: Detener WebSocket de eventos
+                stopEventosWebSocket()
+                
                 _uiState.value = MonitoringUiState.Idle
                 
                 Log.d(TAG, "⏹️ Viaje detenido completamente")
@@ -730,6 +802,7 @@ class MonitoringViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopGPSTracking()
+        stopEventosWebSocket()  // ← NUEVO
         stopAlert()
 
         gpsObserverJob?.cancel()

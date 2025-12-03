@@ -2,7 +2,8 @@
 Router WebSocket para conexiones en tiempo real.
 
 Endpoints:
-- /ws/admin/{user_id} - Conexión para administradores
+- /ws/admin - Conexión para administradores (notificaciones)
+- /ws/chofer/{id_viaje} - Conexión para choferes (enviar eventos)
 - /ws/monitor - Conexión para dashboards de monitoreo
 - /ws/stats - Estadísticas de conexiones (HTTP)
 
@@ -10,12 +11,12 @@ Endpoints:
 @version 1.0
 """
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
 import logging
 import json
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
+from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import datetime
 
 from app.api.deps import get_db
 from app.services.connection_manager import (
@@ -24,8 +25,11 @@ from app.services.connection_manager import (
     WebSocketMessage
 )
 from app.services.notification_service import notification_service
+from app.services.evento_notification_service import evento_notification_service
 from app.models.user import Usuario
+from app.models.viaje import Viaje
 from app.core.security import decode_token
+from app.schemas.notificacion_somnolencia import EventoSomnolenciaWS
 
 logger = logging.getLogger(__name__)
 
@@ -35,13 +39,6 @@ router = APIRouter()
 async def verify_websocket_token(token: str, db: Session) -> Optional[Usuario]:
     """
     Verifica el token JWT para conexiones WebSocket.
-    
-    Args:
-        token: JWT token
-        db: Sesión de base de datos
-        
-    Returns:
-        Usuario si el token es válido, None en caso contrario
     """
     try:
         payload = decode_token(token)
@@ -74,32 +71,24 @@ async def websocket_admin_endpoint(
     WebSocket endpoint para administradores.
     
     Recibe notificaciones de:
-    - Eventos críticos de somnolencia
+    - Eventos de somnolencia (NOTIF_SOMNOLENCIA)
+    - Batches de eventos sincronizados (NOTIF_BATCH)
     - Alertas de choferes
     - Notificaciones del sistema
     
     Query params:
         token: JWT token de autenticación
-    
-    Mensajes recibidos:
-        - ping: Responde con pong
-        - subscribe: Suscribirse a eventos específicos
-    
-    Mensajes enviados:
-        - evento_critico: Nuevo evento de somnolencia crítico
-        - alerta_chofer: Alerta sobre un chofer
-        - sistema: Notificación del sistema
     """
     # Verificar autenticación
     user = await verify_websocket_token(token, db)
     
     if not user:
-        await websocket.close(code=4001, reason="Token inválido o expirado")
+        await websocket.close(code=4001, reason="Token inválido")
         return
     
     # Verificar que sea admin
     if user.rol != "admin":
-        await websocket.close(code=4003, reason="Solo administradores pueden conectarse")
+        await websocket.close(code=4003, reason="Acceso denegado - Solo admins")
         return
     
     user_id = user.id_usuario
@@ -112,34 +101,210 @@ async def websocket_admin_endpoint(
     )
     
     if not connected:
+        await websocket.close(code=4000, reason="Error de conexión")
         return
     
+    logger.info(f"🔌 Admin conectado para notificaciones: {user.nombre_completo} (ID: {user_id})")
+    
+    # Enviar confirmación de conexión
+    await websocket.send_json({
+        "type": "CONNECTION_ESTABLISHED",
+        "user_id": user_id,
+        "user_name": user.nombre_completo,
+        "message": "Conectado al sistema de notificaciones",
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    
     try:
-        # Loop de mensajes
         while True:
+            # Recibir mensajes del admin (ping, subscribe, etc.)
             data = await websocket.receive_text()
             
             try:
                 message = json.loads(data)
-                await handle_admin_message(user_id, message)
+                await handle_admin_message(user_id, message, websocket)
             except json.JSONDecodeError:
-                # Si no es JSON, verificar comandos simples
-                if data == "ping":
-                    await connection_manager.send_personal_message(
-                        user_id=user_id,
-                        message=WebSocketMessage(
-                            event_type="pong",
-                            data={"timestamp": "now"}
-                        ),
-                        connection_type=ConnectionType.ADMIN
-                    )
-                    
+                logger.warning(f"Mensaje no-JSON de admin {user_id}: {data}")
+                
     except WebSocketDisconnect:
-        logger.info(f"Admin {user_id} desconectado")
+        logger.info(f"🔌 Admin desconectado: {user.nombre_completo}")
     except Exception as e:
         logger.error(f"Error en WebSocket admin {user_id}: {e}")
     finally:
         await connection_manager.disconnect(user_id, ConnectionType.ADMIN)
+
+
+# ═══════════════════════════════════════════════════════════════
+# NUEVO: WebSocket para Choferes (enviar eventos de somnolencia)
+# ═══════════════════════════════════════════════════════════════
+
+@router.websocket("/chofer/{id_viaje}")
+async def websocket_chofer_eventos(
+    websocket: WebSocket,
+    id_viaje: int,
+    token: str = Query(..., description="JWT Token"),
+    db: Session = Depends(get_db)
+):
+    """
+    WebSocket para que el chofer envíe eventos de somnolencia en tiempo real.
+    """
+    logger.info("═══════════════════════════════════════")
+    logger.info(f"🔌 NUEVA CONEXIÓN WS EVENTOS")
+    logger.info(f"   Viaje ID: {id_viaje}")
+    logger.info(f"   Token: {token[:20]}...")
+    logger.info("═══════════════════════════════════════")
+    
+    # 1. Verificar autenticación
+    user = await verify_websocket_token(token, db)
+    if not user:
+        logger.error(f"❌ Token inválido para viaje {id_viaje}")
+        await websocket.close(code=4001, reason="Token inválido")
+        return
+    
+    logger.info(f"✅ Usuario autenticado: {user.nombre_completo} (ID: {user.id_usuario})")
+    
+    # 2. Verificar que es chofer
+    if user.rol != "chofer":
+        logger.error(f"❌ Usuario {user.id_usuario} no es chofer (rol: {user.rol})")
+        await websocket.close(code=4003, reason="Solo choferes pueden conectar")
+        return
+    
+    # 3. Verificar viaje
+    viaje = db.query(Viaje).filter(
+        Viaje.id_viaje == id_viaje,
+        Viaje.id_chofer == user.id_usuario,
+        Viaje.estado.in_(['pendiente', 'en_curso'])
+    ).first()
+    
+    if not viaje:
+        logger.error(f"❌ Viaje {id_viaje} no encontrado o no pertenece al chofer {user.id_usuario}")
+        await websocket.close(code=4004, reason="Viaje no encontrado")
+        return
+    
+    logger.info(f"✅ Viaje verificado: {viaje.origen} → {viaje.destino}")
+    
+    # 4. Aceptar conexión
+    await websocket.accept()
+    
+    logger.info(f"═══════════════════════════════════════")
+    logger.info(f"✅ CHOFER CONECTADO PARA EVENTOS")
+    logger.info(f"   Chofer: {user.nombre_completo}")
+    logger.info(f"   Viaje: {id_viaje}")
+    logger.info(f"═══════════════════════════════════════")
+    
+    # Enviar confirmación
+    await websocket.send_json({
+        "type": "CONNECTION_ESTABLISHED",
+        "id_viaje": id_viaje,
+        "id_chofer": user.id_usuario,
+        "message": "Conectado al sistema de eventos",
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    
+    try:
+        while True:
+            data = await websocket.receive_text()
+            logger.info(f"📩 Mensaje recibido de chofer {user.nombre_completo}: {data[:100]}...")
+            
+            try:
+                message = json.loads(data)
+                await handle_chofer_evento_message(message, user, id_viaje, websocket)
+            except json.JSONDecodeError:
+                logger.warning(f"Mensaje no es JSON válido: {data}")
+                
+    except WebSocketDisconnect:
+        logger.info(f"🔌 Chofer {user.nombre_completo} desconectado de eventos (viaje {id_viaje})")
+    except Exception as e:
+        logger.error(f"❌ Error en WebSocket eventos: {e}")
+    finally:
+        logger.info(f"🔴 Conexión eventos finalizada para viaje {id_viaje}")
+
+
+async def handle_chofer_evento_message(
+    message: dict,
+    user: Usuario,
+    id_viaje: int,
+    websocket: WebSocket
+):
+    """
+    Maneja mensajes de eventos del chofer.
+    """
+    msg_type = message.get("type", "")
+    
+    if msg_type == "PING":
+        await websocket.send_json({"type": "PONG"})
+        return
+    
+    if msg_type == "EVENTO_SOMNOLENCIA":
+        # Evento individual
+        try:
+            evento = EventoSomnolenciaWS(
+                type="EVENTO_SOMNOLENCIA",
+                id_viaje=id_viaje,
+                id_chofer=user.id_usuario,
+                tipo_evento=message.get("tipo_evento", "desconocido"),
+                nivel_severidad=message.get("nivel_severidad", "MEDIUM"),
+                duracion_segundos=message.get("duracion_segundos", 0),
+                timestamp_evento=message.get("timestamp_evento", datetime.utcnow().isoformat()),
+                latitud=message.get("latitud"),
+                longitud=message.get("longitud"),
+                velocidad_kmh=message.get("velocidad_kmh"),
+                ear_promedio=message.get("ear_promedio"),
+                mar_promedio=message.get("mar_promedio")
+            )
+            
+            # Notificar a admins
+            sent_count = await evento_notification_service.notificar_evento(
+                evento=evento,
+                nombre_chofer=user.nombre_completo
+            )
+            
+            # Confirmar al chofer
+            await websocket.send_json({
+                "type": "EVENTO_RECIBIDO",
+                "tipo_evento": evento.tipo_evento,
+                "admins_notificados": sent_count,
+                "timestamp": datetime.utcnow().isoformat()
+            })
+            
+            logger.info(
+                f"📤 Evento {evento.tipo_evento} de {user.nombre_completo} "
+                f"→ {sent_count} admins notificados"
+            )
+            
+        except Exception as e:
+            logger.error(f"Error procesando evento: {e}")
+            await websocket.send_json({
+                "type": "ERROR",
+                "message": f"Error procesando evento: {str(e)}"
+            })
+    
+    elif msg_type == "EVENTOS_BATCH":
+        # Batch de eventos (sincronización offline)
+        eventos = message.get("eventos", [])
+        
+        if eventos:
+            sent_count = await evento_notification_service.notificar_batch(
+                eventos=eventos,
+                id_viaje=id_viaje,
+                id_chofer=user.id_usuario,
+                nombre_chofer=user.nombre_completo
+            )
+            
+            await websocket.send_json({
+                "type": "BATCH_RECIBIDO",
+                "total_eventos": len(eventos),
+                "admins_notificados": sent_count,
+                "timestamp": datetime.utcnow().isoformat()
+            })
+            
+            logger.info(
+                f"📤 Batch de {len(eventos)} eventos de {user.nombre_completo} "
+                f"→ {sent_count} admins notificados"
+            )
+    
+    else:
+        logger.warning(f"Tipo de mensaje desconocido: {msg_type}")
 
 
 @router.websocket("/monitor")
@@ -150,23 +315,15 @@ async def websocket_monitor_endpoint(
 ):
     """
     WebSocket endpoint para dashboards de monitoreo.
-    
-    Similar al endpoint admin pero sin restricción de rol.
-    Útil para pantallas de monitoreo en centros de control.
-    
-    Query params:
-        token: JWT token de autenticación
     """
-    # Verificar autenticación
     user = await verify_websocket_token(token, db)
     
     if not user:
-        await websocket.close(code=4001, reason="Token inválido o expirado")
+        await websocket.close(code=4001, reason="Token inválido")
         return
     
     user_id = user.id_usuario
     
-    # Conectar como monitor
     connected = await connection_manager.connect(
         websocket=websocket,
         user_id=user_id,
@@ -174,74 +331,49 @@ async def websocket_monitor_endpoint(
     )
     
     if not connected:
+        await websocket.close(code=4000, reason="Error de conexión")
         return
     
     try:
         while True:
             data = await websocket.receive_text()
-            
-            if data == "ping":
-                await connection_manager.send_personal_message(
-                    user_id=user_id,
-                    message=WebSocketMessage(
-                        event_type="pong",
-                        data={"timestamp": "now"}
-                    ),
-                    connection_type=ConnectionType.MONITOR
-                )
+            try:
+                message = json.loads(data)
+                if message.get("type") == "PING":
+                    await websocket.send_json({"type": "PONG"})
+            except json.JSONDecodeError:
+                pass
                 
     except WebSocketDisconnect:
-        logger.info(f"Monitor {user_id} desconectado")
+        logger.info(f"Monitor desconectado: {user_id}")
     except Exception as e:
-        logger.error(f"Error en WebSocket monitor {user_id}: {e}")
+        logger.error(f"Error en WebSocket monitor: {e}")
     finally:
         await connection_manager.disconnect(user_id, ConnectionType.MONITOR)
 
 
-async def handle_admin_message(user_id: int, message: dict):
+async def handle_admin_message(user_id: int, message: dict, websocket: WebSocket):
     """
     Maneja mensajes recibidos de admins.
-    
-    Args:
-        user_id: ID del usuario admin
-        message: Mensaje recibido
     """
     msg_type = message.get("type", "")
     
-    if msg_type == "ping":
-        await connection_manager.send_personal_message(
-            user_id=user_id,
-            message=WebSocketMessage(
-                event_type="pong",
-                data={"received": message}
-            ),
-            connection_type=ConnectionType.ADMIN
-        )
+    if msg_type == "PING":
+        await websocket.send_json({
+            "type": "PONG",
+            "timestamp": datetime.utcnow().isoformat()
+        })
     
-    elif msg_type == "subscribe":
-        # Futuro: manejar suscripciones a eventos específicos
-        await connection_manager.send_personal_message(
-            user_id=user_id,
-            message=WebSocketMessage(
-                event_type="subscribed",
-                data={
-                    "topics": message.get("topics", []),
-                    "status": "ok"
-                }
-            ),
-            connection_type=ConnectionType.ADMIN
-        )
-    
-    elif msg_type == "get_stats":
-        stats = notification_service.get_stats()
-        await connection_manager.send_personal_message(
-            user_id=user_id,
-            message=WebSocketMessage(
-                event_type="stats",
-                data=stats
-            ),
-            connection_type=ConnectionType.ADMIN
-        )
+    elif msg_type == "GET_STATS":
+        stats = {
+            "websocket": connection_manager.get_stats(),
+            "notifications": notification_service.get_stats(),
+            "eventos": evento_notification_service.get_stats()
+        }
+        await websocket.send_json({
+            "type": "STATS",
+            "data": stats
+        })
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -254,16 +386,12 @@ async def handle_admin_message(user_id: int, message: dict):
     description="Obtiene estadísticas de conexiones WebSocket activas"
 )
 async def get_websocket_stats():
-    """
-    Obtiene estadísticas del sistema WebSocket.
-    
-    Returns:
-        Estadísticas de conexiones y notificaciones
-    """
+    """Obtiene estadísticas del sistema WebSocket."""
     return {
         "status": "ok",
         "websocket": connection_manager.get_stats(),
-        "notifications": notification_service.get_stats()
+        "notifications": notification_service.get_stats(),
+        "eventos": evento_notification_service.get_stats()
     }
 
 
@@ -273,16 +401,11 @@ async def get_websocket_stats():
     description="Lista de usuarios conectados por WebSocket"
 )
 async def get_active_connections():
-    """
-    Obtiene lista de conexiones activas.
-    
-    Returns:
-        Lista de usuarios conectados por tipo
-    """
+    """Lista de conexiones activas."""
     return {
         "admins": connection_manager.get_connected_users(ConnectionType.ADMIN),
-        "monitors": connection_manager.get_connected_users(ConnectionType.MONITOR),
-        "total": len(connection_manager.get_connected_users())
+        "choferes": connection_manager.get_connected_users(ConnectionType.CHOFER),
+        "monitors": connection_manager.get_connected_users(ConnectionType.MONITOR)
     }
 
 
@@ -292,28 +415,27 @@ async def get_active_connections():
     description="Envía una notificación de prueba a todos los admins conectados"
 )
 async def send_test_notification():
-    """
-    Envía una notificación de prueba.
+    """Envía notificación de prueba."""
+    from app.schemas.notificacion_somnolencia import EventoSomnolenciaWS
     
-    Útil para verificar que el sistema WebSocket está funcionando.
-    
-    Returns:
-        Número de notificaciones enviadas
-    """
-    message = WebSocketMessage(
-        event_type="test_notification",
-        data={
-            "mensaje": "🔔 Esta es una notificación de prueba",
-            "timestamp": "now"
-        },
-        priority="normal"
+    evento_test = EventoSomnolenciaWS(
+        id_viaje=0,
+        id_chofer=0,
+        tipo_evento="microsueno",
+        nivel_severidad="CRITICAL",
+        duracion_segundos=2.5,
+        timestamp_evento=datetime.utcnow().isoformat(),
+        latitud=-17.3895,
+        longitud=-66.1568,
+        velocidad_kmh=65.5
     )
     
-    sent_count = await connection_manager.broadcast_to_admins(message)
+    sent_count = await evento_notification_service.notificar_evento(
+        evento=evento_test,
+        nombre_chofer="[TEST] Chofer de Prueba"
+    )
     
     return {
         "status": "ok",
-        "message": "Notificación de prueba enviada",
-        "sent_to": sent_count,
-        "connected_admins": connection_manager.get_connected_users(ConnectionType.ADMIN)
+        "message": f"Notificación de prueba enviada a {sent_count} admins"
     }

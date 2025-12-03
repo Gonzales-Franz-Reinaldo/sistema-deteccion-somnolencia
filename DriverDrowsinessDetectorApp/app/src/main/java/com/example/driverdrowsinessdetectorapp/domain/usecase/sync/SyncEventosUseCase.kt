@@ -137,6 +137,8 @@ class SyncEventosUseCase @Inject constructor(
                 if (response.isSuccessful) {
                     val eventosResponse = response.body() ?: emptyList()
                     
+                    Log.d(TAG, "✅ Servidor respondió con ${eventosResponse.size} eventos")
+                    
                     // Marcar como sincronizados en Room
                     var successCount = 0
                     eventos.forEachIndexed { index, evento ->
@@ -148,6 +150,7 @@ class SyncEventosUseCase @Inject constructor(
                                     idServidor = serverEvento.idEvento
                                 )
                                 successCount++
+                                Log.d(TAG, "✅ Evento ${evento.id} marcado como sincronizado → Server ID: ${serverEvento.idEvento}")
                             }
                         } catch (e: Exception) {
                             Log.e(TAG, "Error marcando evento ${evento.id}: ${e.message}")
@@ -167,17 +170,25 @@ class SyncEventosUseCase @Inject constructor(
                     val errorBody = response.errorBody()?.string() ?: "Error desconocido"
                     Log.e(TAG, "❌ Error del servidor: ${response.code()} - $errorBody")
                     
-                    // Marcar error en eventos
-                    eventos.forEach { evento ->
-                        eventoRepository.markSyncFailed(evento.id, "HTTP ${response.code()}: $errorBody")
-                    }
-                    
-                    // Si es error 4xx, no reintentar
+                    // Si es error 4xx (cliente), no reintentar
                     if (response.code() in 400..499) {
+                        // Marcar error en eventos
+                        eventos.forEach { evento ->
+                            try {
+                                eventoRepository.markSyncFailed(evento.id, "HTTP ${response.code()}: $errorBody")
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error marcando fallo: ${e.message}")
+                            }
+                        }
                         return BatchResult.Failed("Error del servidor: ${response.code()}")
                     }
                     
+                    // Si es error 5xx, reintentar
                     retries++
+                    if (retries < MAX_RETRIES) {
+                        Log.d(TAG, "⏳ Reintentando en 1 segundo...")
+                        kotlinx.coroutines.delay(1000L * retries)
+                    }
                 }
                 
             } catch (e: Exception) {

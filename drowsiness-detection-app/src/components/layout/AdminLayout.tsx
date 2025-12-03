@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/auth/hooks/useAuth';
+import { useNotificaciones } from '../../providers/NotificacionesProvider';
 
 interface AdminLayoutProps {
   children?: ReactNode;
@@ -11,6 +12,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { isConnected, sonidoEnabled, setSonidoEnabled } = useNotificaciones();
 
   const menuItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
@@ -42,39 +44,59 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               <h1 className="text-xl font-bold hidden sm:block">Sistema de Detección de Somnolencia</h1>
             </div>
 
-            {/* User Menu */}
-            <div className="relative">
+            {/* Indicadores de notificaciones */}
+            <div className="flex items-center gap-4">
+              {/* Indicador de conexión WebSocket */}
+              <div className="flex items-center gap-2" title={isConnected ? 'Notificaciones activas' : 'Sin conexión'}>
+                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+                <span className="text-xs text-indigo-200 hidden sm:inline">
+                  {isConnected ? 'En línea' : 'Offline'}
+                </span>
+              </div>
+              
+              {/* Botón de sonido */}
               <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 rounded-lg px-4 py-2 transition-colors"
+                onClick={() => setSonidoEnabled(!sonidoEnabled)}
+                className="p-2 rounded-lg hover:bg-indigo-600 transition-colors"
+                title={sonidoEnabled ? 'Sonido activado' : 'Sonido desactivado'}
               >
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium">{user?.nombre_completo}</p>
-                  <p className="text-xs text-indigo-200">Administrador</p>
-                </div>
-                <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center font-bold">
-                  {user?.nombre_completo.charAt(0).toUpperCase()}
-                </div>
+                {sonidoEnabled ? '🔔' : '🔕'}
               </button>
 
-              {/* Dropdown */}
-              {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 z-50">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">{user?.nombre_completo}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 rounded-lg px-4 py-2 transition-colors"
+                >
+                  <div className="text-right hidden sm:block">
+                    <p className="text-sm font-medium">{user?.nombre_completo}</p>
+                    <p className="text-xs text-indigo-200">Administrador</p>
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Cerrar Sesión
-                  </button>
-                </div>
-              )}
+                  <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center font-bold">
+                    {user?.nombre_completo.charAt(0).toUpperCase()}
+                  </div>
+                </button>
+
+                {/* Dropdown */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 z-50">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{user?.nombre_completo}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

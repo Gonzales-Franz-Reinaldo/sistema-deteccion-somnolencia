@@ -1,1 +1,5 @@
-export * from './AuthProvider';
+/**
+ * Exports de providers globales
+ */
+
+export { NotificacionesProvider, useNotificaciones } from './NotificacionesProvider';
