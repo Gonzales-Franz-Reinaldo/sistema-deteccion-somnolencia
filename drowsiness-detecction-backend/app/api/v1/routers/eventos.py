@@ -5,6 +5,8 @@ Endpoints para crear, consultar y gestionar eventos de somnolencia
 detectados por la aplicación móvil.
 
 """
+import logging  
+
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, Body, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -27,30 +29,24 @@ from app.schemas.evento_somnolencia import (
 )
 
 # Import del servicio de notificaciones
-from app.services.notification_service import notification_service
+from app.services.evento_notification_service import evento_notification_service
+from app.schemas.notificacion_somnolencia import EventoSomnolenciaWS
+
+logger = logging.getLogger(__name__)  
 
 router = APIRouter()
 
-
-# ENDPOINTS PARA CHOFERES (crear eventos)
 
 @router.post(
     "/",
     response_model=EventoSomnolenciaResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Crear evento de somnolencia",
-    description="""
-    Registra un nuevo evento de somnolencia detectado.
-    
-    **Requiere autenticación como chofer.**
-    
-    El evento se asocia automáticamente al chofer autenticado.
-    Si el evento es crítico, se notifica a los administradores en tiempo real.
-    """
+    description="Registra un nuevo evento de somnolencia detectado"
 )
-async def crear_evento_somnolencia(  
-    evento: EventoSomnolenciaCreate,
-    background_tasks: BackgroundTasks,
+async def crear_evento_somnolencia(
+    evento_in: EventoSomnolenciaCreate,
+    
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
@@ -74,22 +70,44 @@ async def crear_evento_somnolencia(
             detail="Solo los choferes pueden registrar eventos de somnolencia"
         )
     
-    # Crear evento con el id_chofer del token
-    db_evento = crud_eventos.crear_evento(
+    # Crear evento en DB
+    evento = crud_eventos.crear_evento(
         db=db,
-        evento=evento,
+        evento=evento_in,
         id_chofer=current_user.id_usuario
     )
     
-    # Notificar a admins en background si es crítico
-    background_tasks.add_task(
-        notification_service.notify_evento_somnolencia,
-        evento=db_evento,
-        chofer=current_user,
-        db=db
-    )
+    # ← NUEVO: Notificar a admins conectados
+    try:
+        evento_ws = EventoSomnolenciaWS(
+            id_viaje=evento.id_viaje,
+            id_chofer=evento.id_chofer,
+            tipo_evento=evento.tipo_evento,
+            nivel_severidad=evento.nivel_severidad,
+            duracion_segundos=evento.duracion_segundos,
+            timestamp_evento=evento.timestamp_evento.isoformat(),
+            latitud=evento.latitud,
+            longitud=evento.longitud,
+            velocidad_kmh=evento.velocidad_kmh,
+            ear_promedio=evento.ear_promedio,
+            mar_promedio=evento.mar_promedio
+        )
+        
+        # Obtener nombre del chofer
+        chofer = db.query(Usuario).filter(Usuario.id_usuario == evento.id_chofer).first()
+        nombre_chofer = chofer.nombre_completo if chofer else "Chofer desconocido"
+        
+        # Notificar (no esperamos respuesta, fire-and-forget)
+        import asyncio
+        asyncio.create_task(
+            evento_notification_service.notificar_evento(evento_ws, nombre_chofer)
+        )
+        
+    except Exception as e:
+        logger.warning(f"Error enviando notificación de evento: {e}")
     
-    return db_evento
+    return evento
+
 
 
 @router.post(
@@ -99,9 +117,9 @@ async def crear_evento_somnolencia(
     summary="Crear eventos en lote (sync offline)",
     description="Sincroniza múltiples eventos acumulados durante periodo offline."
 )
-async def crear_eventos_batch(  
+async def crear_eventos_batch(
     batch: EventoSomnolenciaBatch,
-    background_tasks: BackgroundTasks, 
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
@@ -114,6 +132,8 @@ async def crear_eventos_batch(
     - Máximo 100 eventos por request
     - Todos los eventos se crean en una sola transacción
     """
+    logger.info(f"📦 Recibiendo batch de {len(batch.eventos)} eventos de chofer {current_user.id_usuario}")
+    
     # Verificar que es chofer
     if current_user.rol != "chofer":
         raise HTTPException(
@@ -121,21 +141,36 @@ async def crear_eventos_batch(
             detail="Solo los choferes pueden registrar eventos de somnolencia"
         )
     
-    # Crear eventos en lote
-    db_eventos = crud_eventos.crear_eventos_batch(
-        db=db,
-        eventos=batch.eventos,
-        id_chofer=current_user.id_usuario
-    )
-    
-    # Notificar eventos críticos en background
-    background_tasks.add_task(
-        notification_service.notify_evento_batch,
-        eventos=db_eventos,
-        db=db
-    )
-    
-    return db_eventos
+    try:
+        # Crear eventos en lote
+        db_eventos = crud_eventos.crear_eventos_batch(
+            db=db,
+            eventos=batch.eventos,
+            id_chofer=current_user.id_usuario
+        )
+        
+        logger.info(f"✅ Batch creado: {len(db_eventos)} eventos guardados")
+        
+        # Notificar eventos críticos en background (no bloquea la respuesta)
+        # Usar try/except para que si falla la notificación, no falle el endpoint
+        try:
+            background_tasks.add_task(
+                evento_notification_service.notify_evento_batch,
+                eventos=db_eventos,
+                db=db
+            )
+        except Exception as notif_error:
+            logger.warning(f"⚠️ Error agregando tarea de notificación: {notif_error}")
+        
+        return db_eventos
+        
+    except Exception as e:
+        logger.error(f"❌ Error creando batch: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creando eventos: {str(e)}"
+        )
 
 
 # ENDPOINTS PARA CONSULTAR EVENTOS

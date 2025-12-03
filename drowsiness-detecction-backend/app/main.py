@@ -173,13 +173,6 @@ app.include_router(
     tags=["🔌 WebSocket (Tiempo Real)"]
 )
 
-#  Router WebSocket
-app.include_router(
-    ws_router.router,
-    prefix=f"{settings.API_V1_PREFIX}/ws",
-    tags=["🔌 WebSocket (Tiempo Real)"]
-)
-
 # ← NUEVO: Router GPS en Tiempo Real
 app.include_router(
     gps_realtime.router,

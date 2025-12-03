@@ -3,6 +3,7 @@ package com.example.driverdrowsinessdetectorapp.data.local.preferences
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -25,16 +26,25 @@ class PreferencesManager @Inject constructor(
 ) {
     private val dataStore = context.dataStore
 
-    // Keys
+    // ═══════════════════════════════════════════════════════════════
+    // KEYS
+    // ═══════════════════════════════════════════════════════════════
     private val KEY_TOKEN = stringPreferencesKey(Constants.KEY_AUTH_TOKEN)
     private val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token") 
     private val KEY_USER_ID = intPreferencesKey(Constants.KEY_USER_ID)
     private val KEY_USERNAME = stringPreferencesKey(Constants.KEY_USERNAME)
     private val KEY_FULL_NAME = stringPreferencesKey(Constants.KEY_FULL_NAME)
     private val KEY_ROLE = stringPreferencesKey(Constants.KEY_ROLE)
-    private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
+    private val KEY_EMAIL = stringPreferencesKey("user_email")
+    private val KEY_ACTIVE = booleanPreferencesKey("user_active")
 
-    // Save auth data (con refresh token)
+    // ═══════════════════════════════════════════════════════════════
+    // GUARDAR DATOS DE AUTENTICACIÓN
+    // ═══════════════════════════════════════════════════════════════
+    
+    /**
+     * Guarda todos los datos de autenticación (con refresh token).
+     */
     suspend fun saveAuthData(accessToken: String, refreshToken: String, user: User) {
         dataStore.edit { prefs ->
             prefs[KEY_TOKEN] = accessToken
@@ -43,47 +53,78 @@ class PreferencesManager @Inject constructor(
             prefs[KEY_USERNAME] = user.username
             prefs[KEY_FULL_NAME] = user.fullName
             prefs[KEY_ROLE] = user.role
+            user.email?.let { prefs[KEY_EMAIL] = it }
+            prefs[KEY_ACTIVE] = user.active
         }
     }
     
-    // Método de compatibilidad (sin refresh token)
+    /**
+     * Método de compatibilidad (sin refresh token).
+     */
     suspend fun saveAuthData(token: String, user: User) {
         saveAuthData(token, "", user)
     }
 
-    // Update only access token (para refresh)
+    /**
+     * Actualiza solo el access token (para refresh).
+     */
     suspend fun updateAccessToken(newToken: String) {
         dataStore.edit { prefs ->
             prefs[KEY_TOKEN] = newToken
         }
     }
 
-    // Get auth token
+    // ═══════════════════════════════════════════════════════════════
+    // OBTENER DATOS
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Obtiene el token de autenticación.
+     * ← USADO POR: AuthInterceptor, SyncUseCase, etc.
+     */
     fun getAuthToken(): Flow<String?> = dataStore.data.map { prefs ->
         prefs[KEY_TOKEN]
     }
     
-    // Get refresh token
+    /**
+     * Obtiene el token de acceso (ALIAS de getAuthToken para compatibilidad).
+     * ← USADO POR: EventoWebSocketManager, GPSWebSocketManager
+     */
+    fun getAccessToken(): Flow<String?> = dataStore.data.map { prefs ->
+        prefs[KEY_TOKEN]
+    }
+    
+    /**
+     * Obtiene el refresh token.
+     */
     fun getRefreshToken(): Flow<String?> = dataStore.data.map { prefs ->
         prefs[KEY_REFRESH_TOKEN]
     }
 
-    // Get user ID
+    /**
+     * Obtiene el ID del usuario.
+     */
     fun getUserId(): Flow<Int?> = dataStore.data.map { prefs ->
         prefs[KEY_USER_ID]
     }
 
-    // Get full name
+    /**
+     * Obtiene el nombre completo.
+     */
     fun getFullName(): Flow<String?> = dataStore.data.map { prefs ->
         prefs[KEY_FULL_NAME]
     }
 
-    // Get role
+    /**
+     * Obtiene el rol.
+     */
     fun getRole(): Flow<String?> = dataStore.data.map { prefs ->
         prefs[KEY_ROLE]
     }
 
-    // Get complete user data
+    /**
+     * Obtiene todos los datos del usuario.
+     */
     fun getUserData(): Flow<User?> = dataStore.data.map { prefs ->
         val userId = prefs[KEY_USER_ID]
         val username = prefs[KEY_USERNAME]
@@ -96,49 +137,53 @@ class PreferencesManager @Inject constructor(
                 username = username,
                 fullName = fullName,
                 role = role,
-                email = null,
-                active = true
+                email = prefs[KEY_EMAIL],
+                active = prefs[KEY_ACTIVE] ?: true
             )
         } else {
             null
         }
     }
 
-    // Clear all auth data
+    // ═══════════════════════════════════════════════════════════════
+    // LIMPIAR DATOS
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Limpia todos los datos de autenticación.
+     */
     suspend fun clearAuthData() {
         dataStore.edit { prefs ->
             prefs.clear()
         }
     }
+    
+    /**
+     * Limpia solo el token de acceso.
+     */
+    suspend fun clearAccessToken() {
+        dataStore.edit { prefs ->
+            prefs.remove(KEY_TOKEN)
+        }
+    }
 
-    // Check if user is logged in
+    // ═══════════════════════════════════════════════════════════════
+    // VERIFICACIONES
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Verifica si el usuario está logueado.
+     */
     fun isLoggedIn(): Flow<Boolean> = dataStore.data.map { prefs ->
         !prefs[KEY_TOKEN].isNullOrBlank()
     }
-
-    /**
-     * Obtiene el token de acceso guardado.
-     */
-    fun getAccessToken(): Flow<String?> = dataStore.data
-        .map { preferences ->
-            preferences[ACCESS_TOKEN_KEY]
-        }
     
     /**
-     * Guarda el token de acceso.
+     * Guarda el token de acceso (para compatibilidad).
      */
     suspend fun saveAccessToken(token: String) {
-        dataStore.edit { preferences ->
-            preferences[ACCESS_TOKEN_KEY] = token
-        }
-    }
-    
-    /**
-     * Limpia el token de acceso.
-     */
-    suspend fun clearAccessToken() {
-        dataStore.edit { preferences ->
-            preferences.remove(ACCESS_TOKEN_KEY)
+        dataStore.edit { prefs ->
+            prefs[KEY_TOKEN] = token
         }
     }
 }
