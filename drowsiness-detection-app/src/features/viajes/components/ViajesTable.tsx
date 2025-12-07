@@ -1,7 +1,5 @@
-// ============================================
 // COMPONENTE: TABLA DE VIAJES
 // Muestra lista de viajes con información completa
-// ============================================
 
 import { useNavigate } from 'react-router-dom';
 import type { Viaje } from '../types';

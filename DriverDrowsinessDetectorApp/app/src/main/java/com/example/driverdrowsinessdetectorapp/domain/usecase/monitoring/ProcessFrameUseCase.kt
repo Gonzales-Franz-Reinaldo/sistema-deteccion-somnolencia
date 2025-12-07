@@ -26,13 +26,13 @@ class ProcessFrameUseCase @Inject constructor(
             )
             
             if (!landmarksResult.hasFace) {
-                Log.d(TAG, "⚠️ Frame sin rostro - Procesando cabeceo: isNodding=${metrics.isNodding}")
+                Log.d(TAG, "Frame sin rostro - Procesando cabeceo: isNodding=${metrics.isNodding}")
             }
             
             metrics
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al procesar frame: ${e.message}", e)
+            Log.e(TAG, "Error al procesar frame: ${e.message}", e)
             null
         }
     }

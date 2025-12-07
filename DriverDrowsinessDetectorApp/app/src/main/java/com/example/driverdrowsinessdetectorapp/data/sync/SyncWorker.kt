@@ -33,10 +33,8 @@ class SyncWorker @AssistedInject constructor(
     
     override suspend fun doWork(): Result {
         val startTime = System.currentTimeMillis()
-        Log.d(TAG, "═══════════════════════════════════════")
-        Log.d(TAG, "🔄 INICIANDO SINCRONIZACIÓN")
+        Log.d(TAG, "INICIANDO SINCRONIZACIÓN")
         Log.d(TAG, "   Attempt: $runAttemptCount")
-        Log.d(TAG, "═══════════════════════════════════════")
         
         return try {
             // Ejecutar sincronización
@@ -46,42 +44,37 @@ class SyncWorker @AssistedInject constructor(
             
             when (result) {
                 is SyncResult.Success -> {
-                    Log.d(TAG, "✅ SYNC EXITOSA")
+                    Log.d(TAG, "SYNC EXITOSA")
                     Log.d(TAG, "   Eventos sincronizados: ${result.eventosSincronizados}")
                     Log.d(TAG, "   Mensaje: ${result.descripcion}")
                     Log.d(TAG, "   Duración: ${duration}ms")
-                    Log.d(TAG, "═══════════════════════════════════════")
                     Result.success()
                 }
                 
                 is SyncResult.NothingToSync -> {
-                    Log.d(TAG, "✅ SIN EVENTOS PENDIENTES")
+                    Log.d(TAG, "SIN EVENTOS PENDIENTES")
                     Log.d(TAG, "   Duración: ${duration}ms")
-                    Log.d(TAG, "═══════════════════════════════════════")
                     Result.success()
                 }
                 
                 is SyncResult.PartialSuccess -> {
-                    Log.w(TAG, "⚠️ SYNC PARCIAL")
+                    Log.w(TAG, "SYNC PARCIAL")
                     Log.w(TAG, "   Sincronizados: ${result.eventosSincronizados}")
                     Log.w(TAG, "   Fallidos: ${result.eventosFallidos}")
                     Log.w(TAG, "   Errores: ${result.errores.take(3)}")
-                    Log.d(TAG, "═══════════════════════════════════════")
                     // Reintentar para los fallidos
                     if (runAttemptCount < 3) Result.retry() else Result.success()
                 }
                 
                 is SyncResult.NoConnection -> {
-                    Log.w(TAG, "⚠️ SIN CONEXIÓN - Reintentando después")
-                    Log.d(TAG, "═══════════════════════════════════════")
+                    Log.w(TAG, "SIN CONEXIÓN - Reintentando después")
                     Result.retry()
                 }
                 
                 is SyncResult.Error -> {
-                    Log.e(TAG, "❌ ERROR EN SYNC")
+                    Log.e(TAG, "ERROR EN SYNC")
                     Log.e(TAG, "   Mensaje: ${result.descripcion}")
                     Log.e(TAG, "   Excepción: ${result.exception?.message}")
-                    Log.d(TAG, "═══════════════════════════════════════")
                     
                     // Reintentar hasta 3 veces
                     if (runAttemptCount < 3) {
@@ -93,8 +86,7 @@ class SyncWorker @AssistedInject constructor(
             }
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ EXCEPCIÓN EN WORKER: ${e.message}", e)
-            Log.d(TAG, "═══════════════════════════════════════")
+            Log.e(TAG, "EXCEPCIÓN EN WORKER: ${e.message}", e)
             
             if (runAttemptCount < 3) {
                 Result.retry()

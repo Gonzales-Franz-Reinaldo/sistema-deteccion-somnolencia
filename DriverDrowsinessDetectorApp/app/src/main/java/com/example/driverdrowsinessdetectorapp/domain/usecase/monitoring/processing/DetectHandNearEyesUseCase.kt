@@ -82,14 +82,14 @@ class DetectHandNearEyesUseCase @Inject constructor() {
                     result["MANO_IZQUIERDA_OJO_DERECHO"] = isNearRightEye
                     result["MANO_IZQUIERDA_OJO_IZQUIERDO"] = isNearLeftEye
                     if ((isNearRightEye || isNearLeftEye) && frameCount % 10 == 0) {
-                        Log.d(TAG, "👁️✋ MANO IZQ cerca: Der=$isNearRightEye (${String.format("%.3f", minDistRight)}), Izq=$isNearLeftEye (${String.format("%.3f", minDistLeft)})")
+                        Log.d(TAG, "MANO IZQ cerca: Der=$isNearRightEye (${String.format("%.3f", minDistRight)}), Izq=$isNearLeftEye (${String.format("%.3f", minDistLeft)})")
                     }
                 }
                 "DERECHA" -> {
                     result["MANO_DERECHA_OJO_DERECHO"] = isNearRightEye
                     result["MANO_DERECHA_OJO_IZQUIERDO"] = isNearLeftEye
                     if ((isNearRightEye || isNearLeftEye) && frameCount % 10 == 0) {
-                        Log.d(TAG, "👁️🤚 MANO DER cerca: Der=$isNearRightEye (${String.format("%.3f", minDistRight)}), Izq=$isNearLeftEye (${String.format("%.3f", minDistLeft)})")
+                        Log.d(TAG, "MANO DER cerca: Der=$isNearRightEye (${String.format("%.3f", minDistRight)}), Izq=$isNearLeftEye (${String.format("%.3f", minDistLeft)})")
                     }
                 }
             }

@@ -53,7 +53,7 @@ class DetectMicrosleepUseCase @Inject constructor() {
             reason = "bostezo activo, umbral estricto=${EAR_STRICT_THRESHOLD}"
             
             if (avgEar < EAR_THRESHOLD && avgEar >= EAR_STRICT_THRESHOLD) {
-                Log.d(TAG, "👁️🥱 Ojos entrecerrados por BOSTEZO (EAR=${"%.3f".format(avgEar)}) - IGNORANDO")
+                Log.d(TAG, "Ojos entrecerrados por BOSTEZO (EAR=${"%.3f".format(avgEar)}) - IGNORANDO")
             }
         } else {
             //  NORMAL: Usar umbral estándar
@@ -70,7 +70,7 @@ class DetectMicrosleepUseCase @Inject constructor() {
             if (eyesClosedStartTime == null) {
                 eyesClosedStartTime = currentTime
                 isCurrentlyInMicrosleep = false
-                Log.d(TAG, "👁️ Ojos cerrados (EAR=${"%.3f".format(avgEar)}, bostezo=$isMouthWideOpen)")
+                Log.d(TAG, "Ojos cerrados (EAR=${"%.3f".format(avgEar)}, bostezo=$isMouthWideOpen)")
             }
 
             val duration = currentTime - (eyesClosedStartTime ?: currentTime)
@@ -86,7 +86,7 @@ class DetectMicrosleepUseCase @Inject constructor() {
             // Log de progreso
             if (duration > 0 && duration % 500 < 50) {
                 val progress = ((duration.toFloat() / MICROSLEEP_DURATION_MS) * 100).toInt().coerceAtMost(100)
-                Log.d(TAG, "⏱️ Ojos cerrados: ${duration}ms / ${MICROSLEEP_DURATION_MS}ms ($progress%)")
+                Log.d(TAG, "Ojos cerrados: ${duration}ms / ${MICROSLEEP_DURATION_MS}ms ($progress%)")
             }
 
             return Triple(isCurrentlyInMicrosleep, microsleepCount, microsleepDurations)
@@ -94,7 +94,7 @@ class DetectMicrosleepUseCase @Inject constructor() {
             // Ojos abiertos - reset
             if (eyesClosedStartTime != null) {
                 val duration = currentTime - (eyesClosedStartTime ?: currentTime)
-                Log.d(TAG, "👁️ Ojos abiertos (duración cerrados: ${duration}ms)")
+                Log.d(TAG, "Ojos abiertos (duración cerrados: ${duration}ms)")
             }
             eyesClosedStartTime = null
             isCurrentlyInMicrosleep = false
@@ -108,6 +108,6 @@ class DetectMicrosleepUseCase @Inject constructor() {
         microsleepCount = 0
         microsleepDurations.clear()
         isCurrentlyInMicrosleep = false
-        Log.d(TAG, "🔄 DetectMicrosleep reseteado")
+        Log.d(TAG, "DetectMicrosleep reseteado")
     }
 }

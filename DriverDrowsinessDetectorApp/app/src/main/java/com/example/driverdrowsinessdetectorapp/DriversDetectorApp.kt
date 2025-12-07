@@ -46,9 +46,7 @@ class DriversDetectorApp : Application(), Configuration.Provider {
         super.onCreate()
 
         Log.d(TAG, "")
-        Log.d(TAG, "═══════════════════════════════════════")
-        Log.d(TAG, "🚀 INICIANDO APLICACIÓN")
-        Log.d(TAG, "═══════════════════════════════════════")
+        Log.d(TAG, " INICIANDO APLICACIÓN")
 
         // Iniciar servicios de sincronización
         initializeSync()
@@ -60,28 +58,26 @@ class DriversDetectorApp : Application(), Configuration.Provider {
     private fun initializeSync() {
         try {
             Log.d(TAG, "")
-            Log.d(TAG, "📡 Inicializando servicios de sincronización...")
+            Log.d(TAG, " Inicializando servicios de sincronización...")
             
             // 1. WorkManager: Sincronización periódica cada 15 min (backup)
             syncManager.startPeriodicSync()
-            Log.d(TAG, "✅ WorkManager iniciado (cada 15 min - backup)")
+            Log.d(TAG, "WorkManager iniciado (cada 15 min - backup)")
             
             // 2. ConnectivitySyncService - Sincronización INMEDIATA al recuperar conexión
             connectivitySyncService.start()
-            Log.d(TAG, "✅ ConnectivitySyncService iniciado")
+            Log.d(TAG, "ConnectivitySyncService iniciado")
             Log.d(TAG, "   ├── isRunning: ${connectivitySyncService.isRunning()}")
 
             // 3. Sincronización inicial con delay (por si hay eventos pendientes)
             syncManager.scheduleSyncWithDelay()
-            Log.d(TAG, "✅ Sincronización inicial programada")
+            Log.d(TAG, "Sincronización inicial programada")
             
             Log.d(TAG, "")
-            Log.d(TAG, "═══════════════════════════════════════")
-            Log.d(TAG, "✅ TODOS LOS SERVICIOS DE SYNC INICIADOS")
-            Log.d(TAG, "═══════════════════════════════════════")
+            Log.d(TAG, "TODOS LOS SERVICIOS DE SYNC INICIADOS")
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error inicializando sync: ${e.message}", e)
+            Log.e(TAG, "Error inicializando sync: ${e.message}", e)
         }
     }
 }

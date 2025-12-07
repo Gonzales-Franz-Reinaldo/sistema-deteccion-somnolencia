@@ -48,34 +48,28 @@ class NetworkConnectivityObserver @Inject constructor(
      * Observa cambios en la conectividad como Flow.
      */
     fun observe(): Flow<Status> = callbackFlow {
-        Log.d(TAG, "═══════════════════════════════════════")
-        Log.d(TAG, "🔄 INICIANDO OBSERVACIÓN DE CONECTIVIDAD")
-        Log.d(TAG, "═══════════════════════════════════════")
+        Log.d(TAG, "INICIANDO OBSERVACIÓN DE CONECTIVIDAD")
         
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                Log.d(TAG, "═══════════════════════════════════════")
-                Log.d(TAG, "🌐 CONEXIÓN DISPONIBLE")
+                Log.d(TAG, "CONEXIÓN DISPONIBLE")
                 Log.d(TAG, "   Network: $network")
-                Log.d(TAG, "═══════════════════════════════════════")
                 trySend(Status.Available)
             }
             
             override fun onLosing(network: Network, maxMsToLive: Int) {
-                Log.w(TAG, "⚠️ PERDIENDO CONEXIÓN: $network (${maxMsToLive}ms)")
+                Log.w(TAG, "PERDIENDO CONEXIÓN: $network (${maxMsToLive}ms)")
                 trySend(Status.Losing)
             }
             
             override fun onLost(network: Network) {
-                Log.w(TAG, "═══════════════════════════════════════")
-                Log.w(TAG, "❌ CONEXIÓN PERDIDA")
+                Log.w(TAG, "CONEXIÓN PERDIDA")
                 Log.w(TAG, "   Network: $network")
-                Log.w(TAG, "═══════════════════════════════════════")
                 trySend(Status.Lost)
             }
             
             override fun onUnavailable() {
-                Log.w(TAG, "📵 RED NO DISPONIBLE")
+                Log.w(TAG, "RED NO DISPONIBLE")
                 trySend(Status.Unavailable)
             }
             
@@ -85,7 +79,7 @@ class NetworkConnectivityObserver @Inject constructor(
             ) {
                 val hasInternet = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 val validated = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                Log.d(TAG, "📶 Capacidades cambiadas: internet=$hasInternet, validated=$validated")
+                Log.d(TAG, "Capacidades cambiadas: internet=$hasInternet, validated=$validated")
                 
                 if (hasInternet && validated) {
                     trySend(Status.Available)
@@ -102,18 +96,18 @@ class NetworkConnectivityObserver @Inject constructor(
         
         try {
             connectivityManager.registerNetworkCallback(request, callback)
-            Log.d(TAG, "✅ Callback de red registrado")
+            Log.d(TAG, "Callback de red registrado")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error registrando callback: ${e.message}", e)
+            Log.e(TAG, "Error registrando callback: ${e.message}", e)
         }
         
         // Emitir estado inicial
         val currentStatus = getCurrentStatus()
-        Log.d(TAG, "📊 Estado inicial: $currentStatus")
+        Log.d(TAG, "Estado inicial: $currentStatus")
         trySend(currentStatus)
         
         awaitClose {
-            Log.d(TAG, "🛑 Deteniendo observación de conectividad")
+            Log.d(TAG, "Deteniendo observación de conectividad")
             try {
                 connectivityManager.unregisterNetworkCallback(callback)
             } catch (e: Exception) {
@@ -128,20 +122,20 @@ class NetworkConnectivityObserver @Inject constructor(
     fun getCurrentStatus(): Status {
         val network = connectivityManager.activeNetwork
         if (network == null) {
-            Log.d(TAG, "📵 No hay red activa")
+            Log.d(TAG, "No hay red activa")
             return Status.Unavailable
         }
         
         val capabilities = connectivityManager.getNetworkCapabilities(network)
         if (capabilities == null) {
-            Log.d(TAG, "📵 Sin capacidades de red")
+            Log.d(TAG, "Sin capacidades de red")
             return Status.Unavailable
         }
         
         val hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         val validated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         
-        Log.d(TAG, "📶 Estado actual: internet=$hasInternet, validated=$validated")
+        Log.d(TAG, "Estado actual: internet=$hasInternet, validated=$validated")
         
         return if (hasInternet && validated) {
             Status.Available

@@ -1,7 +1,5 @@
-// ============================================
 // HEADER DEL MONITOREO DE VIAJE
 // Muestra origen, destino y badge EN VIVO
-// ============================================
 
 import React from 'react';
 

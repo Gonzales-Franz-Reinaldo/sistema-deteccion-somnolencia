@@ -1,7 +1,5 @@
-// ============================================
 // PÁGINA: EDICIÓN DE CHOFER
 // Permite modificar datos de un chofer existente
-// ============================================
 
 import { useParams, Link } from 'react-router-dom';
 import { ChoferForm } from '../../features/choferes/components/ChoferForm';

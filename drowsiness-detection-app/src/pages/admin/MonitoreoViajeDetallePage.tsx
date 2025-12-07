@@ -1,7 +1,5 @@
-// ============================================
 // PÁGINA DE MONITOREO DE VIAJE EN DETALLE
 // Vista completa con mapa GPS en tiempo real
-// ============================================
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -69,14 +67,14 @@ export const MonitoreoViajeDetallePage: React.FC = () => {
       setPosicionDisplay(posicion);
     },
     onChoferConnected: (data) => {
-      console.log('🟢 Chofer conectado:', data.nombre_chofer);
+      console.log('Chofer conectado:', data.nombre_chofer);
     },
     onChoferDisconnected: () => {
-      console.log('🔴 Chofer desconectado');
+      console.log('Chofer desconectado');
     },
     //  Callback cuando se pierde señal por timeout
     onChoferSignalLost: () => {
-      console.warn('📡 Señal GPS del chofer perdida (timeout)');
+      console.warn('Señal GPS del chofer perdida (timeout)');
     },
   });
 

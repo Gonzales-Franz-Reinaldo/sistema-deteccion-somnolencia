@@ -77,7 +77,7 @@ async def crear_evento_somnolencia(
         id_chofer=current_user.id_usuario
     )
     
-    # ← NUEVO: Notificar a admins conectados
+    #  Notificar a admins conectados
     try:
         evento_ws = EventoSomnolenciaWS(
             id_viaje=evento.id_viaje,
@@ -132,7 +132,7 @@ async def crear_eventos_batch(
     - Máximo 100 eventos por request
     - Todos los eventos se crean en una sola transacción
     """
-    logger.info(f"📦 Recibiendo batch de {len(batch.eventos)} eventos de chofer {current_user.id_usuario}")
+    logger.info(f"Recibiendo batch de {len(batch.eventos)} eventos de chofer {current_user.id_usuario}")
     
     # Verificar que es chofer
     if current_user.rol != "chofer":
@@ -149,7 +149,7 @@ async def crear_eventos_batch(
             id_chofer=current_user.id_usuario
         )
         
-        logger.info(f"✅ Batch creado: {len(db_eventos)} eventos guardados")
+        logger.info(f"Batch creado: {len(db_eventos)} eventos guardados")
         
         # Notificar eventos críticos en background (no bloquea la respuesta)
         # Usar try/except para que si falla la notificación, no falle el endpoint
@@ -160,12 +160,12 @@ async def crear_eventos_batch(
                 db=db
             )
         except Exception as notif_error:
-            logger.warning(f"⚠️ Error agregando tarea de notificación: {notif_error}")
+            logger.warning(f"Error agregando tarea de notificación: {notif_error}")
         
         return db_eventos
         
     except Exception as e:
-        logger.error(f"❌ Error creando batch: {e}")
+        logger.error(f"Error creando batch: {e}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -321,7 +321,7 @@ def obtener_eventos_recientes(
             detail="Solo el administrador puede acceder a este endpoint"
         )
     
-    logger.info(f"📊 Consultando eventos recientes: minutos={minutos}, limite={limite}, solo_criticos={solo_criticos}")
+    logger.info(f"Consultando eventos recientes: minutos={minutos}, limite={limite}, solo_criticos={solo_criticos}")
     
     eventos = crud_eventos.obtener_eventos_recientes(
         db=db,
@@ -330,7 +330,7 @@ def obtener_eventos_recientes(
         solo_criticos=solo_criticos
     )
     
-    logger.info(f"📊 Encontrados {len(eventos)} eventos")
+    logger.info(f"Encontrados {len(eventos)} eventos")
     
     # Agregar nombre del chofer a cada evento
     resultado = []

@@ -1,6 +1,4 @@
-// ============================================
 // TIPOS E INTERFACES PARA EMPRESAS
-// ============================================
 
 /**
  * Interfaz para una Empresa

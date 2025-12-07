@@ -210,7 +210,7 @@ fun DashboardScreen(
             isLoading = isLoading,
             onConfirm = {
                 viewModel.iniciarViaje {
-                    // ✅ Pasar datos del viaje
+                    // Pasar datos del viaje
                     viajeAsignado?.let { viaje ->
                         onStartMonitoring(viaje.idViaje, viaje.origen, viaje.destino)
                     }
@@ -491,7 +491,7 @@ fun StartMonitoringButton(
     }
     
     val buttonColor = when {
-        viaje?.estado == EstadoViaje.EN_CURSO -> Color(0xFF2196F3) // Azul para continuar
+        viaje?.estado == EstadoViaje.EN_CURSO -> Color(0xFF2196F3) 
         isEnabled -> GreenSuccess
         else -> Color.Gray
     }

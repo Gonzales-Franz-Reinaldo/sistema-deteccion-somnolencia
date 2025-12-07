@@ -1,6 +1,4 @@
-// ============================================
 // UTILIDAD PARA FORMATEAR FECHAS
-// ============================================
 
 /**
  * Formatea una fecha para mostrarla de forma amigable

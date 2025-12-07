@@ -63,15 +63,15 @@ class SaveMetricsUseCase @Inject constructor(
 
                 val id = metricsRepository.saveMetrics(entity)
 
-                Log.d(TAG, "✅ Métricas guardadas: ID=$id, AlertLevel=${metrics.alertLevel}")
+                Log.d(TAG, "Métricas guardadas: ID=$id, AlertLevel=${metrics.alertLevel}")
 
                 Result.success(id)
             } else {
-                Log.d(TAG, "⏭️ Métricas sin alertas - no guardadas")
+                Log.d(TAG, "Métricas sin alertas - no guardadas")
                 Result.success(-1L)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al guardar métricas: ${e.message}", e)
+            Log.e(TAG, "Error al guardar métricas: ${e.message}", e)
             Result.failure(e)
         }
     }

@@ -123,24 +123,24 @@ class GPSWebSocketManager @Inject constructor() {
     private fun createWebSocketListener(): WebSocketListener {
         return object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                Log.i(TAG, "✅ WebSocket GPS conectado")
+                Log.i(TAG, "WebSocket GPS conectado")
                 _connectionState.value = GPSWebSocketState.CONNECTED
                 reconnectAttempts = 0
                 startPingJob()
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                Log.d(TAG, "📩 Mensaje recibido: $text")
+                Log.d(TAG, "Mensaje recibido: $text")
                 handleMessage(text)
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                Log.w(TAG, "⚠️ WebSocket cerrándose: $code - $reason")
+                Log.w(TAG, "WebSocket cerrándose: $code - $reason")
                 webSocket.close(1000, null)
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                Log.i(TAG, "🔴 WebSocket cerrado: $code - $reason")
+                Log.i(TAG, "WebSocket cerrado: $code - $reason")
                 _connectionState.value = GPSWebSocketState.DISCONNECTED
                 stopPingJob()
                 
@@ -150,7 +150,7 @@ class GPSWebSocketManager @Inject constructor() {
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                Log.e(TAG, "❌ Error WebSocket: ${t.message}", t)
+                Log.e(TAG, "Error WebSocket: ${t.message}", t)
                 _connectionState.value = GPSWebSocketState.ERROR
                 stopPingJob()
                 
@@ -168,11 +168,11 @@ class GPSWebSocketManager @Inject constructor() {
         try {
             val json = JSONObject(text)
             when (json.optString("type")) {
-                "PONG" -> Log.d(TAG, "🏓 Pong recibido")
-                "ACK" -> Log.d(TAG, "✅ Posición recibida por servidor")
+                "PONG" -> Log.d(TAG, "Pong recibido")
+                "ACK" -> Log.d(TAG, "Posición recibida por servidor")
                 "ERROR" -> {
                     val errorMsg = json.optJSONObject("data")?.optString("mensaje") ?: "Error desconocido"
-                    Log.e(TAG, "❌ Error del servidor: $errorMsg")
+                    Log.e(TAG, "Error del servidor: $errorMsg")
                 }
             }
         } catch (e: Exception) {
@@ -211,9 +211,9 @@ class GPSWebSocketManager @Inject constructor() {
             
             if (success) {
                 _lastSentPosition.value = position
-                Log.d(TAG, "📤 Posición enviada: (${position.lat}, ${position.lng})")
+                Log.d(TAG, "Posición enviada: (${position.lat}, ${position.lng})")
             } else {
-                Log.e(TAG, "❌ Error enviando posición")
+                Log.e(TAG, "Error enviando posición")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error construyendo mensaje: ${e.message}", e)
@@ -271,7 +271,7 @@ class GPSWebSocketManager @Inject constructor() {
                 put("type", "PING")
             }
             webSocket?.send(pingMessage.toString())
-            Log.d(TAG, "🏓 Ping enviado")
+            Log.d(TAG, "Ping enviado")
         } catch (e: Exception) {
             Log.e(TAG, "Error enviando ping: ${e.message}")
         }
@@ -290,7 +290,7 @@ class GPSWebSocketManager @Inject constructor() {
         reconnectAttempts++
         _connectionState.value = GPSWebSocketState.RECONNECTING
         
-        Log.i(TAG, "🔄 Reconectando en ${RECONNECT_DELAY_MS}ms (intento $reconnectAttempts/$MAX_RECONNECT_ATTEMPTS)")
+        Log.i(TAG, "Reconectando en ${RECONNECT_DELAY_MS}ms (intento $reconnectAttempts/$MAX_RECONNECT_ATTEMPTS)")
         
         reconnectJob?.cancel()
         reconnectJob = scope.launch {

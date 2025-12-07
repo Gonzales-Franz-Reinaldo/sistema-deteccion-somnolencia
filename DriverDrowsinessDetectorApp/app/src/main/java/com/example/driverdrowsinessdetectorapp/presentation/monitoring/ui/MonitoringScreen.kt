@@ -53,7 +53,7 @@ fun MonitoringScreen(
     // Establecer el ID del viaje al entrar
     LaunchedEffect(idViaje) {
         viewModel.setViajeId(idViaje)  
-        Log.d("MonitoringScreen", "📋 Viaje ID establecido: $idViaje")
+        Log.d("MonitoringScreen", "Viaje ID establecido: $idViaje")
     }
 
     // Solicitar permisos e iniciar
@@ -223,7 +223,7 @@ fun MonitoringScreen(
                         onViajeCompletado()
                     },
                     onError = { error ->
-                        Toast.makeText(context, "❌ $error", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "$error", Toast.LENGTH_LONG).show()
                     }
                 )
             },

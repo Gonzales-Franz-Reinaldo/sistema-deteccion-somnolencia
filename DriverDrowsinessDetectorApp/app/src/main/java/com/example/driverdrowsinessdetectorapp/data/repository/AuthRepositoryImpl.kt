@@ -22,8 +22,6 @@ class AuthRepositoryImpl @Inject constructor(
             val response = authApi.login(loginRequest)
             
             Log.d("AuthRepository", "=== RESPUESTA EXITOSA ===")
-            Log.d("AuthRepository", "Access Token: ${response.accessToken.take(20)}...")
-            Log.d("AuthRepository", "Refresh Token: ${response.refreshToken?.take(20) ?: "NULL"}...")  
             
             val user = User(
                 id = response.user.id,

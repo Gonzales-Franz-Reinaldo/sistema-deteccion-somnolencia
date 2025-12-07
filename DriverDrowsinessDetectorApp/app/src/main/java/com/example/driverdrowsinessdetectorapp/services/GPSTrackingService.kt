@@ -93,10 +93,10 @@ class GPSTrackingService @Inject constructor(
         currentChoferId = idChofer
         currentToken = token
 
-        Log.i(TAG, "🚀 Iniciando tracking GPS para viaje $idViaje")
+        Log.i(TAG, "Iniciando tracking GPS para viaje $idViaje")
 
         // Conectar WebSocket si hay internet
-        if (networkUtil.isNetworkAvailable()) {  // ← Usando método de instancia
+        if (networkUtil.isNetworkAvailable()) {  
             gpsWebSocketManager.connect(idViaje, idChofer, token)
         }
 
@@ -116,7 +116,7 @@ class GPSTrackingService @Inject constructor(
      * Detener tracking GPS
      */
     fun stopTracking() {
-        Log.i(TAG, "🛑 Deteniendo tracking GPS")
+        Log.i(TAG, "Deteniendo tracking GPS")
 
         stopLocationUpdates()
         gpsWebSocketManager.disconnect()
@@ -159,7 +159,7 @@ class GPSTrackingService @Inject constructor(
                 locationCallback!!,
                 Looper.getMainLooper()
             )
-            Log.i(TAG, "✅ Location updates iniciados")
+            Log.i(TAG, "Location updates iniciados")
         } catch (e: Exception) {
             Log.e(TAG, "Error iniciando location updates: ${e.message}", e)
             _trackingState.value = _trackingState.value.copy(
@@ -186,7 +186,7 @@ class GPSTrackingService @Inject constructor(
     private fun handleLocationUpdate(location: Location) {
         val timestamp = isoFormat.format(Date())
 
-        Log.d(TAG, "📍 Nueva ubicación: (${location.latitude}, ${location.longitude}) " +
+        Log.d(TAG, "Nueva ubicación: (${location.latitude}, ${location.longitude}) " +
                 "speed=${location.speed} bearing=${location.bearing}")
 
         // Crear objeto de posición
@@ -210,7 +210,7 @@ class GPSTrackingService @Inject constructor(
         if (networkUtil.isNetworkAvailable() && gpsWebSocketManager.isConnected()) {
             gpsWebSocketManager.sendPosition(position)
         } else {
-            Log.w(TAG, "📵 Sin conexión, posición no enviada")
+            Log.w(TAG, "Sin conexión, posición no enviada")
             // TODO: Guardar en cola local para enviar después
         }
     }
@@ -222,7 +222,7 @@ class GPSTrackingService @Inject constructor(
         trackingJob?.cancel()
         trackingJob = scope.launch {
             gpsWebSocketManager.connectionState.collect { state ->
-                Log.d(TAG, "📶 Estado WebSocket GPS: $state")
+                Log.d(TAG, "Estado WebSocket GPS: $state")
                 
                 _trackingState.value = _trackingState.value.copy(
                     isConnected = state == GPSWebSocketState.CONNECTED
@@ -238,7 +238,7 @@ class GPSTrackingService @Inject constructor(
                     currentViajeId?.let { viaje ->
                         currentChoferId?.let { chofer ->
                             currentToken?.let { token ->
-                                Log.i(TAG, "🔄 Intentando reconectar WebSocket GPS...")
+                                Log.i(TAG, "Intentando reconectar WebSocket GPS...")
                                 gpsWebSocketManager.connect(viaje, chofer, token)
                             }
                         }

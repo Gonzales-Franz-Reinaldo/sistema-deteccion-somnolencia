@@ -16,9 +16,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object UseCaseModule {
 
-    // ========================================
     //  PROCESSING USE CASES
-    // ========================================
     
     @Provides
     @Singleton
@@ -62,9 +60,7 @@ object UseCaseModule {
         return DetectHandNearEyesUseCase()
     }
     
-    // ========================================
     // EXTRACTION USE CASES
-    // ========================================
     
     @Provides
     @Singleton
@@ -75,9 +71,7 @@ object UseCaseModule {
         return ExtractLandmarksUseCase(faceLandmarkerHelper, handLandmarkerHelper)
     }
     
-    // ========================================
     // FEATURES USE CASES (DETECCIÓN)
-    // ========================================
     
     @Provides
     @Singleton
@@ -109,9 +103,7 @@ object UseCaseModule {
         return DetectEyeRubUseCase() 
     }
     
-    // ========================================
     // MAIN ORCHESTRATORS
-    // ========================================
     
     @Provides
     @Singleton

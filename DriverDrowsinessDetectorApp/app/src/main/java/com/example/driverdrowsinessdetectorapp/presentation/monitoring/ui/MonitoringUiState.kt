@@ -15,7 +15,7 @@ sealed class MonitoringUiState {
     /** Estado de carga */
     data object Loading : MonitoringUiState()
     
-    /** Monitoreo activo - ESTE ES EL QUE USA EL VIEWMODEL */
+    /** Monitoreo activo*/
     data class Active(
         val sessionId: Long,
         val duration: String = "00:00:00",

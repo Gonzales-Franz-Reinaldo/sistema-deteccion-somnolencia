@@ -1,7 +1,5 @@
-// ============================================
 // PÁGINA: ASIGNAR NUEVO VIAJE
 // Formulario de creación de viaje
-// ============================================
 
 import { useNavigate } from 'react-router-dom';
 import { ViajeForm } from '../../../features/viajes/components/ViajeForm';

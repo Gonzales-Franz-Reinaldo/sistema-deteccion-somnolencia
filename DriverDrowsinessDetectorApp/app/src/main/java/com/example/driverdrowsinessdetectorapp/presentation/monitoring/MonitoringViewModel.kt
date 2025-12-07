@@ -49,7 +49,7 @@ class MonitoringViewModel @Inject constructor(
     private val stopGPSTrackingUseCase: StopGPSTrackingUseCase,
     private val preferencesManager: PreferencesManager,
     
-    // ═══ NUEVO: DEPENDENCIA PARA WEBSOCKET DE EVENTOS ═══
+    // ═══  DEPENDENCIA PARA WEBSOCKET DE EVENTOS ═══
     private val sendEventoRealtimeUseCase: SendEventoRealtimeUseCase
 ) : ViewModel() {
 
@@ -110,12 +110,10 @@ class MonitoringViewModel @Inject constructor(
      */
     fun setViajeId(idViaje: Int) {
         currentViajeId = idViaje
-        Log.d(TAG, "📋 Viaje establecido: $idViaje")
+        Log.d(TAG, "Viaje establecido: $idViaje")
     }
 
-    // ═══════════════════════════════════════════════════════════════
     // MÉTODOS PARA GPS TRACKING
-    // ═══════════════════════════════════════════════════════════════
     
     /**
      * Inicia el tracking GPS via WebSocket
@@ -123,7 +121,7 @@ class MonitoringViewModel @Inject constructor(
     private suspend fun startGPSTracking() {
         val viajeId = currentViajeId
         if (viajeId == null) {
-            Log.w(TAG, "⚠️ No hay viaje ID para iniciar GPS tracking")
+            Log.w(TAG, "No hay viaje ID para iniciar GPS tracking")
             return
         }
         
@@ -132,11 +130,11 @@ class MonitoringViewModel @Inject constructor(
             val token = preferencesManager.getAuthToken().first()
             
             if (choferId == null || token == null) {
-                Log.e(TAG, "❌ No hay chofer ID ($choferId) o token para GPS tracking")
+                Log.e(TAG, "No hay chofer ID ($choferId) o token para GPS tracking")
                 return
             }
             
-            Log.d(TAG, "🛰️ Iniciando GPS tracking para viaje $viajeId, chofer $choferId")
+            Log.d(TAG, "Iniciando GPS tracking para viaje $viajeId, chofer $choferId")
             
             startGPSTrackingUseCase(viajeId, choferId, token)
             
@@ -152,14 +150,14 @@ class MonitoringViewModel @Inject constructor(
                         )
                     }
                     
-                    Log.d(TAG, "📶 GPS State: tracking=${state.isTracking}, connected=${state.isConnected}")
+                    Log.d(TAG, "GPS State: tracking=${state.isTracking}, connected=${state.isConnected}")
                 }
             }
             
-            Log.d(TAG, "✅ GPS tracking iniciado correctamente")
+            Log.d(TAG, "GPS tracking iniciado correctamente")
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error iniciando GPS tracking: ${e.message}", e)
+            Log.e(TAG, "Error iniciando GPS tracking: ${e.message}", e)
         }
     }
     
@@ -167,31 +165,29 @@ class MonitoringViewModel @Inject constructor(
      * Detiene el tracking GPS
      */
     private fun stopGPSTracking() {
-        Log.d(TAG, "🛑 Deteniendo GPS tracking...")
+        Log.d(TAG, "Deteniendo GPS tracking...")
         gpsObserverJob?.cancel()
         gpsObserverJob = null
         stopGPSTrackingUseCase()
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // ← NUEVO: MÉTODOS PARA WEBSOCKET DE EVENTOS
-    // ═══════════════════════════════════════════════════════════════
+    // ← : MÉTODOS PARA WEBSOCKET DE EVENTOS
     
     /**
      * Inicia la conexión WebSocket para eventos de somnolencia.
      */
     private suspend fun startEventosWebSocket() {
         val viajeId = currentViajeId ?: run {
-            Log.e(TAG, "❌ No hay viaje ID para conectar WebSocket eventos")
+            Log.e(TAG, "No hay viaje ID para conectar WebSocket eventos")
             return
         }
         
         try {
-            Log.d(TAG, "🔌 Conectando WebSocket de eventos para viaje $viajeId")
+            Log.d(TAG, "Conectando WebSocket de eventos para viaje $viajeId")
             sendEventoRealtimeUseCase.connect(viajeId)
-            Log.d(TAG, "✅ WebSocket de eventos conectado")
+            Log.d(TAG, "WebSocket de eventos conectado")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error conectando WebSocket de eventos: ${e.message}", e)
+            Log.e(TAG, "Error conectando WebSocket de eventos: ${e.message}", e)
         }
     }
     
@@ -199,7 +195,7 @@ class MonitoringViewModel @Inject constructor(
      * Detiene la conexión WebSocket de eventos.
      */
     private fun stopEventosWebSocket() {
-        Log.d(TAG, "🔌 Desconectando WebSocket de eventos")
+        Log.d(TAG, "Desconectando WebSocket de eventos")
         sendEventoRealtimeUseCase.disconnect()
     }
 
@@ -208,7 +204,7 @@ class MonitoringViewModel @Inject constructor(
      */
     fun startTrip() {
         viewModelScope.launch {
-            Log.d(TAG, "🚀 Iniciando viaje...")
+            Log.d(TAG, "Iniciando viaje...")
             
             _uiState.value = MonitoringUiState.Starting
             detectDrowsinessUseCase.reset()
@@ -227,7 +223,7 @@ class MonitoringViewModel @Inject constructor(
                 // Iniciar GPS Tracking WebSocket
                 startGPSTracking()
                 
-                // ← NUEVO: Iniciar WebSocket de eventos
+                // ← Iniciar WebSocket de eventos
                 startEventosWebSocket()
                 
                 _uiState.value = MonitoringUiState.Active(
@@ -244,10 +240,10 @@ class MonitoringViewModel @Inject constructor(
                 
                 startTimer()
                 
-                Log.d(TAG, "✅ Sesión iniciada: ID=${session.id}, ViajeID=$currentViajeId")
+                Log.d(TAG, "Sesión iniciada: ID=${session.id}, ViajeID=$currentViajeId")
                 
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Error al iniciar sesión: ${e.message}", e)
+                Log.e(TAG, "Error al iniciar sesión: ${e.message}", e)
                 _uiState.value = MonitoringUiState.Error("Error al iniciar: ${e.message}")
             }
         }
@@ -357,20 +353,20 @@ class MonitoringViewModel @Inject constructor(
                 val alertType = metrics.alertType ?: return@launch
                 
                 // LOG ANTES DE VERIFICAR COOLDOWN
-                Log.d(TAG, "🔔 Intentando guardar evento: ${alertType.name}")
+                Log.d(TAG, "Intentando guardar evento: ${alertType.name}")
                 
                 if (!shouldSaveEvent(alertType, currentTime)) {
-                    Log.d(TAG, "⏭️ Evento ${alertType.name} en cooldown, no guardado")
+                    Log.d(TAG, "Evento ${alertType.name} en cooldown, no guardado")
                     return@launch
                 }
                 
                 val userId = sessionManager.getCurrentSession()?.userId ?: run {
-                    Log.e(TAG, "❌ No hay userId disponible")
+                    Log.e(TAG, "No hay userId disponible")
                     return@launch
                 }
                 
                 // LOG CON ID DE VIAJE
-                Log.d(TAG, "💾 Guardando evento: tipo=${alertType.name}, userId=$userId, sessionId=$sessionId, viajeId=$currentViajeId")
+                Log.d(TAG, "Guardando evento: tipo=${alertType.name}, userId=$userId, sessionId=$sessionId, viajeId=$currentViajeId")
                 
                 //  TODOS LOS MÉTODOS AHORA INCLUYEN idViaje
                 val result = when (alertType) {
@@ -431,12 +427,10 @@ class MonitoringViewModel @Inject constructor(
                 }
                 
                 result.onSuccess { eventoId ->
-                    Log.d(TAG, "✅ Evento guardado exitosamente: ID=$eventoId")
+                    Log.d(TAG, "Evento guardado exitosamente: ID=$eventoId")
                     updateEventosStats(alertType)
                     
-                    // ═══════════════════════════════════════════════════════════════
-                    // ← NUEVO: Enviar evento via WebSocket para notificar al admin
-                    // ═══════════════════════════════════════════════════════════════
+                    //  Enviar evento via WebSocket para notificar al admin
                     currentViajeId?.let { viajeId ->
                         try {
                             val duracion = when (alertType) {
@@ -454,19 +448,18 @@ class MonitoringViewModel @Inject constructor(
                                 earPromedio = metrics.ear,
                                 marPromedio = metrics.mar
                             )
-                            Log.i(TAG, "📤 Evento enviado via WebSocket: ${alertType.name}")
+                            Log.i(TAG, "Evento enviado via WebSocket: ${alertType.name}")
                         } catch (e: Exception) {
-                            Log.w(TAG, "⚠️ Error enviando via WebSocket: ${e.message}")
+                            Log.w(TAG, "Error enviando via WebSocket: ${e.message}")
                         }
                     }
-                    // ═══════════════════════════════════════════════════════════════
                     
                 }.onFailure { error ->
-                    Log.e(TAG, "❌ Error guardando evento: ${error.message}")
+                    Log.e(TAG, "Error guardando evento: ${error.message}")
                 }
                 
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción guardando evento: ${e.message}", e)
+                Log.e(TAG, "Excepción guardando evento: ${e.message}", e)
             }
         }
     }
@@ -612,7 +605,7 @@ class MonitoringViewModel @Inject constructor(
             _uiState.value = currentState.copy(alertLevel = AlertLevel.NORMAL)
         }
         
-        Log.d(TAG, "🟢 Alerta detenida")
+        Log.d(TAG, "Alerta detenida")
     }
 
     /**
@@ -645,7 +638,7 @@ class MonitoringViewModel @Inject constructor(
                 )
                 
                 stopAlert()
-                Log.d(TAG, "⏸️ Viaje PAUSADO (estado en servidor sigue en_curso)")
+                Log.d(TAG, "⏸Viaje PAUSADO (estado en servidor sigue en_curso)")
             }
         }
     }
@@ -672,7 +665,7 @@ class MonitoringViewModel @Inject constructor(
                     eventosGuardados = eventosStats
                 )
                 
-                Log.d(TAG, "▶️ Viaje reanudado")
+                Log.d(TAG, "Viaje reanudado")
             }
         }
     }
@@ -684,7 +677,7 @@ class MonitoringViewModel @Inject constructor(
         val viajeId = currentViajeId
         
         if (viajeId == null) {
-            Log.e(TAG, "❌ No hay viaje ID para finalizar")
+            Log.e(TAG, "No hay viaje ID para finalizar")
             onError("No se encontró el viaje activo")
             return
         }
@@ -692,17 +685,17 @@ class MonitoringViewModel @Inject constructor(
         viewModelScope.launch {
             _finalizarViajeState.value = FinalizarViajeState.Loading
             
-            Log.d(TAG, "🏁 Finalizando viaje ID: $viajeId")
+            Log.d(TAG, "Finalizando viaje ID: $viajeId")
 
             // Detener GPS Tracking 
             stopGPSTracking()
             
-            // ← NUEVO: Detener WebSocket de eventos
+            //  Detener WebSocket de eventos
             stopEventosWebSocket()
             
             viajeRepository.finalizarViaje(viajeId)
                 .onSuccess { viaje ->
-                    Log.d(TAG, "✅ Viaje finalizado exitosamente: ${viaje.estado}")
+                    Log.d(TAG, "Viaje finalizado exitosamente: ${viaje.estado}")
                     
                     // Finalizar sesión local
                     stopAlert()
@@ -716,7 +709,7 @@ class MonitoringViewModel @Inject constructor(
                     onSuccess()
                 }
                 .onFailure { error ->
-                    Log.e(TAG, "❌ Error finalizando viaje: ${error.message}")
+                    Log.e(TAG, "Error finalizando viaje: ${error.message}")
                     _finalizarViajeState.value = FinalizarViajeState.Error(error.message ?: "Error desconocido")
                     onError(error.message ?: "Error al finalizar viaje")
                 }
@@ -735,7 +728,7 @@ class MonitoringViewModel @Inject constructor(
                 
                 _uiState.value = MonitoringUiState.Idle
                 
-                Log.d(TAG, "⏹️ Monitoreo detenido (viaje sigue en_curso)")
+                Log.d(TAG, "Monitoreo detenido (viaje sigue en_curso)")
             } catch (e: Exception) {
                 Log.e(TAG, "Error al detener monitoreo: ${e.message}")
                 _uiState.value = MonitoringUiState.Idle
@@ -756,12 +749,12 @@ class MonitoringViewModel @Inject constructor(
                 detectDrowsinessUseCase.reset()
                 resetEventCooldowns()
                 
-                // ← NUEVO: Detener WebSocket de eventos
+                //  Detener WebSocket de eventos
                 stopEventosWebSocket()
                 
                 _uiState.value = MonitoringUiState.Idle
                 
-                Log.d(TAG, "⏹️ Viaje detenido completamente")
+                Log.d(TAG, "Viaje detenido completamente")
             } catch (e: Exception) {
                 Log.e(TAG, "Error al detener viaje: ${e.message}")
                 _uiState.value = MonitoringUiState.Idle
@@ -802,7 +795,7 @@ class MonitoringViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopGPSTracking()
-        stopEventosWebSocket()  // ← NUEVO
+        stopEventosWebSocket()  
         stopAlert()
 
         gpsObserverJob?.cancel()
@@ -814,7 +807,7 @@ class MonitoringViewModel @Inject constructor(
             }
         }
         
-        Log.d(TAG, "🧹 ViewModel cleared")
+        Log.d(TAG, "ViewModel cleared")
     }
 }
 

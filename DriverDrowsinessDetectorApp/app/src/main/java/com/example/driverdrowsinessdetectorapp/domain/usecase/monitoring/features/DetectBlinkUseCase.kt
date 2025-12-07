@@ -37,7 +37,7 @@ class DetectBlinkUseCase @Inject constructor() {
         if (wasEyesClosed && !isEyesClosed) {
             blinkTimestamps.add(currentTime)
             isBlinking = true
-            Log.d(TAG, "👁️ Parpadeo detectado (EAR: $avgEar)")
+            Log.d(TAG, "Parpadeo detectado (EAR: $avgEar)")
         }
 
         wasEyesClosed = isEyesClosed
@@ -50,7 +50,7 @@ class DetectBlinkUseCase @Inject constructor() {
 
         // LOG cuando excede umbral
         if (blinkCount > BLINK_COUNT_THRESHOLD) {
-            Log.w(TAG, "⚠️ EXCEDE UMBRAL: $blinkCount parpadeos en 60s")
+            Log.w(TAG, "EXCEDE UMBRAL: $blinkCount parpadeos en 60s")
         }
 
         return Triple(isBlinking, blinkCount, isEyesClosed)

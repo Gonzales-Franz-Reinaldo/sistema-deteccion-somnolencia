@@ -59,7 +59,7 @@ class SendEventoRealtimeUseCase @Inject constructor(
             // Timestamp en formato ISO 8601
             val timestamp = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             
-            Log.d(TAG, "📤 Enviando evento: tipo=${tipoEvento.name}, severidad=${nivelSeveridad.name}")
+            Log.d(TAG, "Enviando evento: tipo=${tipoEvento.name}, severidad=${nivelSeveridad.name}")
             
             // Enviar via WebSocket
             eventoWebSocketManager.sendEventoSomnolencia(
@@ -76,10 +76,10 @@ class SendEventoRealtimeUseCase @Inject constructor(
                 marPromedio = marPromedio
             )
             
-            Log.d(TAG, "✅ Evento enviado/encolado correctamente")
+            Log.d(TAG, "Evento enviado/encolado correctamente")
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error enviando evento: ${e.message}", e)
+            Log.e(TAG, "Error enviando evento: ${e.message}", e)
         }
     }
     

@@ -70,7 +70,7 @@ class NotificationService:
     
     def __init__(self):
         self._notifications_sent = 0
-        logger.info("🔔 NotificationService inicializado")
+        logger.info(" NotificationService inicializado")
     
     async def notify_evento_somnolencia(
         self,
@@ -122,7 +122,7 @@ class NotificationService:
         self._notifications_sent += sent_count
         
         logger.info(
-            f"🔔 Notificación evento {evento.tipo_evento} "
+            f" Notificación evento {evento.tipo_evento} "
             f"(severidad: {evento.nivel_severidad}) - "
             f"Enviada a {sent_count} usuarios"
         )
@@ -160,10 +160,10 @@ class NotificationService:
         ]
         
         if not eventos_criticos:
-            logger.info(f"📦 Batch de {len(eventos)} eventos sin eventos críticos")
+            logger.info(f" Batch de {len(eventos)} eventos sin eventos críticos")
             return 0
         
-        logger.info(f"🔔 Batch con {len(eventos_criticos)} eventos críticos de {len(eventos)} totales")
+        logger.info(f" Batch con {len(eventos_criticos)} eventos críticos de {len(eventos)} totales")
         
         # Si hay muchos eventos críticos, enviar resumen
         if len(eventos_criticos) > 3:
@@ -200,7 +200,7 @@ class NotificationService:
             }
             
             sent_count = await self._broadcast_to_admins(mensaje)
-            logger.info(f"📤 Resumen de batch enviado a {sent_count} admins")
+            logger.info(f" Resumen de batch enviado a {sent_count} admins")
             return sent_count
         
         # Si son pocos eventos críticos, notificar individualmente

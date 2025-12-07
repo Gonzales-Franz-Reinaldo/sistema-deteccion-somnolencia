@@ -42,10 +42,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    //  URL obtenida de BuildConfig (configurada en build.gradle.kts)
-    // Ya no necesitas cambiar nada aquí, solo en build.gradle.kts
-
-    // CONFIGURACIÓN BASE
 
     @Provides
     @Singleton

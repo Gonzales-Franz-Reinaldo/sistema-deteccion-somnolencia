@@ -1,7 +1,5 @@
-// ============================================
 // SERVICIO API PARA VIAJES
 // Maneja todas las llamadas HTTP relacionadas con viajes
-// ============================================
 
 import apiClient from '../../../lib/api/client';
 import type { 

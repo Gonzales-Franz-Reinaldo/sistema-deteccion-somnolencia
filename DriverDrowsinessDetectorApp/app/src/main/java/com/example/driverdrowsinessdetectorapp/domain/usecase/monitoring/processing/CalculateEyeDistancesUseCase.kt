@@ -41,7 +41,7 @@ class CalculateEyeDistancesUseCase @Inject constructor() {
     operator fun invoke(faceLandmarks: List<NormalizedLandmark>): EyeDistances {
         //  VERIFICACIÓN CORRECTA
         if (faceLandmarks.size < 468) {
-            Log.w(TAG, "⚠️ Landmarks insuficientes: ${faceLandmarks.size}")
+            Log.w(TAG, "Landmarks insuficientes: ${faceLandmarks.size}")
             return EyeDistances(0f, 0f, 0f, 0f)
         }
 
@@ -66,8 +66,8 @@ class CalculateEyeDistancesUseCase @Inject constructor() {
             val horizontalRight = euclideanDistance(rightLeft, rightRight)
             val horizontalLeft = euclideanDistance(leftLeft, leftRight)
 
-            Log.d(TAG, "📏 Vertical Right=$verticalRight, Horizontal Right=$horizontalRight")
-            Log.d(TAG, "📏 Vertical Left=$verticalLeft, Horizontal Left=$horizontalLeft")
+            Log.d(TAG, "Vertical Right=$verticalRight, Horizontal Right=$horizontalRight")
+            Log.d(TAG, "Vertical Left=$verticalLeft, Horizontal Left=$horizontalLeft")
 
             return EyeDistances(
                 verticalRightEyelid = verticalRight,
@@ -76,7 +76,7 @@ class CalculateEyeDistancesUseCase @Inject constructor() {
                 horizontalLeftEye = horizontalLeft
             )
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error: ${e.message}", e)
+            Log.e(TAG, "Error: ${e.message}", e)
             return EyeDistances(0f, 0f, 0f, 0f)
         }
     }

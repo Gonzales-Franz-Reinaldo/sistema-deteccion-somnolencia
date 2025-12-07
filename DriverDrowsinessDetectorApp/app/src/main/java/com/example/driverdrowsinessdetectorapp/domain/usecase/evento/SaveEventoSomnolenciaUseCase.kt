@@ -48,7 +48,7 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
      */
     suspend operator fun invoke(params: EventoParams): Result<Long> {
         return try {
-            Log.d(TAG, "📝 Guardando evento: ${params.tipoEvento}, Severidad: ${params.nivelSeveridad}")
+            Log.d(TAG, "Guardando evento: ${params.tipoEvento}, Severidad: ${params.nivelSeveridad}")
             
             // 1. Obtener ubicación GPS actual
             val location = obtenerUbicacion()
@@ -59,7 +59,7 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
             // 3. SIEMPRE guardar en Room primero (offline-first)
             val id = eventoRepository.saveEvento(evento)
             
-            Log.d(TAG, "✅ Evento guardado en Room: ID=$id, GPS=${location != null}")
+            Log.d(TAG, "Evento guardado en Room: ID=$id, GPS=${location != null}")
             
             // 4. Intentar sincronización inmediata (NO bloquea el flujo principal)
             CoroutineScope(Dispatchers.IO).launch {
@@ -68,16 +68,16 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
                     if (synced) {
                         Log.d(TAG, "⚡ Sincronización inmediata exitosa para evento $id")
                     } else {
-                        Log.d(TAG, "📵 Evento $id pendiente de sincronización (WorkManager lo reintentará)")
+                        Log.d(TAG, "Evento $id pendiente de sincronización (WorkManager lo reintentará)")
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "⚠️ Error en sync inmediata: ${e.message} - WorkManager lo reintentará")
+                    Log.e(TAG, "Error en sync inmediata: ${e.message} - WorkManager lo reintentará")
                 }
             }
             
             Result.success(id)
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error guardando evento: ${e.message}", e)
+            Log.e(TAG, "Error guardando evento: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -90,7 +90,7 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
     suspend fun saveMicrosleep(
         idChofer: Int,
         sessionId: Long,
-        idViaje: Int? = null,  // ✅ Ahora se usa
+        idViaje: Int? = null,  
         duracionSegundos: Float,
         nivelSeveridad: AlertLevel = AlertLevel.CRITICAL
     ): Result<Long> {
@@ -213,12 +213,12 @@ class SaveEventoSomnolenciaUseCase @Inject constructor(
                     result.location
                 }
                 else -> {
-                    Log.w(TAG, "⚠️ No se pudo obtener ubicación GPS")
+                    Log.w(TAG, "No se pudo obtener ubicación GPS")
                     null
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error obteniendo GPS: ${e.message}")
+            Log.e(TAG, "Error obteniendo GPS: ${e.message}")
             null
         }
     }

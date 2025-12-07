@@ -1,7 +1,5 @@
-// ============================================
 // HOOK PERSONALIZADO PARA GESTIÓN DE CHOFERES
 // Maneja estado, carga de datos y operaciones CRUD
-// ============================================
 
 import { useState, useEffect, useCallback } from 'react';
 import { choferesApi } from '../services/choferesApi';

@@ -29,7 +29,7 @@ class GetCurrentLocationUseCase @Inject constructor(
         return try {
             // Verificar permisos primero
             if (!locationService.hasLocationPermission()) {
-                Log.w(TAG, "⚠️ Sin permisos de ubicación")
+                Log.w(TAG, "Sin permisos de ubicación")
                 return LocationResult.NoPermission
             }
             
@@ -37,17 +37,17 @@ class GetCurrentLocationUseCase @Inject constructor(
             val location = locationService.getCurrentLocation()
             
             if (location != null && location.isValid()) {
-                Log.d(TAG, "✅ Ubicación obtenida: ${location.latitude}, ${location.longitude}")
+                Log.d(TAG, "Ubicación obtenida: ${location.latitude}, ${location.longitude}")
                 LocationResult.Success(location)
             } else {
-                Log.w(TAG, "⚠️ No se pudo obtener ubicación válida")
+                Log.w(TAG, "No se pudo obtener ubicación válida")
                 LocationResult.Unavailable
             }
         } catch (e: SecurityException) {
-            Log.e(TAG, "❌ Error de permisos: ${e.message}")
+            Log.e(TAG, "Error de permisos: ${e.message}")
             LocationResult.NoPermission
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error obteniendo ubicación: ${e.message}", e)
+            Log.e(TAG, "Error obteniendo ubicación: ${e.message}", e)
             LocationResult.Error(e.message ?: "Error desconocido")
         }
     }

@@ -71,10 +71,10 @@ fun CameraPreview(
                 )
 
                 isCameraReady = true
-                Log.d("CameraPreview", "✅ Cámara inicializada correctamente")
+                Log.d("CameraPreview", "Cámara inicializada correctamente")
 
             } catch (e: Exception) {
-                Log.e("CameraPreview", "❌ Error al inicializar cámara: ${e.message}", e)
+                Log.e("CameraPreview", "Error al inicializar cámara: ${e.message}", e)
             }
         }, ContextCompat.getMainExecutor(context))
 
@@ -132,7 +132,7 @@ private fun processImageProxy(imageProxy: ImageProxy, onFrameCaptured: (Bitmap) 
         onFrameCaptured(rotatedBitmap)
 
     } catch (e: Exception) {
-        Log.e("CameraPreview", "❌ Error al procesar frame: ${e.message}", e)
+        Log.e("CameraPreview", "Error al procesar frame: ${e.message}", e)
     } finally {
         imageProxy.close()
     }

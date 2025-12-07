@@ -35,11 +35,11 @@ class EventoSomnolenciaRepositoryImpl @Inject constructor(
             require(evento.validar()) { "Evento inválido: $evento" }
             
             val id = eventoSomnolenciaDao.insert(evento)
-            Log.d(TAG, "✅ Evento guardado: ID=$id, Tipo=${evento.tipoEvento}, " +
+            Log.d(TAG, "Evento guardado: ID=$id, Tipo=${evento.tipoEvento}, " +
                       "Severidad=${evento.nivelSeveridad}")
             id
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error guardando evento: ${e.message}", e)
+            Log.e(TAG, "Error guardando evento: ${e.message}", e)
             throw e
         }
     }
@@ -52,10 +52,10 @@ class EventoSomnolenciaRepositoryImpl @Inject constructor(
             }
             
             val ids = eventoSomnolenciaDao.insertAll(eventos)
-            Log.d(TAG, "✅ ${eventos.size} eventos guardados")
+            Log.d(TAG, "${eventos.size} eventos guardados")
             ids
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error guardando eventos en batch: ${e.message}", e)
+            Log.e(TAG, "Error guardando eventos en batch: ${e.message}", e)
             throw e
         }
     }
@@ -63,9 +63,9 @@ class EventoSomnolenciaRepositoryImpl @Inject constructor(
     override suspend fun updateEvento(evento: EventoSomnolenciaEntity) {
         try {
             eventoSomnolenciaDao.update(evento)
-            Log.d(TAG, "✅ Evento actualizado: ID=${evento.id}")
+            Log.d(TAG, "Evento actualizado: ID=${evento.id}")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error actualizando evento: ${e.message}", e)
+            Log.e(TAG, "Error actualizando evento: ${e.message}", e)
             throw e
         }
     }
@@ -77,9 +77,9 @@ class EventoSomnolenciaRepositoryImpl @Inject constructor(
                 idServidor = idServidor,
                 timestampSync = System.currentTimeMillis()
             )
-            Log.d(TAG, "✅ Evento marcado como sincronizado: ID=$id, ServerID=$idServidor")
+            Log.d(TAG, "Evento marcado como sincronizado: ID=$id, ServerID=$idServidor")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error marcando evento como sincronizado: ${e.message}", e)
+            Log.e(TAG, "Error marcando evento como sincronizado: ${e.message}", e)
             throw e
         }
     }
@@ -91,9 +91,9 @@ class EventoSomnolenciaRepositoryImpl @Inject constructor(
                 error = error,
                 timestamp = System.currentTimeMillis()
             )
-            Log.w(TAG, "⚠️ Evento marcado con error de sync: ID=$id, Error=$error")
+            Log.w(TAG, "Evento marcado con error de sync: ID=$id, Error=$error")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error marcando fallo de sync: ${e.message}", e)
+            Log.e(TAG, "Error marcando fallo de sync: ${e.message}", e)
             throw e
         }
     }
@@ -159,9 +159,9 @@ class EventoSomnolenciaRepositoryImpl @Inject constructor(
     override suspend fun deleteEvento(id: Long) {
         try {
             eventoSomnolenciaDao.deleteById(id)
-            Log.d(TAG, "✅ Evento eliminado: ID=$id")
+            Log.d(TAG, "Evento eliminado: ID=$id")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error eliminando evento: ${e.message}", e)
+            Log.e(TAG, "Error eliminando evento: ${e.message}", e)
             throw e
         }
     }
@@ -169,9 +169,9 @@ class EventoSomnolenciaRepositoryImpl @Inject constructor(
     override suspend fun deleteEventosBySession(sessionId: Long) {
         try {
             eventoSomnolenciaDao.deleteBySessionId(sessionId)
-            Log.d(TAG, "✅ Eventos de sesión eliminados: SessionID=$sessionId")
+            Log.d(TAG, "Eventos de sesión eliminados: SessionID=$sessionId")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error eliminando eventos de sesión: ${e.message}", e)
+            Log.e(TAG, "Error eliminando eventos de sesión: ${e.message}", e)
             throw e
         }
     }
@@ -179,10 +179,10 @@ class EventoSomnolenciaRepositoryImpl @Inject constructor(
     override suspend fun deleteSyncedOlderThan(timestamp: Long): Int {
         return try {
             val count = eventoSomnolenciaDao.deleteSyncedOlderThan(timestamp)
-            Log.d(TAG, "✅ $count eventos antiguos sincronizados eliminados")
+            Log.d(TAG, "$count eventos antiguos sincronizados eliminados")
             count
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error eliminando eventos antiguos: ${e.message}", e)
+            Log.e(TAG, "Error eliminando eventos antiguos: ${e.message}", e)
             throw e
         }
     }
@@ -190,9 +190,9 @@ class EventoSomnolenciaRepositoryImpl @Inject constructor(
     override suspend fun deleteAllEventos() {
         try {
             eventoSomnolenciaDao.deleteAll()
-            Log.d(TAG, "✅ Todos los eventos eliminados")
+            Log.d(TAG, "Todos los eventos eliminados")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error eliminando todos los eventos: ${e.message}", e)
+            Log.e(TAG, "Error eliminando todos los eventos: ${e.message}", e)
             throw e
         }
     }

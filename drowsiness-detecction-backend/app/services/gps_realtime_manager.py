@@ -109,7 +109,7 @@ class GPSRealtimeManager:
                 self._chofer_connections[id_viaje] = connection
                 self._total_connections += 1
             
-            logger.info(f"🚗 Chofer conectado GPS: viaje={id_viaje}, chofer={nombre_chofer}")
+            logger.info(f"Chofer conectado GPS: viaje={id_viaje}, chofer={nombre_chofer}")
             
             # Notificar a admins suscritos
             await self._notify_admins_chofer_status(
@@ -130,7 +130,7 @@ class GPSRealtimeManager:
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error conectando chofer GPS: {e}")
+            logger.error(f" Error conectando chofer GPS: {e}")
             return False
     
     async def disconnect_chofer(self, id_viaje: int):
@@ -145,7 +145,7 @@ class GPSRealtimeManager:
                 connection = self._chofer_connections[id_viaje]
                 del self._chofer_connections[id_viaje]
                 
-                logger.info(f"🔌 Chofer desconectado GPS: viaje={id_viaje}")
+                logger.info(f" Chofer desconectado GPS: viaje={id_viaje}")
                 
                 # Notificar a admins (fuera del lock)
                 asyncio.create_task(
@@ -184,7 +184,7 @@ class GPSRealtimeManager:
             Número de admins que recibieron la actualización
         """
         if id_viaje not in self._chofer_connections:
-            logger.warning(f"⚠️ Viaje {id_viaje} no tiene chofer conectado")
+            logger.warning(f" Viaje {id_viaje} no tiene chofer conectado")
             return 0
         
         connection = self._chofer_connections[id_viaje]
@@ -202,7 +202,7 @@ class GPSRealtimeManager:
         connection.last_update = datetime.utcnow()
         
         # ← NUEVO: Log de posición recibida
-        logger.info(f"📍 Posición recibida de chofer {connection.nombre_chofer}: ({lat}, {lng})")
+        logger.info(f" Posición recibida de chofer {connection.nombre_chofer}: ({lat}, {lng})")
         
         # Construir mensaje para admins
         message = {
@@ -215,13 +215,13 @@ class GPSRealtimeManager:
         
         # Enviar a todos los admins suscritos
         admins_count = len(self._admin_subscriptions.get(id_viaje, []))
-        logger.info(f"📡 Retransmitiendo a {admins_count} admins suscritos al viaje {id_viaje}")
+        logger.info(f" Retransmitiendo a {admins_count} admins suscritos al viaje {id_viaje}")
         
         sent_count = await self._broadcast_to_admins(id_viaje, message)
         self._total_updates_sent += sent_count
         
         # ← NUEVO: Log de envío completado
-        logger.info(f"✅ Posición enviada a {sent_count}/{admins_count} admins")
+        logger.info(f" Posición enviada a {sent_count}/{admins_count} admins")
         
         return sent_count
     
@@ -257,7 +257,7 @@ class GPSRealtimeManager:
                 )
                 self._admin_subscriptions[id_viaje].append(subscription)
             
-            logger.info(f"👁️ Admin {user_id} suscrito a GPS viaje {id_viaje}")
+            logger.info(f" Admin {user_id} suscrito a GPS viaje {id_viaje}")
             
             # Enviar estado actual del chofer si está conectado
             if id_viaje in self._chofer_connections:
@@ -282,7 +282,7 @@ class GPSRealtimeManager:
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error suscribiendo admin GPS: {e}")
+            logger.error(f" Error suscribiendo admin GPS: {e}")
             return False
     
     async def unsubscribe_admin(self, id_viaje: int, user_id: int):
@@ -304,7 +304,7 @@ class GPSRealtimeManager:
                 if not self._admin_subscriptions[id_viaje]:
                     del self._admin_subscriptions[id_viaje]
         
-        logger.info(f"👁️ Admin {user_id} desuscrito de GPS viaje {id_viaje}")
+        logger.info(f" Admin {user_id} desuscrito de GPS viaje {id_viaje}")
     
     async def unsubscribe_admin_by_websocket(self, websocket: WebSocket):
         """

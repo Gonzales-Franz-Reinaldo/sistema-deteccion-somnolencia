@@ -144,7 +144,7 @@ export const useGPSRealtime = ({
     // Verificar si hay advertencia (señal débil)
     if (timeSinceLastPosition >= CHOFER_WARNING_TIMEOUT_MS && timeSinceLastPosition < CHOFER_OFFLINE_TIMEOUT_MS) {
       if (!isChoferSignalWeak) {
-        console.warn(`⚠️ Señal GPS débil: ${seconds}s sin actualización`);
+        console.warn(` Señal GPS débil: ${seconds}s sin actualización`);
         setIsChoferSignalWeak(true);
       }
     } else if (timeSinceLastPosition < CHOFER_WARNING_TIMEOUT_MS) {
@@ -156,7 +156,7 @@ export const useGPSRealtime = ({
     // Verificar si el chofer está offline (timeout completo)
     if (timeSinceLastPosition >= CHOFER_OFFLINE_TIMEOUT_MS) {
       if (isChoferOnline && wasChoferOnlineRef.current) {
-        console.warn(`🔴 Chofer offline detectado por timeout: ${seconds}s sin señal`);
+        console.warn(` Chofer offline detectado por timeout: ${seconds}s sin señal`);
         setIsChoferOnline(false);
         setIsChoferSignalWeak(false);
         wasChoferOnlineRef.current = false;
@@ -241,7 +241,7 @@ export const useGPSRealtime = ({
             id_chofer: message.id_chofer!,
             nombre_chofer: message.nombre_chofer!,
           });
-          console.log('🟢 Chofer conectado GPS:', message.nombre_chofer);
+          console.log(' Chofer conectado GPS:', message.nombre_chofer);
           break;
           
         case 'CHOFER_DISCONNECTED':
@@ -253,7 +253,7 @@ export const useGPSRealtime = ({
           onChoferDisconnected?.({
             ultima_posicion: message.ultima_posicion,
           });
-          console.log('🔴 Chofer desconectado GPS (notificado por servidor)');
+          console.log(' Chofer desconectado GPS (notificado por servidor)');
           break;
           
         case 'PONG':
@@ -294,13 +294,13 @@ export const useGPSRealtime = ({
     setConnectionStatus('CONNECTING');
     
     const wsUrl = `${WS_BASE_URL}/api/v1/gps/admin/${idViaje}?token=${token}`;
-    console.log('🛰️ Conectando GPS WebSocket:', wsUrl);
+    console.log(' Conectando GPS WebSocket:', wsUrl);
     
     try {
       const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
-        console.log('✅ GPS WebSocket conectado');
+        console.log(' GPS WebSocket conectado');
         setConnectionStatus('CONNECTED');
         reconnectAttemptsRef.current = 0;
         
@@ -318,12 +318,12 @@ export const useGPSRealtime = ({
       ws.onmessage = handleMessage;
       
       ws.onerror = (error) => {
-        console.error('❌ Error GPS WebSocket:', error);
+        console.error(' Error GPS WebSocket:', error);
         setConnectionStatus('ERROR');
       };
       
       ws.onclose = (event) => {
-        console.log('🔌 GPS WebSocket cerrado:', event.code, event.reason);
+        console.log(' GPS WebSocket cerrado:', event.code, event.reason);
         clearTimers();
         
         // Solo reconectar si no fue cierre intencional
@@ -333,14 +333,14 @@ export const useGPSRealtime = ({
           // Reconectar con backoff exponencial
           if (reconnectAttemptsRef.current < maxReconnectAttempts) {
             const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-            console.log(`🔄 Reconectando GPS en ${delay}ms... (intento ${reconnectAttemptsRef.current + 1})`);
+            console.log(` Reconectando GPS en ${delay}ms... (intento ${reconnectAttemptsRef.current + 1})`);
             
             reconnectTimeoutRef.current = setTimeout(() => {
               reconnectAttemptsRef.current++;
               connect();
             }, delay);
           } else {
-            console.error('❌ Máximo de reconexiones GPS alcanzado');
+            console.error(' Máximo de reconexiones GPS alcanzado');
             setConnectionStatus('ERROR');
           }
         } else {

@@ -72,7 +72,7 @@ class EventoNotificationService:
     def __init__(self):
         self._notificaciones_enviadas = 0
         self._batches_enviados = 0
-        logger.info("🔔 EventoNotificationService inicializado")
+        logger.info("EventoNotificationService inicializado")
     
     async def notificar_evento(
         self,
@@ -95,14 +95,14 @@ class EventoNotificationService:
             self._notificaciones_enviadas += sent_count
             
             logger.info(
-                f"🔔 Notificación enviada: {evento.tipo_evento} "
+                f"Notificación enviada: {evento.tipo_evento} "
                 f"({evento.nivel_severidad}) → {sent_count} admins"
             )
             
             return sent_count
             
         except Exception as e:
-            logger.error(f"❌ Error enviando notificación: {e}")
+            logger.error(f"Error enviando notificación: {e}")
             return 0
     
     async def notificar_batch(
@@ -133,14 +133,14 @@ class EventoNotificationService:
             self._batches_enviados += 1
             
             logger.info(
-                f"📦 Notificación batch enviada: {len(eventos)} eventos "
+                f"Notificación batch enviada: {len(eventos)} eventos "
                 f"de {nombre_chofer} → {sent_count} admins"
             )
             
             return sent_count
             
         except Exception as e:
-            logger.error(f"❌ Error enviando notificación batch: {e}")
+            logger.error(f"Error enviando notificación batch: {e}")
             return 0
     
     async def notify_evento_batch(
@@ -161,7 +161,7 @@ class EventoNotificationService:
             Número de notificaciones enviadas
         """
         if not eventos:
-            logger.debug("📦 Batch vacío, no hay nada que notificar")
+            logger.debug("Batch vacío, no hay nada que notificar")
             return 0
         
         try:
@@ -173,11 +173,11 @@ class EventoNotificationService:
             ]
             
             if not eventos_criticos:
-                logger.info(f"📦 Batch de {len(eventos)} eventos sin eventos críticos")
+                logger.info(f"Batch de {len(eventos)} eventos sin eventos críticos")
                 return 0
             
             logger.info(
-                f"🔔 Batch con {len(eventos_criticos)} eventos críticos "
+                f"Batch con {len(eventos_criticos)} eventos críticos "
                 f"de {len(eventos)} totales"
             )
             
@@ -233,14 +233,14 @@ class EventoNotificationService:
             self._batches_enviados += 1
             
             logger.info(
-                f"📤 Resumen de batch enviado a {sent_count} admins: "
+                f"Resumen de batch enviado a {sent_count} admins: "
                 f"{len(eventos)} eventos de {nombre_chofer}"
             )
             
             return sent_count
             
         except Exception as e:
-            logger.error(f"❌ Error en notify_evento_batch: {e}", exc_info=True)
+            logger.error(f"Error en notify_evento_batch: {e}", exc_info=True)
             return 0
     
     def _crear_notificacion_evento(

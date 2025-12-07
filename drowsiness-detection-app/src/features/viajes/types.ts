@@ -1,6 +1,4 @@
-// ============================================
 // TIPOS E INTERFACES PARA FEATURE VIAJES
-// ============================================
 
 /**
  * Estados disponibles para un viaje
@@ -170,7 +168,7 @@ export interface ChoferDisponible {
 }
 
 /**
- * Respuesta del endpoint GET /api/v1/viajes/choferes-disponibles/por-categoria
+ * Respuesta del endpoint 
  */
 export interface ChoferesDisponiblesResponse {
   total: number;

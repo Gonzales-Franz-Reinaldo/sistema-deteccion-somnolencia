@@ -25,7 +25,7 @@ class DetectNoddingUseCase @Inject constructor() {
         //  LOG DE DEBUG cada segundo (con info de roll)
         if (currentTime - lastLogTime > 1000) {
             val rollInfo = if (headPosition.rollAngle != 0f) ", roll=${headPosition.rollAngle.toInt()}°" else ""
-            Log.d(TAG, "📊 Estado: isHeadDown=${headPosition.isHeadDown}, pos=${headPosition.position}$rollInfo, startTime=$headDownStartTime")
+            Log.d(TAG, "Estado: isHeadDown=${headPosition.isHeadDown}, pos=${headPosition.position}$rollInfo, startTime=$headDownStartTime")
             lastLogTime = currentTime
         }
         
@@ -54,7 +54,7 @@ class DetectNoddingUseCase @Inject constructor() {
                 val progress = ((duration.toFloat() / NODDING_DURATION_MS) * 100).toInt().coerceAtMost(100)
                 val remaining = ((NODDING_DURATION_MS - duration) / 1000f).coerceAtLeast(0f)
                 val rollInfo = if (headPosition.rollAngle != 0f) " [roll=${headPosition.rollAngle.toInt()}°]" else ""
-                Log.d(TAG, "⏱️ Progreso: ${duration}ms / ${NODDING_DURATION_MS}ms ($progress%) - Faltan: ${"%.1f".format(remaining)}s$rollInfo")
+                Log.d(TAG, "Progreso: ${duration}ms / ${NODDING_DURATION_MS}ms ($progress%) - Faltan: ${"%.1f".format(remaining)}s$rollInfo")
             }
             
             //  DETECTAR CABECEO A LOS 3 SEGUNDOS
@@ -72,7 +72,7 @@ class DetectNoddingUseCase @Inject constructor() {
                 
                 
                 if (headPosition.rollAngle != 0f) {
-                    Log.w(TAG, "🚨   Roll: ${headPosition.rollAngle.toInt()}°              🚨")
+                    Log.w(TAG, "Roll: ${headPosition.rollAngle.toInt()}°")
                 }
     
                 
@@ -83,7 +83,7 @@ class DetectNoddingUseCase @Inject constructor() {
             if (hasAlertedForCurrentNodding) {
                 val seconds = duration / 1000
                 if (duration % 1000 < 100) {
-                    Log.d(TAG, "⚠️ CABECEO ACTIVO: ${seconds}s - ${headPosition.position}")
+                    Log.d(TAG, "CABECEO ACTIVO: ${seconds}s - ${headPosition.position}")
                 }
                 return Triple(true, noddingCount, noddingDurations)
             }
@@ -95,7 +95,7 @@ class DetectNoddingUseCase @Inject constructor() {
             //  CABEZA EN POSICIÓN NORMAL
             if (headDownStartTime != null) {
                 val duration = currentTime - (headDownStartTime ?: currentTime)
-                Log.d(TAG, "⬆️ ═══════ CABEZA ARRIBA ═══════ (duración: ${duration}ms, tipo: $lastPosition, alertó: $hasAlertedForCurrentNodding)")
+                Log.d(TAG, "CABEZA ARRIBA (duración: ${duration}ms, tipo: $lastPosition, alertó: $hasAlertedForCurrentNodding)")
                 
                 // Reset
                 headDownStartTime = null
@@ -114,6 +114,6 @@ class DetectNoddingUseCase @Inject constructor() {
         hasAlertedForCurrentNodding = false
         lastLogTime = 0L
         lastPosition = ""
-        Log.d(TAG, "🔄 Contadores reseteados")
+        Log.d(TAG, "Contadores reseteados")
     }
 }

@@ -1,7 +1,5 @@
-// ============================================
 // PÁGINA: GESTIÓN DE CHOFERES
 // Vista principal para administrar choferes del sistema
-// ============================================
 
 import { useChoferes } from '../../features/choferes/hooks/useChoferes';
 import { ChoferesTable } from '../../features/choferes/components/ChoferesTable';

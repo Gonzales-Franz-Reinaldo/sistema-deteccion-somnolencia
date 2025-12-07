@@ -26,7 +26,7 @@ class DetectYawnUseCase @Inject constructor() {
                 mouthOpenStartTime = currentTime
                 isCurrentlyYawning = false
                 isMouthOpen = true
-                Log.d(TAG, "👄 Boca abierta")
+                Log.d(TAG, "Boca abierta")
             }
         } else {
             if (isMouthOpen) {
@@ -39,7 +39,7 @@ class DetectYawnUseCase @Inject constructor() {
                     isCurrentlyYawning = true
                     yawnTimestamps.add(currentTime) 
                     yawnDurations.add(duration)
-                    Log.d(TAG, "🚨 BOSTEZO DETECTADO: ${duration}ms")
+                    Log.d(TAG, "BOSTEZO DETECTADO: ${duration}ms")
                     
                     // LIMPIAR timestamps fuera de ventana (últimos 3 minutos)
                     val cutoffTime = currentTime - YAWN_WINDOW_MS
@@ -49,7 +49,7 @@ class DetectYawnUseCase @Inject constructor() {
                     
                     // LOG cuando excede umbral
                     if (yawnCount > 3) {
-                        Log.w(TAG, "⚠️ EXCEDE UMBRAL: $yawnCount bostezos en 3 minutos")
+                        Log.w(TAG, "EXCEDE UMBRAL: $yawnCount bostezos en 3 minutos")
                     }
                     
                     return Triple(true, yawnCount, yawnDurations)

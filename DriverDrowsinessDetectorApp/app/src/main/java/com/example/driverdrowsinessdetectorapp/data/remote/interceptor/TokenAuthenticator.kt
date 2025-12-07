@@ -46,7 +46,7 @@ class TokenAuthenticator @Inject constructor(
     private var isRefreshing = false
     
     override fun authenticate(route: Route?, response: Response): Request? {
-        Log.w(TAG, "⚠️ Recibido 401 - Intentando renovar token...")
+        Log.w(TAG, "Recibido 401 - Intentando renovar token...")
         
         // Evitar múltiples refreshes simultáneos
         synchronized(this) {
@@ -63,7 +63,7 @@ class TokenAuthenticator @Inject constructor(
             }
             
             if (refreshToken.isNullOrBlank()) {
-                Log.e(TAG, "❌ No hay refresh token disponible")
+                Log.e(TAG, "No hay refresh token disponible")
                 clearSessionAndReturn()
                 return null
             }
@@ -72,7 +72,7 @@ class TokenAuthenticator @Inject constructor(
             val newAccessToken = refreshAccessToken(refreshToken)
             
             if (newAccessToken != null) {
-                Log.d(TAG, "✅ Token renovado exitosamente")
+                Log.d(TAG, "Token renovado exitosamente")
                 
                 // Guardar nuevo token
                 runBlocking {
@@ -85,12 +85,12 @@ class TokenAuthenticator @Inject constructor(
                     .addHeader("Authorization", "Bearer $newAccessToken")
                     .build()
             } else {
-                Log.e(TAG, "❌ No se pudo renovar el token")
+                Log.e(TAG, "No se pudo renovar el token")
                 clearSessionAndReturn()
                 null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error renovando token: ${e.message}", e)
+            Log.e(TAG, "Error renovando token: ${e.message}", e)
             clearSessionAndReturn()
             null
         } finally {
@@ -123,11 +123,11 @@ class TokenAuthenticator @Inject constructor(
                 val refreshResponse = gson.fromJson(responseBody, RefreshTokenResponse::class.java)
                 refreshResponse.accessToken
             } else {
-                Log.e(TAG, "❌ Refresh falló: ${response.code}")
+                Log.e(TAG, "Refresh falló: ${response.code}")
                 null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Excepción en refresh: ${e.message}", e)
+            Log.e(TAG, "Excepción en refresh: ${e.message}", e)
             null
         }
     }

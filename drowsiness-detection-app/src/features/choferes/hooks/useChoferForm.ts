@@ -1,8 +1,6 @@
-// ============================================
 // HOOK PERSONALIZADO PARA FORMULARIO DE CHOFER
 // Maneja estado, validaciones y envío del formulario
 // Soporta tanto creación como edición
-// ============================================
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';

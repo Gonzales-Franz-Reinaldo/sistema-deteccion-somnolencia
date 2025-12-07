@@ -56,7 +56,7 @@ class DetectHeadPositionUseCase @Inject constructor() {
         //  SI NO HAY ROSTRO: Mantener último estado conocido
         if (faceLandmarks == null || faceLandmarks.size < 468) {
             if (frameCount % 10 == 0) {
-                Log.w(TAG, "⚠️ Sin rostro - Manteniendo estado: ${if(lastKnownHeadDown) "ABAJO" else "ARRIBA"}")
+                Log.w(TAG, "Sin rostro - Manteniendo estado: ${if(lastKnownHeadDown) "ABAJO" else "ARRIBA"}")
             }
             return HeadPosition(
                 isHeadDown = lastKnownHeadDown,
@@ -95,7 +95,7 @@ class DetectHeadPositionUseCase @Inject constructor() {
             absRoll >= ROLL_SEVERE_THRESHOLD -> {
                 isHeadDown = true
                 position = "cabeceo lateral severo ($direction, roll=${rollAngle.toInt()}°)"
-                Log.w(TAG, "🙇↘️ ROLL SEVERO: ${absRoll.toInt()}° → Cabeceo lateral detectado")
+                Log.w(TAG, "ROLL SEVERO: ${absRoll.toInt()}° → Cabeceo lateral detectado")
             }
             
             // CASO 2: ROLL MODERADO (18-25°) → Cabeceo si pitch no es muy negativo
@@ -109,7 +109,7 @@ class DetectHeadPositionUseCase @Inject constructor() {
                 }
                 
                 if (isHeadDown) {
-                    Log.w(TAG, "🙇↗️ ROLL MODERADO: ${absRoll.toInt()}° + pitch=${"%.4f".format(pitchDifference)} → Cabeceo")
+                    Log.w(TAG, "ROLL MODERADO: ${absRoll.toInt()}° + pitch=${"%.4f".format(pitchDifference)} → Cabeceo")
                 }
             }
             
@@ -149,18 +149,18 @@ class DetectHeadPositionUseCase @Inject constructor() {
         // Log detallado cuando cambia estado
         if (stateChanged) {
             if (isHeadDown) {
-                Log.w(TAG, "🙇⬇️ ═══ CABEZA INCLINADA ═══")
+                Log.w(TAG, " ═══ CABEZA INCLINADA ═══")
                 Log.w(TAG, "    Pitch: ${"%.4f".format(pitchDifference)}")
                 Log.w(TAG, "    Roll: ${rollAngle.toInt()}°")
                 Log.w(TAG, "    Posición: $position")
             } else {
-                Log.d(TAG, "⬆️ Cabeza ARRIBA (pitch=${"%.4f".format(pitchDifference)}, roll=${rollAngle.toInt()}°)")
+                Log.d(TAG, " Cabeza ARRIBA (pitch=${"%.4f".format(pitchDifference)}, roll=${rollAngle.toInt()}°)")
             }
         }
         
         // Log periódico de valores (cada 30 frames)
         if (frameCount % 30 == 0) {
-            Log.d(TAG, "📊 Pitch=${"%.4f".format(pitchDifference)}, Roll=${rollAngle.toInt()}°, Down=$isHeadDown, Pos=$position")
+            Log.d(TAG, "Pitch=${"%.4f".format(pitchDifference)}, Roll=${rollAngle.toInt()}°, Down=$isHeadDown, Pos=$position")
         }
 
         return HeadPosition(
@@ -195,6 +195,6 @@ class DetectHeadPositionUseCase @Inject constructor() {
         wasHeadDown = false
         lastKnownHeadDown = false
         frameCount = 0
-        Log.d(TAG, "🔄 DetectHeadPosition reseteado")
+        Log.d(TAG, "DetectHeadPosition reseteado")
     }
 }

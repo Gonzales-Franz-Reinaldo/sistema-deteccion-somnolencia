@@ -63,7 +63,7 @@ class SyncManager @Inject constructor(
      * Se ejecuta cada 15 minutos cuando hay conexión.
      */
     fun startPeriodicSync() {
-        Log.d(TAG, "🔄 Iniciando sincronización periódica cada $SYNC_INTERVAL_MINUTES minutos")
+        Log.d(TAG, "Iniciando sincronización periódica cada $SYNC_INTERVAL_MINUTES minutos")
         
         val periodicSyncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
             SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES,
@@ -80,11 +80,11 @@ class SyncManager @Inject constructor(
         
         workManager.enqueueUniquePeriodicWork(
             PERIODIC_SYNC_WORK,
-            ExistingPeriodicWorkPolicy.KEEP,  // Mantener si ya existe
+            ExistingPeriodicWorkPolicy.KEEP,  
             periodicSyncRequest
         )
         
-        Log.d(TAG, "✅ Sincronización periódica programada")
+        Log.d(TAG, "Sincronización periódica programada")
     }
     
     /**
@@ -106,7 +106,7 @@ class SyncManager @Inject constructor(
         
         workManager.enqueueUniqueWork(
             IMMEDIATE_SYNC_WORK,
-            ExistingWorkPolicy.REPLACE,  // Reemplazar si ya existe
+            ExistingWorkPolicy.REPLACE,  
             immediateSyncRequest
         )
     }
@@ -116,7 +116,7 @@ class SyncManager @Inject constructor(
      * Útil al iniciar la app.
      */
     fun scheduleSyncWithDelay() {
-        Log.d(TAG, "⏰ Programando sincronización con delay de $INITIAL_DELAY_SECONDS segundos")
+        Log.d(TAG, "Programando sincronización con delay de $INITIAL_DELAY_SECONDS segundos")
         
         val delayedSyncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(syncConstraints)
@@ -136,7 +136,7 @@ class SyncManager @Inject constructor(
      * Detiene la sincronización periódica.
      */
     fun stopPeriodicSync() {
-        Log.d(TAG, "🛑 Deteniendo sincronización periódica")
+        Log.d(TAG, "Deteniendo sincronización periódica")
         workManager.cancelUniqueWork(PERIODIC_SYNC_WORK)
     }
     
@@ -144,7 +144,7 @@ class SyncManager @Inject constructor(
      * Cancela todos los trabajos de sincronización.
      */
     fun cancelAllSync() {
-        Log.d(TAG, "🛑 Cancelando todas las sincronizaciones")
+        Log.d(TAG, "Cancelando todas las sincronizaciones")
         workManager.cancelAllWorkByTag("sync")
     }
     

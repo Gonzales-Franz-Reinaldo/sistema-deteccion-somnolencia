@@ -1,6 +1,4 @@
-// ============================================
 // CONSTANTES PARA FEATURE VIAJES
-// ============================================
 
 import type { CategoriaLicencia } from '../types';
 

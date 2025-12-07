@@ -1,6 +1,4 @@
-// ============================================
 // TIPOS PARA SESIONES Y ALERTAS
-// ============================================
 
 export interface AlertaResumen {
   id_alerta: number;
@@ -39,9 +37,7 @@ export interface DetalleSesion extends SesionResumen {
   alertas: AlertaResumen[];
 }
 
-// ============================================
 // TIPOS PARA FILTROS
-// ============================================
 
 export interface ReporteFiltros {
   fecha_inicio?: string; // YYYY-MM-DD
@@ -55,9 +51,7 @@ export interface ReporteFiltros {
   limit?: number;
 }
 
-// ============================================
 // TIPOS PARA ESTADÍSTICAS
-// ============================================
 
 export interface AlertasPorTipo {
   microsueno: number;
@@ -84,9 +78,7 @@ export interface EstadisticasReporte {
   sesiones_criticas: number;
 }
 
-// ============================================
 // TIPOS PARA RESPUESTAS
-// ============================================
 
 export interface ReportesResponse {
   sesiones: SesionResumen[];
@@ -101,9 +93,7 @@ export interface EstadisticasResponse {
   periodo_fin?: string;
 }
 
-// ============================================
 // ENUMS Y TIPOS LITERALES
-// ============================================
 
 export type TipoAlerta = 
   | 'microsueno' 
@@ -118,9 +108,7 @@ export type EstadoSesion = 'activa' | 'finalizada' | 'interrumpida';
 
 export type NivelAlerta = 'normal' | 'alerta' | 'critico';
 
-// ============================================
 // MAPEOS DE ETIQUETAS
-// ============================================
 
 export const TIPO_ALERTA_LABELS: Record<TipoAlerta, string> = {
   microsueno: 'Microsueños',
@@ -149,9 +137,7 @@ export const NIVEL_ALERTA_LABELS: Record<NivelAlerta, string> = {
   critico: 'Crítico'
 };
 
-// ============================================
 // COLORES POR NIVEL
-// ============================================
 
 export const NIVEL_ALERTA_COLORS: Record<NivelAlerta, string> = {
   normal: 'text-green-600 bg-green-50',

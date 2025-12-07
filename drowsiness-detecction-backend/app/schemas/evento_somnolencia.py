@@ -5,9 +5,7 @@ from decimal import Decimal
 from enum import Enum
 
 
-# ═══════════════════════════════════════════════════════════════
 # ENUMS PARA VALIDACIÓN
-# ═══════════════════════════════════════════════════════════════
 
 class TipoEvento(str, Enum):
     MICROSUENO = "microsueno"
@@ -24,9 +22,7 @@ class NivelSeveridad(str, Enum):
     CRITICAL = "CRITICAL"
 
 
-# ═══════════════════════════════════════════════════════════════
 # SCHEMAS PARA CREAR EVENTOS (desde app móvil)
-# ═══════════════════════════════════════════════════════════════
 
 class EventoSomnolenciaCreate(BaseModel):
     """
@@ -100,9 +96,7 @@ class EventoSomnolenciaBatch(BaseModel):
     )
 
 
-# ═══════════════════════════════════════════════════════════════
 # SCHEMAS PARA RESPUESTAS
-# ═══════════════════════════════════════════════════════════════
 
 class EventoSomnolenciaResponse(BaseModel):
     """
@@ -156,9 +150,7 @@ class EventoConChofer(EventoResumen):
         from_attributes = True
 
 
-# ═══════════════════════════════════════════════════════════════
 # SCHEMAS PARA ESTADÍSTICAS
-# ═══════════════════════════════════════════════════════════════
 
 class EstadisticasChofer(BaseModel):
     """

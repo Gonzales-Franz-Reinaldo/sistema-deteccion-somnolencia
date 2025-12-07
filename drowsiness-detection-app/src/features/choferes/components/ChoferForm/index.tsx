@@ -1,8 +1,6 @@
-// ============================================
 // FORMULARIO COMPLETO DE REGISTRO/EDICIÓN DE CHOFER
 // Incluye todas las secciones integradas
 // Soporta modo creación y edición
-// ============================================
 
 import { useState, useEffect } from 'react';
 import { useChoferForm } from '../../hooks/useChoferForm';
@@ -28,7 +26,7 @@ export const ChoferForm: React.FC<ChoferFormProps> = ({ choferId }) => {
 
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loadingEmpresas, setLoadingEmpresas] = useState(false);
-  const [changePassword, setChangePassword] = useState(false); // Checkbox para cambiar contraseña en modo edición
+  const [changePassword, setChangePassword] = useState(false); 
 
   // Cargar empresas al montar el componente
   useEffect(() => {

@@ -45,26 +45,26 @@ class SyncImmediateUseCase @Inject constructor(
         try {
             // 1. Verificar conectividad
             if (!NetworkUtil.isNetworkAvailable(context)) {
-                Log.d(TAG, "📵 Sin conexión - Evento $eventoId queda pendiente")
+                Log.d(TAG, "Sin conexión - Evento $eventoId queda pendiente")
                 return@withContext false
             }
             
             // 2. Obtener evento de Room
             val evento = eventoRepository.getEventoById(eventoId)
             if (evento == null) {
-                Log.e(TAG, "❌ Evento $eventoId no encontrado en Room")
+                Log.e(TAG, "Evento $eventoId no encontrado en Room")
                 return@withContext false
             }
             
             // 3. Si ya está sincronizado, no hacer nada
             if (evento.sincronizado) {
-                Log.d(TAG, "✅ Evento $eventoId ya estaba sincronizado")
+                Log.d(TAG, "Evento $eventoId ya estaba sincronizado")
                 return@withContext true
             }
             
             // 4. Convertir a DTO y enviar al backend
             val request = EventoRequest.fromEntity(evento)
-            Log.d(TAG, "📤 Enviando evento $eventoId al servidor...")
+            Log.d(TAG, "Enviando evento $eventoId al servidor...")
             
             val response = eventosApi.crearEvento(request)
             
@@ -74,11 +74,11 @@ class SyncImmediateUseCase @Inject constructor(
                 // 5. Marcar como sincronizado en Room
                 eventoRepository.markAsSynced(eventoId, eventoServidor.idEvento)
                 
-                Log.d(TAG, "✅ Evento $eventoId sincronizado → ID servidor: ${eventoServidor.idEvento}")
+                Log.d(TAG, "Evento $eventoId sincronizado → ID servidor: ${eventoServidor.idEvento}")
                 return@withContext true
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "❌ Error del servidor: ${response.code()} - $errorBody")
+                Log.e(TAG, "Error del servidor: ${response.code()} - $errorBody")
                 
                 // Marcar intento fallido
                 eventoRepository.markSyncFailed(eventoId, "HTTP ${response.code()}: $errorBody")
@@ -86,13 +86,13 @@ class SyncImmediateUseCase @Inject constructor(
             }
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Excepción en sincronización inmediata: ${e.message}", e)
+            Log.e(TAG, "Excepción en sincronización inmediata: ${e.message}", e)
             
             // Marcar intento fallido (el evento queda en Room para retry)
             try {
                 eventoRepository.markSyncFailed(eventoId, e.message ?: "Error desconocido")
             } catch (roomError: Exception) {
-                Log.e(TAG, "❌ Error actualizando Room: ${roomError.message}")
+                Log.e(TAG, "Error actualizando Room: ${roomError.message}")
             }
             
             return@withContext false

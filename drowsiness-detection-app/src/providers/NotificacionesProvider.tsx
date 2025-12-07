@@ -8,20 +8,16 @@ import { useNotificacionesSomnolencia, type Notificacion, type ConnectionStatus 
 import { NotificacionesContainer } from '../components/notificaciones/NotificacionesContainer';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
-// ============================================
 // IMPORTAR ARCHIVO DE SONIDO (con fallback)
-// ============================================
 let alertaSonido: string | null = null;
 try {
   // Intentar importar el sonido
   alertaSonido = new URL('../assets/sounds/notificacion_alerta.mp3', import.meta.url).href;
 } catch (e) {
-  console.warn('⚠️ Archivo de sonido no encontrado, las notificaciones no tendrán sonido');
+  console.warn('Archivo de sonido no encontrado, las notificaciones no tendrán sonido');
 }
 
-// ============================================
 // SONIDO DE ALERTA - USANDO ARCHIVO MP3
-// ============================================
 
 let audioInstance: HTMLAudioElement | null = null;
 
@@ -42,7 +38,7 @@ const playAlertSound = (durationMs: number = 5000) => {
   try {
     const audio = getAudioInstance();
     if (!audio) {
-      console.log('🔇 Sin sonido de alerta (archivo no disponible)');
+      console.log('Sin sonido de alerta (archivo no disponible)');
       return;
     }
     
@@ -82,9 +78,7 @@ const stopAlertSound = () => {
   }
 };
 
-// ============================================
 // CONTEXTO
-// ============================================
 
 interface NotificacionesContextValue {
   /** Estado de conexión WebSocket */
@@ -105,9 +99,7 @@ interface NotificacionesContextValue {
 
 const NotificacionesContext = createContext<NotificacionesContextValue | null>(null);
 
-// ============================================
 // HOOK PARA USAR EL CONTEXTO
-// ============================================
 
 export const useNotificaciones = (): NotificacionesContextValue => {
   const context = useContext(NotificacionesContext);
@@ -128,9 +120,7 @@ export const useNotificaciones = (): NotificacionesContextValue => {
   return context;
 };
 
-// ============================================
 // PROVIDER
-// ============================================
 
 interface NotificacionesProviderProps {
   children: React.ReactNode;
@@ -155,7 +145,7 @@ export const NotificacionesProvider: React.FC<NotificacionesProviderProps> = ({
   const shouldEnable = enabled && isAuthenticated && user?.rol === 'admin';
 
   // ← AGREGAR LOG PARA DEPURACIÓN
-  console.log('🔔 NotificacionesProvider:', {
+  console.log('NotificacionesProvider:', {
     enabled,
     isAuthenticated,
     userRol: user?.rol,
@@ -195,7 +185,7 @@ export const NotificacionesProvider: React.FC<NotificacionesProviderProps> = ({
       return newList;
     });
     
-    console.log('🔔 Nueva notificación agregada:', notificacion.titulo);
+    console.log('Nueva notificación agregada:', notificacion.titulo);
   }, [sonidoEnabled, maxNotificaciones, duracionSonidoMs]);
   
   // Hook de WebSocket

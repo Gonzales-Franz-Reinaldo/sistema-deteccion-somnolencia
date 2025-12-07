@@ -22,7 +22,7 @@ class EventoWebSocketManager @Inject constructor(
     private val gson: Gson
 ) {
     companion object {
-        private const val TAG = "EventoWSManager"  // ← TAG más corto para Logcat
+        private const val TAG = "EventoWSManager"  
         private const val RECONNECT_DELAY_MS = 5000L
         private const val MAX_RECONNECT_ATTEMPTS = 5
         private const val PING_INTERVAL_MS = 25000L
@@ -62,13 +62,11 @@ class EventoWebSocketManager @Inject constructor(
      * Conecta al WebSocket para el viaje especificado.
      */
     suspend fun connect(idViaje: Int) {
-        Log.i(TAG, "═══════════════════════════════════════")
-        Log.i(TAG, "🔌 INICIANDO CONEXIÓN EVENTOS WS")
+        Log.i(TAG, "INICIANDO CONEXIÓN EVENTOS WS")
         Log.i(TAG, "   Viaje ID: $idViaje")
-        Log.i(TAG, "═══════════════════════════════════════")
         
         if (_connectionState.value is ConnectionState.Connected && currentViajeId == idViaje) {
-            Log.w(TAG, "⚠️ Ya conectado al viaje $idViaje")
+            Log.w(TAG, "Ya conectado al viaje $idViaje")
             return
         }
         
@@ -80,10 +78,10 @@ class EventoWebSocketManager @Inject constructor(
         
         // ← IMPORTANTE: Obtener token
         val token = preferencesManager.getAccessToken().first()
-        Log.d(TAG, "📋 Token obtenido: ${if (token.isNullOrEmpty()) "❌ VACÍO/NULL" else "✅ ${token.take(20)}..."}")
+        Log.d(TAG, "Token obtenido: ${if (token.isNullOrEmpty()) "VACÍO/NULL" else "${token.take(20)}..."}")
         
         if (token.isNullOrEmpty()) {
-            Log.e(TAG, "❌ ERROR: No hay token de autenticación")
+            Log.e(TAG, "ERROR: No hay token de autenticación")
             _connectionState.value = ConnectionState.Error("Sin token de autenticación")
             return
         }
@@ -94,10 +92,10 @@ class EventoWebSocketManager @Inject constructor(
             .replace("https://", "wss://")
             .trimEnd('/')
         
-        // ← IMPORTANTE: Endpoint correcto para EVENTOS (no GPS)
+        // ←  Endpoint correcto para EVENTOS (no GPS)
         val wsUrl = "$baseUrl/api/v1/ws/chofer/$idViaje?token=$token"
         
-        Log.i(TAG, "🌐 URL WebSocket Eventos: $wsUrl")
+        Log.i(TAG, "URL WebSocket Eventos: $wsUrl")
         
         val request = Request.Builder()
             .url(wsUrl)
@@ -110,7 +108,7 @@ class EventoWebSocketManager @Inject constructor(
      * Desconecta del WebSocket.
      */
     fun disconnect() {
-        Log.i(TAG, "🔌 Desconectando WebSocket eventos")
+        Log.i(TAG, "Desconectando WebSocket eventos")
         
         pingJob?.cancel()
         reconnectJob?.cancel()
@@ -127,15 +125,15 @@ class EventoWebSocketManager @Inject constructor(
      * Envía un evento de somnolencia.
      */
     fun sendEvento(evento: EventoSomnolenciaMessage) {
-        Log.d(TAG, "📤 sendEvento() llamado - Estado: ${_connectionState.value}")
+        Log.d(TAG, "sendEvento() llamado - Estado: ${_connectionState.value}")
         
         if (_connectionState.value is ConnectionState.Connected) {
             sendEventoInternal(evento)
         } else {
-            Log.w(TAG, "⚠️ No conectado, guardando en cola de pendientes")
+            Log.w(TAG, "No conectado, guardando en cola de pendientes")
             synchronized(pendingEventsLock) {
                 pendingEvents.add(evento)
-                Log.d(TAG, "📋 Eventos pendientes: ${pendingEvents.size}")
+                Log.d(TAG, "Eventos pendientes: ${pendingEvents.size}")
             }
         }
     }
@@ -156,12 +154,10 @@ class EventoWebSocketManager @Inject constructor(
         earPromedio: Float? = null,
         marPromedio: Float? = null
     ) {
-        Log.i(TAG, "═══════════════════════════════════════")
-        Log.i(TAG, "🚨 ENVIANDO EVENTO DE SOMNOLENCIA")
+        Log.i(TAG, "ENVIANDO EVENTO DE SOMNOLENCIA")
         Log.i(TAG, "   Tipo: ${tipoEvento.name}")
         Log.i(TAG, "   Severidad: $nivelSeveridad")
         Log.i(TAG, "   Viaje: $idViaje, Chofer: $idChofer")
-        Log.i(TAG, "═══════════════════════════════════════")
         
         val evento = EventoSomnolenciaMessage(
             idViaje = idViaje,
@@ -183,21 +179,21 @@ class EventoWebSocketManager @Inject constructor(
     private fun sendEventoInternal(evento: EventoSomnolenciaMessage) {
         try {
             val json = gson.toJson(evento)
-            Log.d(TAG, "📤 Enviando JSON: $json")
+            Log.d(TAG, "Enviando JSON: $json")
             
             val sent = webSocket?.send(json) ?: false
             
             if (sent) {
-                Log.i(TAG, "✅ Evento enviado exitosamente")
+                Log.i(TAG, "Evento enviado exitosamente")
             } else {
-                Log.e(TAG, "❌ Error: webSocket.send() retornó false")
+                Log.e(TAG, "Error: webSocket.send() retornó false")
                 // Guardar en pendientes
                 synchronized(pendingEventsLock) {
                     pendingEvents.add(evento)
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error enviando evento: ${e.message}", e)
+            Log.e(TAG, "Error enviando evento: ${e.message}", e)
             synchronized(pendingEventsLock) {
                 pendingEvents.add(evento)
             }
@@ -210,11 +206,11 @@ class EventoWebSocketManager @Inject constructor(
     private fun sendPendingEvents() {
         synchronized(pendingEventsLock) {
             if (pendingEvents.isEmpty()) {
-                Log.d(TAG, "📋 No hay eventos pendientes")
+                Log.d(TAG, "No hay eventos pendientes")
                 return
             }
             
-            Log.i(TAG, "📤 Enviando ${pendingEvents.size} eventos pendientes como batch")
+            Log.i(TAG, "Enviando ${pendingEvents.size} eventos pendientes como batch")
             
             val viajeId = currentViajeId ?: return
             val choferId = pendingEvents.firstOrNull()?.idChofer ?: return
@@ -227,18 +223,18 @@ class EventoWebSocketManager @Inject constructor(
             
             try {
                 val json = gson.toJson(batch)
-                Log.d(TAG, "📤 Enviando batch: $json")
+                Log.d(TAG, "Enviando batch: $json")
                 
                 val sent = webSocket?.send(json) ?: false
                 
                 if (sent) {
-                    Log.i(TAG, "✅ Batch enviado, limpiando cola")
+                    Log.i(TAG, "Batch enviado, limpiando cola")
                     pendingEvents.clear()
                 } else {
-                    Log.e(TAG, "❌ Error enviando batch")
+                    Log.e(TAG, "Error enviando batch")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Error enviando batch: ${e.message}", e)
+                Log.e(TAG, "Error enviando batch: ${e.message}", e)
             }
         }
     }
@@ -246,10 +242,8 @@ class EventoWebSocketManager @Inject constructor(
     private fun createWebSocketListener(): WebSocketListener {
         return object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                Log.i(TAG, "═══════════════════════════════════════")
-                Log.i(TAG, "✅ WEBSOCKET EVENTOS CONECTADO")
+                Log.i(TAG, "WEBSOCKET EVENTOS CONECTADO")
                 Log.i(TAG, "   Response: ${response.code}")
-                Log.i(TAG, "═══════════════════════════════════════")
                 
                 _connectionState.value = ConnectionState.Connected
                 reconnectAttempts = 0
@@ -262,23 +256,23 @@ class EventoWebSocketManager @Inject constructor(
             }
             
             override fun onMessage(webSocket: WebSocket, text: String) {
-                Log.d(TAG, "📩 Mensaje recibido: $text")
+                Log.d(TAG, "Mensaje recibido: $text")
                 
                 // Parsear respuesta
                 try {
                     val json = gson.fromJson(text, Map::class.java)
                     when (json["type"]) {
                         "CONNECTION_ESTABLISHED" -> {
-                            Log.i(TAG, "✅ Conexión confirmada por servidor")
+                            Log.i(TAG, "Conexión confirmada por servidor")
                         }
                         "EVENTO_RECIBIDO" -> {
-                            Log.i(TAG, "✅ Servidor confirmó evento recibido")
+                            Log.i(TAG, "Servidor confirmó evento recibido")
                         }
                         "PONG" -> {
-                            Log.d(TAG, "🏓 Pong recibido")
+                            Log.d(TAG, "Pong recibido")
                         }
                         "ERROR" -> {
-                            Log.e(TAG, "❌ Error del servidor: ${json["message"]}")
+                            Log.e(TAG, "Error del servidor: ${json["message"]}")
                         }
                     }
                 } catch (e: Exception) {
@@ -287,11 +281,11 @@ class EventoWebSocketManager @Inject constructor(
             }
             
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                Log.w(TAG, "⚠️ WebSocket cerrándose: $code - $reason")
+                Log.w(TAG, "WebSocket cerrándose: $code - $reason")
             }
             
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                Log.i(TAG, "🔴 WebSocket cerrado: $code - $reason")
+                Log.i(TAG, "WebSocket cerrado: $code - $reason")
                 _connectionState.value = ConnectionState.Disconnected
                 pingJob?.cancel()
                 
@@ -302,7 +296,7 @@ class EventoWebSocketManager @Inject constructor(
             }
             
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                Log.e(TAG, "❌ ERROR WebSocket: ${t.message}", t)
+                Log.e(TAG, "ERROR WebSocket: ${t.message}", t)
                 Log.e(TAG, "   Response: ${response?.code} - ${response?.message}")
                 
                 _connectionState.value = ConnectionState.Error(t.message ?: "Error desconocido")
@@ -321,7 +315,7 @@ class EventoWebSocketManager @Inject constructor(
                 try {
                     val pingMsg = """{"type":"PING"}"""
                     webSocket?.send(pingMsg)
-                    Log.d(TAG, "🏓 Ping enviado")
+                    Log.d(TAG, "Ping enviado")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error enviando ping: ${e.message}")
                 }
@@ -331,13 +325,13 @@ class EventoWebSocketManager @Inject constructor(
     
     private fun scheduleReconnect() {
         if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-            Log.e(TAG, "❌ Máximo de reconexiones alcanzado ($MAX_RECONNECT_ATTEMPTS)")
+            Log.e(TAG, "Máximo de reconexiones alcanzado ($MAX_RECONNECT_ATTEMPTS)")
             _connectionState.value = ConnectionState.Error("Máximo de reconexiones alcanzado")
             return
         }
         
         reconnectAttempts++
-        Log.i(TAG, "🔄 Reconectando en ${RECONNECT_DELAY_MS}ms (intento $reconnectAttempts/$MAX_RECONNECT_ATTEMPTS)")
+        Log.i(TAG, "Reconectando en ${RECONNECT_DELAY_MS}ms (intento $reconnectAttempts/$MAX_RECONNECT_ATTEMPTS)")
         
         reconnectJob?.cancel()
         reconnectJob = scope.launch {
@@ -363,7 +357,7 @@ class EventoWebSocketManager @Inject constructor(
      * Limpia recursos al destruir.
      */
     fun destroy() {
-        Log.i(TAG, "🗑️ Destruyendo EventoWebSocketManager")
+        Log.i(TAG, "Destruyendo EventoWebSocketManager")
         disconnect()
         scope.cancel()
     }

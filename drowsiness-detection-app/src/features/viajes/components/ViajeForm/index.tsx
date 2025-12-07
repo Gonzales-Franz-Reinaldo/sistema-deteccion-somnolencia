@@ -1,8 +1,6 @@
-// ============================================
 // FORMULARIO COMPLETO DE ASIGNACIÓN/EDICIÓN DE VIAJE
 // Incluye todas las secciones integradas con 2 columnas
 // Soporta modo creación y edición
-// ============================================
 
 import { useViajeForm } from '../../hooks/useViajeForm';
 import { CATEGORIAS_LICENCIA } from '../../constants/constants';
@@ -46,9 +44,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
   return (
     <form onSubmit={onSubmit} className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* ============================================ */}
         {/* COLUMNA IZQUIERDA */}
-        {/* ============================================ */}
         <div className="space-y-6">
           {/* SECCIÓN: INFORMACIÓN DEL CHOFER */}
           <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
@@ -268,9 +264,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
           </div>
         </div>
 
-        {/* ============================================ */}
         {/* COLUMNA DERECHA */}
-        {/* ============================================ */}
         <div className="space-y-6">
           {/* SECCIÓN: DURACIÓN Y DISTANCIA */}
           <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
@@ -408,9 +402,7 @@ export const ViajeForm: React.FC<ViajeFormProps> = ({ viajeId }) => {
         </div>
       </div>
 
-      {/* ============================================ */}
       {/* BOTONES DE ACCIÓN */}
-      {/* ============================================ */}
       <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
         {/* Botón Cancelar */}
         <button

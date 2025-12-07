@@ -1,7 +1,5 @@
-// ============================================
 // COMPONENTE: TABLA DE CHOFERES
 // Muestra lista de choferes con información completa
-// ============================================
 
 import { useNavigate } from 'react-router-dom';
 import type { Chofer } from '../types';
