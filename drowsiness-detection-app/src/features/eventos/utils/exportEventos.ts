@@ -7,9 +7,7 @@ import autoTable from 'jspdf-autotable';
 import type { EventoConChofer } from '../types';
 import { TIPO_EVENTO_LABELS, SEVERIDAD_LABELS } from '../types';
 
-// ═══════════════════════════════════════════════════════════════
 // HELPERS
-// ═══════════════════════════════════════════════════════════════
 
 function formatFecha(fecha: string): string {
   const d = new Date(fecha);
@@ -28,9 +26,7 @@ function getTimestamp(): string {
   return new Date().toISOString().replace(/[:T]/g, '-').split('.')[0];
 }
 
-// ═══════════════════════════════════════════════════════════════
 // EXPORTAR A EXCEL
-// ═══════════════════════════════════════════════════════════════
 
 interface ExportExcelOptions {
   eventos: EventoConChofer[];
@@ -103,9 +99,7 @@ export function exportEventosToExcel({
   XLSX.writeFile(wb, `${fileName}_${getTimestamp()}.xlsx`);
 }
 
-// ═══════════════════════════════════════════════════════════════
 // EXPORTAR A PDF
-// ═══════════════════════════════════════════════════════════════
 
 interface ExportPdfOptions {
   eventos: EventoConChofer[];
@@ -210,9 +204,7 @@ export function exportEventosToPDF({
   doc.save(`${fileName}_${getTimestamp()}.pdf`);
 }
 
-// ═══════════════════════════════════════════════════════════════
 // EXPORTAR POR CHOFER (REPORTE INDIVIDUAL)
-// ═══════════════════════════════════════════════════════════════
 
 interface ExportChoferOptions {
   eventos: EventoConChofer[];

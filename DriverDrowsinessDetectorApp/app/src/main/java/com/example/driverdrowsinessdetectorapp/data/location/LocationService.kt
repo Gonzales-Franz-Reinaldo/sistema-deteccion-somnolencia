@@ -124,7 +124,7 @@ class LocationService @Inject constructor(
      */
     suspend fun getCurrentLocation(): LocationData? {
         if (!hasLocationPermission()) {
-            Log.w(TAG, "⚠️ Sin permisos de ubicación")
+            Log.w(TAG, " Sin permisos de ubicación")
             return null
         }
         
@@ -133,23 +133,23 @@ class LocationService @Inject constructor(
             val lastLocation = getLastKnownLocation()
             
             if (lastLocation != null && lastLocation.isRecent()) {
-                Log.d(TAG, "📍 Usando última ubicación conocida: ${lastLocation.latitude}, ${lastLocation.longitude}")
+                Log.d(TAG, "Usando última ubicación conocida: ${lastLocation.latitude}, ${lastLocation.longitude}")
                 lastKnownLocation = lastLocation
                 return lastLocation
             }
             
             // Si no hay ubicación reciente, solicitar una fresca
-            Log.d(TAG, "📍 Solicitando ubicación fresca...")
+            Log.d(TAG, "Solicitando ubicación fresca...")
             val freshLocation = requestFreshLocation()
             
             if (freshLocation != null) {
                 lastKnownLocation = freshLocation
-                Log.d(TAG, "📍 Ubicación fresca obtenida: ${freshLocation.latitude}, ${freshLocation.longitude}")
+                Log.d(TAG, "Ubicación fresca obtenida: ${freshLocation.latitude}, ${freshLocation.longitude}")
             }
             
             freshLocation
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error obteniendo ubicación: ${e.message}", e)
+            Log.e(TAG, " Error obteniendo ubicación: ${e.message}", e)
             // Retornar última ubicación conocida como fallback
             lastKnownLocation
         }
@@ -246,13 +246,13 @@ class LocationService @Inject constructor(
                     lastKnownLocation = locationData
                     trySend(locationData)
                     
-                    Log.d(TAG, "📍 Ubicación actualizada: ${locationData.latitude}, ${locationData.longitude}, " +
+                    Log.d(TAG, "Ubicación actualizada: ${locationData.latitude}, ${locationData.longitude}, " +
                               "Velocidad: ${locationData.getSpeedInKmh()} km/h")
                 }
             }
         }
         
-        Log.d(TAG, "🚀 Iniciando actualizaciones de ubicación")
+        Log.d(TAG, "Iniciando actualizaciones de ubicación")
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback,
@@ -260,7 +260,7 @@ class LocationService @Inject constructor(
         )
         
         awaitClose {
-            Log.d(TAG, "🛑 Deteniendo actualizaciones de ubicación")
+            Log.d(TAG, "Deteniendo actualizaciones de ubicación")
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
     }

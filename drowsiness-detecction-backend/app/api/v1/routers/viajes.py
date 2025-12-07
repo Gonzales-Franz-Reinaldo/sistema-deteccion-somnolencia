@@ -225,7 +225,7 @@ def create_viaje(
     if enviar_email:
         # Validar que el chofer tenga un email válido
         if not chofer.email or not chofer.email.strip():
-            logger.warning(f"⚠️ No se puede enviar email: el chofer {chofer.nombre_completo} no tiene un email registrado")
+            logger.warning(f"No se puede enviar email: el chofer {chofer.nombre_completo} no tiene un email registrado")
         else:
             try:
                 # Formatear fecha y hora para el email
@@ -245,12 +245,12 @@ def create_viaje(
                     nombre_empresa=empresa.nombre_empresa if empresa else None
                 )
                 if email_enviado:
-                    logger.info(f"✉️ Detalles del viaje enviados a {chofer.email}")
+                    logger.info(f"Detalles del viaje enviados a {chofer.email}")
                 else:
-                    logger.warning(f"⚠️ No se pudo enviar email a {chofer.email}")
+                    logger.warning(f"No se pudo enviar email a {chofer.email}")
             except Exception as e:
                 # No fallar la creación del viaje si falla el email
-                logger.error(f"⚠️ Error enviando viaje a {chofer.email}: {str(e)}")
+                logger.error(f"Error enviando viaje a {chofer.email}: {str(e)}")
     
     # Construir respuesta con datos relacionados
     response = ViajeResponse(
@@ -815,7 +815,7 @@ def iniciar_viaje_chofer(
     db.commit()
     db.refresh(viaje)
     
-    logger.info(f"✅ Viaje {id_viaje} iniciado por chofer {current_user.id_usuario}")
+    logger.info(f"Viaje {id_viaje} iniciado por chofer {current_user.id_usuario}")
     
     return ViajeResponse(
         id_viaje=viaje.id_viaje,
@@ -890,7 +890,7 @@ def finalizar_viaje_chofer(
     db.commit()
     db.refresh(viaje)
     
-    logger.info(f"✅ Viaje {id_viaje} finalizado por chofer {current_user.id_usuario}")
+    logger.info(f"Viaje {id_viaje} finalizado por chofer {current_user.id_usuario}")
     
     return ViajeResponse(
         id_viaje=viaje.id_viaje,

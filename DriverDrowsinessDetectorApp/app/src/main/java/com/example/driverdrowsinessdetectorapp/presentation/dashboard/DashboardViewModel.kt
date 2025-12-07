@@ -77,13 +77,13 @@ class DashboardViewModel @Inject constructor(
                 .onSuccess { viaje ->
                     _viajeAsignado.value = viaje
                     if (viaje != null) {
-                        Log.d(TAG, "✅ Viaje cargado: ${viaje.origen} → ${viaje.destino} (${viaje.estado})")
+                        Log.d(TAG, "Viaje cargado: ${viaje.origen} → ${viaje.destino} (${viaje.estado})")
                     } else {
-                        Log.d(TAG, "ℹ️ No hay viaje asignado")
+                        Log.d(TAG, "ℹNo hay viaje asignado")
                     }
                 }
                 .onFailure { error ->
-                    Log.e(TAG, "❌ Error cargando viaje: ${error.message}")
+                    Log.e(TAG, "Error cargando viaje: ${error.message}")
                     _errorMessage.value = "Error al cargar viaje: ${error.message}"
                 }
             
@@ -150,12 +150,12 @@ class DashboardViewModel @Inject constructor(
             viajeRepository.iniciarViaje(viaje.idViaje)
                 .onSuccess { viajeActualizado ->
                     _viajeAsignado.value = viajeActualizado
-                    Log.d(TAG, "✅ Viaje iniciado exitosamente")
+                    Log.d(TAG, "Viaje iniciado exitosamente")
                     _showIniciarViajeDialog.value = false
                     onSuccess()
                 }
                 .onFailure { error ->
-                    Log.e(TAG, "❌ Error iniciando viaje: ${error.message}")
+                    Log.e(TAG, "Error iniciando viaje: ${error.message}")
                     _errorMessage.value = "Error al iniciar viaje: ${error.message}"
                 }
             

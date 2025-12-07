@@ -1,6 +1,5 @@
-// ============================================
 // PÁGINA: REGISTRO DE NUEVO CHOFER
-// ============================================
+
 
 import { Link } from 'react-router-dom';
 import { ChoferForm } from '../../features/choferes/components/ChoferForm';

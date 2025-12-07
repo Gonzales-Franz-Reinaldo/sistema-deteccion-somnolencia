@@ -18,9 +18,7 @@ import com.example.driverdrowsinessdetectorapp.BuildConfig
  */
 object Constants {
     
-    // =========================================
-    // 🔧 CONFIGURACIÓN DE RED (desde BuildConfig)
-    // =========================================
+    // CONFIGURACIÓN DE RED (desde BuildConfig)
     
     /**
      * URL base del backend FastAPI.
@@ -38,9 +36,7 @@ object Constants {
     val READ_TIMEOUT: Long = BuildConfig.READ_TIMEOUT
     val WRITE_TIMEOUT: Long = BuildConfig.WRITE_TIMEOUT
     
-    // =========================================
-    // 💾 DATASTORE KEYS
-    // =========================================
+    //  DATASTORE KEYS
     const val PREFS_NAME = "driver_drowsiness_prefs"
     const val KEY_AUTH_TOKEN = "auth_token"
     const val KEY_REFRESH_TOKEN = "refresh_token"
@@ -49,9 +45,7 @@ object Constants {
     const val KEY_FULL_NAME = "full_name"
     const val KEY_ROLE = "role"
     
-    // =========================================
-    // 📊 INFORMACIÓN DE LA APP
-    // =========================================
+    //  INFORMACIÓN DE LA APP
     val APP_VERSION: String = BuildConfig.VERSION_NAME
     val APP_VERSION_CODE: Int = BuildConfig.VERSION_CODE
     val IS_DEBUG: Boolean = BuildConfig.DEBUG

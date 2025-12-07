@@ -1,6 +1,4 @@
-// ============================================
 // SERVICIO API PARA MONITOREO DE VIAJES
-// ============================================
 
 import apiClient from '../../../lib/api/client';
 import type { ViajeMonitoreo, EventoMonitoreo, PosicionGPS } from '../types';

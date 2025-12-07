@@ -1,7 +1,5 @@
-// ============================================
 // BARREL EXPORT - FEATURE CHOFERES
 // Exporta todos los elementos públicos del feature
-// ============================================
 
 // Types
 export * from './types';

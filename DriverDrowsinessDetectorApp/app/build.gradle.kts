@@ -22,12 +22,8 @@ android {
             useSupportLibrary = true
         }
         
-        // ═══════════════════════════════════════════════════════════
-        // 🌐 CONFIGURACIÓN DE URL DEL BACKEND
-        // ═══════════════════════════════════════════════════════════
+        // CONFIGURACIÓN DE URL DEL BACKEND
         // Cambiar esta IP según tu red local
-        // Para encontrar tu IP en Linux: hostname -I | awk '{print $1}'
-        // ═══════════════════════════════════════════════════════════
         buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.17:8000/\"")
         
         // Configuración de timeouts (en segundos)
@@ -115,12 +111,12 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
 
     // ========================================
-    // ⭐ MEDIAPIPE - CORE DE DETECCIÓN
+    //  MEDIAPIPE - CORE DE DETECCIÓN
     // ========================================
     implementation("com.google.mediapipe:tasks-vision:0.10.14")
 
     // ========================================
-    // ⭐ CAMERAX - CAPTURA DE VIDEO
+    //  CAMERAX - CAPTURA DE VIDEO
     // ========================================
     implementation("androidx.camera:camera-core:1.3.4")
     implementation("androidx.camera:camera-camera2:1.3.4")
@@ -128,7 +124,7 @@ dependencies {
     implementation("androidx.camera:camera-view:1.3.4")
 
     // ========================================
-    // ⭐ KOTLIN COROUTINES - PROCESAMIENTO ASÍNCRONO
+    //  KOTLIN COROUTINES - PROCESAMIENTO ASÍNCRONO
     // ========================================
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
@@ -148,7 +144,7 @@ dependencies {
     ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     // ========================================
-    // ⭐ DATASTORE - PREFERENCES
+    //  DATASTORE - PREFERENCES
     // ========================================
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     

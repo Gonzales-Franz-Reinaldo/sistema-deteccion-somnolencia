@@ -9,7 +9,7 @@ class DetectEyeRubUseCase @Inject constructor() {
         private const val TAG = "DetectEyeRub"
         
         // UMBRALES AJUSTADOS PARA MEJOR DETECCIÓN
-        private const val EYE_RUB_DURATION_MS = 500L       // Reducido: 0.5 segundos
+        private const val EYE_RUB_DURATION_MS = 500L       // 0.5 segundos
         private const val EYE_RUB_WINDOW_MS = 300_000L     // 5 minutos
         private const val COOLDOWN_MS = 2000L              //  Evitar conteo doble
     }
@@ -98,7 +98,7 @@ class DetectEyeRubUseCase @Inject constructor() {
             if (startTime == null) {
                 // INICIO: Mano acaba de acercarse
                 setStartTime(currentTime)
-                Log.d(TAG, "👁️✋ Mano $handLabel CERCA de ojos")
+                Log.d(TAG, "Mano $handLabel CERCA de ojos")
             }
             
             val duration = currentTime - (startTime ?: currentTime)
@@ -115,7 +115,7 @@ class DetectEyeRubUseCase @Inject constructor() {
                     val count = timestamps.size
                     
                     if (count > 3) {
-                        Log.w(TAG, "⚠️ ALERTA: $count frotamientos con mano $handLabel en 5 minutos")
+                        Log.w(TAG, "ALERTA: $count frotamientos con mano $handLabel en 5 minutos")
                     }
                     
                     return Triple(true, count, durations.toList())
@@ -126,7 +126,7 @@ class DetectEyeRubUseCase @Inject constructor() {
             if (duration > 0 && duration % 200 < 50) {
                 val progress = ((duration.toFloat() / EYE_RUB_DURATION_MS) * 100).toInt().coerceAtMost(100)
                 if (progress < 100) {
-                    Log.d(TAG, "⏱️ Mano $handLabel cerca: ${duration}ms ($progress%)")
+                    Log.d(TAG, "Mano $handLabel cerca: ${duration}ms ($progress%)")
                 }
             }
             
@@ -138,7 +138,7 @@ class DetectEyeRubUseCase @Inject constructor() {
             
             if (startTime != null) {
                 val duration = currentTime - startTime
-                Log.d(TAG, "👋 Mano $handLabel ALEJADA (estuvo cerca ${duration}ms, detectó=${isCurrentlyRubbing})")
+                Log.d(TAG, "Mano $handLabel ALEJADA (estuvo cerca ${duration}ms, detectó=${isCurrentlyRubbing})")
                 
                 // Reset para siguiente detección
                 setStartTime(null)
@@ -162,6 +162,6 @@ class DetectEyeRubUseCase @Inject constructor() {
         rightHandDurations.clear()
         isRightHandCurrentlyRubbing = false
         
-        Log.d(TAG, "🔄 DetectEyeRub reseteado")
+        Log.d(TAG, "DetectEyeRub reseteado")
     }
 }

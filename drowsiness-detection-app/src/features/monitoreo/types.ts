@@ -1,6 +1,4 @@
-// ============================================
 // TIPOS E INTERFACES PARA FEATURE MONITOREO
-// ============================================
 
 /**
  * Información del chofer para monitoreo

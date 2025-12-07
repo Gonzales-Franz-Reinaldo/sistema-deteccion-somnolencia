@@ -45,7 +45,7 @@ class DetectDrowsinessUseCase @Inject constructor(
             
             // Si no hay rostro, solo retornar métricas de cabeceo
             if (faceLandmarks == null || faceLandmarks.size < 468) {
-                Log.d(TAG, "⚠️ Sin rostro - Solo procesando cabeceo: isNodding=$isNodding")
+                Log.d(TAG, "Sin rostro - Solo procesando cabeceo: isNodding=$isNodding")
                 
                 val alertLevel = if (isNodding) AlertLevel.CRITICAL else AlertLevel.NORMAL
                 val alertType = if (isNodding) AlertType.HEAD_NODDING else null
@@ -153,7 +153,7 @@ class DetectDrowsinessUseCase @Inject constructor(
             )
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error: ${e.message}", e)
+            Log.e(TAG, "Error: ${e.message}", e)
             return MetricasSomnolencia.empty()
         }
     }
@@ -202,6 +202,6 @@ class DetectDrowsinessUseCase @Inject constructor(
         detectNoddingUseCase.reset()
         detectEyeRubUseCase.reset()
         detectHeadPositionUseCase.reset()
-        Log.d(TAG, "🔄 Contadores reseteados")
+        Log.d(TAG, "Contadores reseteados")
     }
 }

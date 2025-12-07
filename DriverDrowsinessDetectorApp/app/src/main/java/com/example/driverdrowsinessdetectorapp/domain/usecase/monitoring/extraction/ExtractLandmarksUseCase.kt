@@ -36,7 +36,7 @@ class ExtractLandmarksUseCase @Inject constructor(
         val hasHands = handLandmarks?.isNotEmpty() == true
         
         if (!hasFace) {
-            Log.w(TAG, "⚠️ No se detectó rostro en el frame")
+            Log.w(TAG, "No se detectó rostro en el frame")
         }
         
         return LandmarksResult(

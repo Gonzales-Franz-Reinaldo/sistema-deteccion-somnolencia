@@ -1,7 +1,5 @@
-// ============================================
 // PÁGINA: EDITAR VIAJE EXISTENTE
 // Formulario de edición de viaje
-// ============================================
 
 import { useNavigate, useParams } from 'react-router-dom';
 import { ViajeForm } from '../../../features/viajes/components/ViajeForm';

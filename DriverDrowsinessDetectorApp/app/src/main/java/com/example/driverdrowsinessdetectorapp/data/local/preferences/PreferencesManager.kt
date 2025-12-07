@@ -26,9 +26,7 @@ class PreferencesManager @Inject constructor(
 ) {
     private val dataStore = context.dataStore
 
-    // ═══════════════════════════════════════════════════════════════
     // KEYS
-    // ═══════════════════════════════════════════════════════════════
     private val KEY_TOKEN = stringPreferencesKey(Constants.KEY_AUTH_TOKEN)
     private val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token") 
     private val KEY_USER_ID = intPreferencesKey(Constants.KEY_USER_ID)
@@ -38,9 +36,7 @@ class PreferencesManager @Inject constructor(
     private val KEY_EMAIL = stringPreferencesKey("user_email")
     private val KEY_ACTIVE = booleanPreferencesKey("user_active")
 
-    // ═══════════════════════════════════════════════════════════════
     // GUARDAR DATOS DE AUTENTICACIÓN
-    // ═══════════════════════════════════════════════════════════════
     
     /**
      * Guarda todos los datos de autenticación (con refresh token).
@@ -74,9 +70,7 @@ class PreferencesManager @Inject constructor(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     // OBTENER DATOS
-    // ═══════════════════════════════════════════════════════════════
 
     /**
      * Obtiene el token de autenticación.
@@ -145,9 +139,7 @@ class PreferencesManager @Inject constructor(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     // LIMPIAR DATOS
-    // ═══════════════════════════════════════════════════════════════
 
     /**
      * Limpia todos los datos de autenticación.
@@ -167,9 +159,7 @@ class PreferencesManager @Inject constructor(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
     // VERIFICACIONES
-    // ═══════════════════════════════════════════════════════════════
 
     /**
      * Verifica si el usuario está logueado.

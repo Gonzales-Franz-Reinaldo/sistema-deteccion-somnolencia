@@ -2,9 +2,7 @@
  * Tipos para el módulo de Eventos de Somnolencia
  */
 
-// ═══════════════════════════════════════════════════════════════
 // ENUMS
-// ═══════════════════════════════════════════════════════════════
 
 export type TipoEvento = 
   | 'microsueno' 
@@ -15,9 +13,7 @@ export type TipoEvento =
 
 export type NivelSeveridad = 'NORMAL' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
-// ═══════════════════════════════════════════════════════════════
 // INTERFACES DE EVENTOS
-// ═══════════════════════════════════════════════════════════════
 
 export interface EventoResumen {
   id_evento: number;
@@ -45,9 +41,7 @@ export interface EventoCompleto extends EventoResumen {
   sincronizado_offline: boolean;
 }
 
-// ═══════════════════════════════════════════════════════════════
 // INTERFACES DE ESTADÍSTICAS
-// ═══════════════════════════════════════════════════════════════
 
 export interface EstadisticasChofer {
   id_chofer: number;
@@ -77,9 +71,7 @@ export interface EstadisticasGenerales {
   }>;
 }
 
-// ═══════════════════════════════════════════════════════════════
 // INTERFACES DE FILTROS
-// ═══════════════════════════════════════════════════════════════
 
 export interface EventosFiltros {
   id_chofer?: number;
@@ -91,9 +83,7 @@ export interface EventosFiltros {
   solo_criticos?: boolean;
 }
 
-// ═══════════════════════════════════════════════════════════════
 // MAPEOS Y LABELS
-// ═══════════════════════════════════════════════════════════════
 
 export const TIPO_EVENTO_LABELS: Record<TipoEvento, string> = {
   microsueno: 'Microsueño',

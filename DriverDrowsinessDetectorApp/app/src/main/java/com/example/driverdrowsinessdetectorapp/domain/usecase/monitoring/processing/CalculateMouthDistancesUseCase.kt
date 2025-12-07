@@ -55,7 +55,7 @@ class CalculateMouthDistancesUseCase @Inject constructor() {
         // distancia_menton = distancia(menton_izq, menton_der)
         val distanciaMenton = euclideanDistance(p84, p314)
 
-        Log.d(TAG, "📏 Labios=$distanciaLabios, Mentón=$distanciaMenton")
+        Log.d(TAG, "Labios=$distanciaLabios, Mentón=$distanciaMenton")
 
         return MouthDistances(distanciaLabios, distanciaMenton)
     }

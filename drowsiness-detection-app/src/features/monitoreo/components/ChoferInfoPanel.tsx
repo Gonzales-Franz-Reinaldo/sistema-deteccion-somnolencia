@@ -1,7 +1,5 @@
-// ============================================
 // PANEL DE INFORMACIÓN DEL CHOFER
 // Muestra datos personales y licencia
-// ============================================
 
 import React from 'react';
 import type { ChoferInfo } from '../types';

@@ -66,7 +66,7 @@ class SessionManager @Inject constructor(
         val location = try {
             locationService.getCurrentLocation()
         } catch (e: Exception) {
-            Log.w(TAG, "⚠️ No se pudo obtener ubicación inicial: ${e.message}")
+            Log.w(TAG, "No se pudo obtener ubicación inicial: ${e.message}")
             null
         }
         
@@ -91,7 +91,7 @@ class SessionManager @Inject constructor(
         
         currentSession = savedSession
         
-        Log.d(TAG, "✅ Sesión iniciada: ID=$sessionId, Usuario=$userId, Viaje=$viajeId")
+        Log.d(TAG, "Sesión iniciada: ID=$sessionId, Usuario=$userId, Viaje=$viajeId")
         
         return savedSession
     }
@@ -133,7 +133,7 @@ class SessionManager @Inject constructor(
         sessionDao.update(pausedSession)
         currentSession = pausedSession
         
-        Log.d(TAG, "⏸️ Sesión pausada: ID=${session.id}")
+        Log.d(TAG, "Sesión pausada: ID=${session.id}")
     }
     
     /**
@@ -146,7 +146,7 @@ class SessionManager @Inject constructor(
         sessionDao.update(resumedSession)
         currentSession = resumedSession
         
-        Log.d(TAG, "▶️ Sesión reanudada: ID=${session.id}")
+        Log.d(TAG, "Sesión reanudada: ID=${session.id}")
     }
     
     /**
@@ -164,7 +164,7 @@ class SessionManager @Inject constructor(
         val location = try {
             locationService.getCurrentLocation()
         } catch (e: Exception) {
-            Log.w(TAG, "⚠️ No se pudo obtener ubicación final: ${e.message}")
+            Log.w(TAG, "No se pudo obtener ubicación final: ${e.message}")
             null
         }
         

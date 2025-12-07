@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: list = [
         "http://localhost:3000",
-        "http://localhost:5173",  # Vite default
+        "http://localhost:5173",  
         "http://localhost:5174",
     ]
     
@@ -49,10 +49,10 @@ class Settings(BaseSettings):
     EMAIL_ENABLED: bool = True
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
-    SMTP_USER: str = ""  # Se configurará en .env
+    SMTP_USER: str = ""  
     SMTP_PASSWORD: str = ""  # App Password de Gmail
     EMAIL_FROM_NAME: str = "Sistema Detección Somnolencia"
-    EMAIL_FROM_ADDRESS: str = ""  # Se configurará en .env
+    EMAIL_FROM_ADDRESS: str = ""  
     
     # Configuración de la aplicación
     DEBUG: bool = True

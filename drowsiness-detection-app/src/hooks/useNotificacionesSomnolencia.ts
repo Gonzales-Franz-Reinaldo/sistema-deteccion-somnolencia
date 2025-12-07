@@ -10,9 +10,7 @@ import { TOKEN_KEY } from '../lib/constants';
 // URL base del WebSocket
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
 
-// ============================================
 // TIPOS
-// ============================================
 
 export type NotificacionTipo = 'NOTIF_SOMNOLENCIA' | 'NOTIF_BATCH';
 
@@ -67,9 +65,7 @@ export type ConnectionStatus =
   | 'RECONNECTING'
   | 'ERROR';
 
-// ============================================
 // HOOK PRINCIPAL
-// ============================================
 
 interface UseNotificacionesSomnolenciaProps {
   enabled?: boolean;
@@ -136,7 +132,7 @@ export const useNotificacionesSomnolencia = ({
       
       // Procesar notificaciones
       if (eventType === 'NOTIF_SOMNOLENCIA' || eventType === 'NOTIF_BATCH') {
-        console.log('🔔 Notificación recibida:', eventType, notificationData);
+        console.log(' Notificación recibida:', eventType, notificationData);
         onNotificacionRef.current?.(notificationData as Notificacion);
       }
       
@@ -148,13 +144,13 @@ export const useNotificacionesSomnolencia = ({
   // Conectar
   const connect = useCallback(() => {
     if (!enabled) {
-      console.log('🔔 useNotificacionesSomnolencia: DESHABILITADO (enabled=false)');
+      console.log(' useNotificacionesSomnolencia: DESHABILITADO (enabled=false)');
       return;
     }
     
     const token = storage.get<string>(TOKEN_KEY);
     if (!token) {
-      console.warn('🔔 No hay token para conectar WebSocket de notificaciones');
+      console.warn(' No hay token para conectar WebSocket de notificaciones');
       setConnectionStatus('ERROR');
       return;
     }
@@ -168,13 +164,13 @@ export const useNotificacionesSomnolencia = ({
     setConnectionStatus('CONNECTING');
     
     const wsUrl = `${WS_BASE_URL}/api/v1/ws/admin?token=${token}`;
-    console.log('🔔 Conectando WebSocket notificaciones:', wsUrl);
+    console.log(' Conectando WebSocket notificaciones:', wsUrl);
     
     try {
       const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
-        console.log('✅ WebSocket notificaciones conectado');
+        console.log(' WebSocket notificaciones conectado');
         setConnectionStatus('CONNECTED');
         reconnectAttemptsRef.current = 0;
         
@@ -182,24 +178,24 @@ export const useNotificacionesSomnolencia = ({
         pingIntervalRef.current = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'PING' }));
-            console.log('🏓 Ping enviado (notificaciones)');
+            console.log(' Ping enviado (notificaciones)');
           }
         }, 25000);
       };
       
       ws.onmessage = (event) => {
-        console.log('📩 Mensaje WebSocket notificaciones:', event.data);
+        console.log(' Mensaje WebSocket notificaciones:', event.data);
         handleMessage(event);
       };
       
       ws.onerror = (error) => {
-        console.error('❌ Error WebSocket notificaciones:', error);
+        console.error(' Error WebSocket notificaciones:', error);
         setConnectionStatus('ERROR');
         onErrorRef.current?.('Error de conexión WebSocket');
       };
       
       ws.onclose = (event) => {
-        console.log('🔌 WebSocket notificaciones cerrado:', event.code, event.reason);
+        console.log(' WebSocket notificaciones cerrado:', event.code, event.reason);
         clearTimers();
         
         // Reconectar si no fue cierre intencional
@@ -208,14 +204,14 @@ export const useNotificacionesSomnolencia = ({
           
           if (reconnectAttemptsRef.current < maxReconnectAttempts) {
             const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-            console.log(`🔄 Reconectando notificaciones en ${delay}ms...`);
+            console.log(` Reconectando notificaciones en ${delay}ms...`);
             
             reconnectTimeoutRef.current = setTimeout(() => {
               reconnectAttemptsRef.current++;
               connect();
             }, delay);
           } else {
-            console.error('❌ Máximo de reconexiones alcanzado');
+            console.error(' Máximo de reconexiones alcanzado');
             setConnectionStatus('ERROR');
           }
         } else {

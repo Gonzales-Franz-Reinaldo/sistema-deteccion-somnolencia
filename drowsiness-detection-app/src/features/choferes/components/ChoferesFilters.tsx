@@ -1,7 +1,5 @@
-// ============================================
 // COMPONENTE: FILTROS Y BÚSQUEDA DE CHOFERES
 // Incluye input de búsqueda y botón de registro
-// ============================================
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';

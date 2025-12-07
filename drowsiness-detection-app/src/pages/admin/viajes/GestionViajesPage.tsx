@@ -1,7 +1,5 @@
-// ============================================
 // PÁGINA: GESTIÓN DE VIAJES
 // Lista completa de viajes asignados con filtros
-// ============================================
 
 import { useNavigate } from 'react-router-dom';
 import { ViajesTable } from '../../../features/viajes/components/ViajesTable';

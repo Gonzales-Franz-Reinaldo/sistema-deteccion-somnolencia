@@ -122,11 +122,11 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
     const { lat, lng } = posicion;
 
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-      console.warn('📍 Coordenadas fuera de rango:', lat, lng);
+      console.warn(' Coordenadas fuera de rango:', lat, lng);
       return;
     }
 
-    console.log(`📍 Actualizando posición del chofer: (${lat}, ${lng})`);
+    console.log(` Actualizando posición del chofer: (${lat}, ${lng})`);
 
     const markerColor = isChoferOnline ? '#3B82F6' : '#9CA3AF';
     const borderColor = isChoferOnline ? '#1E40AF' : '#6B7280';
@@ -192,7 +192,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
       
       if (!response.ok) {
         if (response.status === 429) {
-          console.warn('⚠️ Rate limit de Nominatim alcanzado');
+          console.warn(' Rate limit de Nominatim alcanzado');
           return null;
         }
         throw new Error(`HTTP ${response.status}`);
@@ -271,7 +271,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
    */
   useEffect(() => {
     if (mapReady && onPosicionCallbackReady) {
-      console.log('🗺️ Registrando callback de posición GPS');
+      console.log(' Registrando callback de posición GPS');
       onPosicionCallbackReady(actualizarPosicionChofer);
     }
   }, [mapReady, onPosicionCallbackReady, actualizarPosicionChofer]);
@@ -285,7 +285,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
     
     // Verificar si ya calculamos esta ruta
     if (origenDestinoRef.current === rutaKey && rutaCalculadaRef.current) {
-      console.log('🗺️ Ruta ya calculada, omitiendo:', rutaKey);
+      console.log(' Ruta ya calculada, omitiendo:', rutaKey);
       return;
     }
 
@@ -295,7 +295,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
       setCargandoRuta(true);
       setErrorRuta(null);
 
-      console.log(`🗺️ Calculando ruta: ${origen} → ${destino}`);
+      console.log(` Calculando ruta: ${origen} → ${destino}`);
 
       const [coordOrigen, coordDestino] = await Promise.all([
         geocodificarCiudad(origen),
@@ -303,7 +303,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
       ]);
 
       if (!isMounted || !mapRef.current) {
-        console.log('⚠️ Componente desmontado, cancelando actualización de ruta');
+        console.log(' Componente desmontado, cancelando actualización de ruta');
         return;
       }
 
@@ -313,8 +313,8 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
         return;
       }
 
-      console.log(`📍 Origen: ${coordOrigen.lat}, ${coordOrigen.lng}`);
-      console.log(`📍 Destino: ${coordDestino.lat}, ${coordDestino.lng}`);
+      console.log(` Origen: ${coordOrigen.lat}, ${coordOrigen.lng}`);
+      console.log(` Destino: ${coordDestino.lat}, ${coordDestino.lng}`);
 
       setRutaInfo(prev => ({
         ...prev,
@@ -353,7 +353,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
 
       originMarkerRef.current.bindPopup(`
         <div style="text-align: center; padding: 8px;">
-          <strong style="color: #166534;">📍 Origen</strong><br/>
+          <strong style="color: #166534;"> Origen</strong><br/>
           <span>${origen}</span>
         </div>
       `);
@@ -416,7 +416,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
               tiempoMinutos,
             }));
 
-            console.log(`✅ Ruta calculada: ${distanciaKm.toFixed(1)} km, ${tiempoMinutos} min`);
+            console.log(` Ruta calculada: ${distanciaKm.toFixed(1)} km, ${tiempoMinutos} min`);
             
             // MARCAR COMO CALCULADA
             rutaCalculadaRef.current = true;
@@ -482,7 +482,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
       .filter(e => e.latitud && e.longitud)
       .forEach(evento => {
         const config = EVENTO_CONFIG[evento.tipo_evento] || { 
-          icon: '⚠️', 
+          icon: '', 
           color: 'text-gray-600', 
           label: evento.tipo_evento 
         };
@@ -545,7 +545,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
       {/* Panel de información de ruta (arriba derecha) */}
       <div className="absolute top-4 right-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 min-w-[220px] max-w-[300px]">
         <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-          <span>🗺️</span> Información de Ruta
+          <span></span> Información de Ruta
         </h4>
         
         {cargandoRuta ? (
@@ -555,7 +555,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
           </div>
         ) : errorRuta ? (
           <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-            ⚠️ {errorRuta}
+             {errorRuta}
           </div>
         ) : (
           <div className="space-y-3 text-sm">
@@ -618,7 +618,7 @@ export const MapaGPS: React.FC<MapaGPSProps> = ({
                   <div>
                     <p className="text-xs text-gray-500">Chofer en ruta</p>
                     <p className="text-xs text-gray-600">
-                      📍 {posicionActual.lat.toFixed(6)}, {posicionActual.lng.toFixed(6)}
+                       {posicionActual.lat.toFixed(6)}, {posicionActual.lng.toFixed(6)}
                     </p>
                     {posicionActual.velocidad !== null && posicionActual.velocidad !== undefined && (
                       <p className="text-xs text-gray-600">

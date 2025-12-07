@@ -1,7 +1,5 @@
-﻿# ============================================
-# SERVICIO DE ENVÍO DE EMAILS
+﻿# SERVICIO DE ENVÍO DE EMAILS
 # Maneja el envío de correos electrónicos usando SMTP
-# ============================================
 
 import smtplib
 import logging
@@ -52,17 +50,17 @@ class EmailService:
         
         # Verificar si el envío de emails está habilitado
         if not self.enabled:
-            logger.warning("⚠️ Envío de emails deshabilitado en configuración")
+            logger.warning("Envío de emails deshabilitado en configuración")
             return False
         
         # Validar que el email del destinatario no esté vacío
         if not to_email or not to_email.strip():
-            logger.error("❌ No se puede enviar email: dirección de destinatario vacía o inválida")
+            logger.error("No se puede enviar email: dirección de destinatario vacía o inválida")
             return False
         
         # Validar configuración SMTP
         if not self.smtp_user or not self.smtp_password:
-            logger.error("❌ Configuración SMTP incompleta (SMTP_USER o SMTP_PASSWORD faltantes)")
+            logger.error("Configuración SMTP incompleta (SMTP_USER o SMTP_PASSWORD faltantes)")
             return False
         
         try:
@@ -83,27 +81,27 @@ class EmailService:
             message.attach(part2)
             
             # Conectar al servidor SMTP y enviar
-            logger.info(f"📧 Enviando email a {to_email}...")
+            logger.info(f"Enviando email a {to_email}...")
             with smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=30) as server:
                 server.starttls()  # Iniciar conexión TLS
                 server.login(self.smtp_user, self.smtp_password)
                 server.send_message(message)
             
-            logger.info(f"✉️ Email enviado correctamente a {to_email}")
+            logger.info(f"Email enviado correctamente a {to_email}")
             return True
             
         except smtplib.SMTPAuthenticationError as e:
-            logger.error(f"❌ Error de autenticación SMTP. Verifica SMTP_USER y SMTP_PASSWORD")
-            logger.error(f"❌ Detalles: {str(e)}")
+            logger.error(f"Error de autenticación SMTP. Verifica SMTP_USER y SMTP_PASSWORD")
+            logger.error(f"Detalles: {str(e)}")
             return False
             
         except smtplib.SMTPException as e:
-            logger.error(f"❌ Error SMTP al enviar email a {to_email}: {str(e)}")
-            logger.error(f"❌ Tipo de error: {type(e).__name__}")
+            logger.error(f"Error SMTP al enviar email a {to_email}: {str(e)}")
+            logger.error(f"Tipo de error: {type(e).__name__}")
             return False
             
         except Exception as e:
-            logger.error(f"❌ Error inesperado al enviar email a {to_email}: {str(e)}")
+            logger.error(f"Error inesperado al enviar email a {to_email}: {str(e)}")
             return False
     
     def enviar_credenciales_chofer(
@@ -126,7 +124,7 @@ class EmailService:
             True si el email se envió correctamente
         """
         
-        subject = "🔐 Credenciales de Acceso - Sistema Detección Somnolencia"
+        subject = "Credenciales de Acceso - Sistema Detección Somnolencia"
         
         # Template HTML
         html_body = f"""
@@ -265,7 +263,7 @@ class EmailService:
                     
                     <div class="warning-box">
                         <p>
-                            <strong>⚠️ IMPORTANTE:</strong> Por razones de seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión. Guarda estas credenciales en un lugar seguro.
+                            <strong>IMPORTANTE:</strong> Por razones de seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión. Guarda estas credenciales en un lugar seguro.
                         </p>
                     </div>
                     
@@ -305,7 +303,7 @@ class EmailService:
         Usuario: {usuario}
         Contraseña: {contrasena}
         
-        ⚠️ IMPORTANTE: Por razones de seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.
+        IMPORTANTE: Por razones de seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.
         
         Saludos,
         Equipo de Administración

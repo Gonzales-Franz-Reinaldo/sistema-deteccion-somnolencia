@@ -31,19 +31,19 @@ class ViajeRepositoryImpl @Inject constructor(
                 }
                 
                 if (viajeActivo != null) {
-                    Log.d(TAG, "✅ Viaje activo encontrado: ${viajeActivo.idViaje} - Estado: ${viajeActivo.estado}")
+                    Log.d(TAG, "Viaje activo encontrado: ${viajeActivo.idViaje} - Estado: ${viajeActivo.estado}")
                     Result.success(viajeActivo.toDomain())
                 } else {
-                    Log.d(TAG, "ℹ️ No hay viajes activos para el chofer")
+                    Log.d(TAG, "No hay viajes activos para el chofer")
                     Result.success(null)
                 }
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "❌ Error obteniendo viajes: ${response.code()} - $errorBody")
+                Log.e(TAG, "Error obteniendo viajes: ${response.code()} - $errorBody")
                 Result.failure(Exception("Error: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Excepción obteniendo viaje activo: ${e.message}", e)
+            Log.e(TAG, "Excepción obteniendo viaje activo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -57,15 +57,15 @@ class ViajeRepositoryImpl @Inject constructor(
             
             if (response.isSuccessful) {
                 val viaje = response.body()!!
-                Log.d(TAG, "✅ Viaje iniciado: ${viaje.idViaje}")
+                Log.d(TAG, "Viaje iniciado: ${viaje.idViaje}")
                 Result.success(viaje.toDomain())
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "❌ Error iniciando viaje: ${response.code()} - $errorBody")
+                Log.e(TAG, "Error iniciando viaje: ${response.code()} - $errorBody")
                 Result.failure(Exception("Error al iniciar viaje: ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Excepción iniciando viaje: ${e.message}", e)
+            Log.e(TAG, "Excepción iniciando viaje: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -79,15 +79,15 @@ class ViajeRepositoryImpl @Inject constructor(
             
             if (response.isSuccessful) {
                 val viaje = response.body()!!
-                Log.d(TAG, "✅ Viaje finalizado: ${viaje.idViaje}")
+                Log.d(TAG, "Viaje finalizado: ${viaje.idViaje}")
                 Result.success(viaje.toDomain())
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "❌ Error finalizando viaje: ${response.code()} - $errorBody")
+                Log.e(TAG, "Error finalizando viaje: ${response.code()} - $errorBody")
                 Result.failure(Exception("Error al finalizar viaje: ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Excepción finalizando viaje: ${e.message}", e)
+            Log.e(TAG, "Excepción finalizando viaje: ${e.message}", e)
             Result.failure(e)
         }
     }

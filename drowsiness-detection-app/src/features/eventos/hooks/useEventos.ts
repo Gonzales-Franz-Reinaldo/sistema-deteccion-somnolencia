@@ -101,7 +101,7 @@ export const useEventos = (): UseEventosReturn => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      console.log('🔍 Cargando eventos recientes con params:', params);
+      console.log(' Cargando eventos recientes con params:', params);
       
       const eventos = await eventosApi.getEventosRecientes({
         minutos: params.minutos || 10080, // 7 días por defecto
@@ -109,7 +109,7 @@ export const useEventos = (): UseEventosReturn => {
         solo_criticos: params.solo_criticos || false
       });
       
-      console.log('✅ Eventos cargados:', eventos.length);
+      console.log(' Eventos cargados:', eventos.length);
       
       setState(prev => ({
         ...prev,
@@ -118,7 +118,7 @@ export const useEventos = (): UseEventosReturn => {
         loading: false
       }));
     } catch (error: any) {
-      console.error('❌ Error cargando eventos:', error);
+      console.error(' Error cargando eventos:', error);
       
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message ||
@@ -148,16 +148,16 @@ export const useEventos = (): UseEventosReturn => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      console.log('🔍 Cargando eventos del chofer:', idChofer);
+      console.log(' Cargando eventos del chofer:', idChofer);
       
       // 1. Obtener datos del chofer para tener su nombre
       let nombreChofer = 'Desconocido';
       try {
         const chofer = await choferesApi.getById(idChofer);
         nombreChofer = chofer.nombre_completo || 'Desconocido';
-        console.log('👤 Nombre del chofer:', nombreChofer);
+        console.log('Nombre del chofer:', nombreChofer);
       } catch (e) {
-        console.warn('⚠️ No se pudo obtener el nombre del chofer:', e);
+        console.warn('No se pudo obtener el nombre del chofer:', e);
       }
       
       // 2. Obtener eventos del chofer
@@ -167,7 +167,7 @@ export const useEventos = (): UseEventosReturn => {
         ...params
       });
       
-      console.log('✅ Eventos del chofer cargados:', eventos.length);
+      console.log(' Eventos del chofer cargados:', eventos.length);
       
       // 3. Convertir EventoResumen a EventoConChofer con el nombre del chofer
       const eventosConChofer: EventoConChofer[] = eventos.map(e => ({
@@ -183,7 +183,7 @@ export const useEventos = (): UseEventosReturn => {
         loading: false
       }));
     } catch (error: any) {
-      console.error('❌ Error cargando eventos del chofer:', error);
+      console.error(' Error cargando eventos del chofer:', error);
       setState(prev => ({
         ...prev,
         loading: false,
@@ -200,11 +200,11 @@ export const useEventos = (): UseEventosReturn => {
     setState(prev => ({ ...prev, loadingEstadisticas: true, error: null }));
     
     try {
-      console.log('📊 Cargando estadísticas generales, días:', dias);
+      console.log(' Cargando estadísticas generales, días:', dias);
       
       const estadisticas = await eventosApi.getEstadisticasGenerales(dias);
       
-      console.log('✅ Estadísticas cargadas:', estadisticas);
+      console.log(' Estadísticas cargadas:', estadisticas);
       
       setState(prev => ({
         ...prev,
@@ -212,7 +212,7 @@ export const useEventos = (): UseEventosReturn => {
         loadingEstadisticas: false
       }));
     } catch (error: any) {
-      console.error('❌ Error cargando estadísticas:', error);
+      console.error(' Error cargando estadísticas:', error);
       
       setState(prev => ({
         ...prev,

@@ -1,6 +1,4 @@
-// ============================================
 // HOOK PARA WEBSOCKET DE MONITOREO EN TIEMPO REAL
-// ============================================
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { storage } from '../../../lib/utils/storage';
@@ -50,13 +48,13 @@ export const useMonitoreoWebSocket = ({
     }
 
     const wsUrl = `${WS_BASE_URL}/api/v1/ws/monitor?token=${token}`;
-    console.log('🔌 Conectando WebSocket:', wsUrl);
+    console.log(' Conectando WebSocket:', wsUrl);
 
     try {
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('✅ WebSocket conectado');
+        console.log(' WebSocket conectado');
         setConectado(true);
         onConexionCambiada?.(true);
 
@@ -109,7 +107,7 @@ export const useMonitoreoWebSocket = ({
               break;
 
             default:
-              console.log('📨 Mensaje WS:', data);
+              console.log(' Mensaje WS:', data);
           }
         } catch (e) {
           // Si no es JSON, ignorar (probablemente "pong")
@@ -117,11 +115,11 @@ export const useMonitoreoWebSocket = ({
       };
 
       ws.onerror = (error) => {
-        console.error('❌ Error WebSocket:', error);
+        console.error(' Error WebSocket:', error);
       };
 
       ws.onclose = (event) => {
-        console.log('🔌 WebSocket desconectado:', event.code, event.reason);
+        console.log(' WebSocket desconectado:', event.code, event.reason);
         setConectado(false);
         onConexionCambiada?.(false);
 
@@ -133,7 +131,7 @@ export const useMonitoreoWebSocket = ({
         // Reconectar después de 5 segundos si no fue cierre intencional
         if (event.code !== 1000) {
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('🔄 Intentando reconectar...');
+            console.log(' Intentando reconectar...');
             conectar();
           }, 5000);
         }

@@ -46,11 +46,11 @@ class SyncEventosUseCase @Inject constructor(
      * @return SyncResult con el resultado de la operación
      */
     suspend operator fun invoke(): SyncResult {
-        Log.d(TAG, "🔄 Iniciando sincronización de eventos...")
+        Log.d(TAG, "Iniciando sincronización de eventos...")
         
         // 1. Verificar conexión a internet
         if (!NetworkUtil.isNetworkAvailable(context)) {
-            Log.w(TAG, "⚠️ Sin conexión a internet")
+            Log.w(TAG, "Sin conexión a internet")
             return SyncResult.NoConnection
         }
         
@@ -58,11 +58,11 @@ class SyncEventosUseCase @Inject constructor(
         val eventosPendientes = eventoRepository.getPendingSync(limit = BATCH_SIZE * 2)
         
         if (eventosPendientes.isEmpty()) {
-            Log.d(TAG, "✅ No hay eventos pendientes de sincronización")
+            Log.d(TAG, "No hay eventos pendientes de sincronización")
             return SyncResult.NothingToSync
         }
         
-        Log.d(TAG, "📊 Eventos pendientes: ${eventosPendientes.size}")
+        Log.d(TAG, "Eventos pendientes: ${eventosPendientes.size}")
         
         // 3. Procesar en batches
         var totalSincronizados = 0
@@ -75,7 +75,7 @@ class SyncEventosUseCase @Inject constructor(
             when (result) {
                 is BatchResult.Success -> {
                     totalSincronizados += result.count
-                    Log.d(TAG, "✅ Batch sincronizado: ${result.count} eventos")
+                    Log.d(TAG, "Batch sincronizado: ${result.count} eventos")
                 }
                 is BatchResult.PartialSuccess -> {
                     totalSincronizados += result.successCount
@@ -85,7 +85,7 @@ class SyncEventosUseCase @Inject constructor(
                 is BatchResult.Failed -> {
                     totalFallidos += batch.size
                     errores.add(result.error)
-                    Log.e(TAG, "❌ Batch fallido: ${result.error}")
+                    Log.e(TAG, "Batch fallido: ${result.error}")
                 }
             }
         }
@@ -93,14 +93,14 @@ class SyncEventosUseCase @Inject constructor(
         // 4. Retornar resultado
         return when {
             totalFallidos == 0 && totalSincronizados > 0 -> {
-                Log.d(TAG, "✅ Sincronización completada: $totalSincronizados eventos")
+                Log.d(TAG, "Sincronización completada: $totalSincronizados eventos")
                 SyncResult.Success(
                     eventosSincronizados = totalSincronizados,
                     descripcion = "Sincronizados $totalSincronizados eventos exitosamente"
                 )
             }
             totalSincronizados > 0 && totalFallidos > 0 -> {
-                Log.w(TAG, "⚠️ Sincronización parcial: $totalSincronizados OK, $totalFallidos fallidos")
+                Log.w(TAG, "Sincronización parcial: $totalSincronizados OK, $totalFallidos fallidos")
                 SyncResult.PartialSuccess(
                     eventosSincronizados = totalSincronizados,
                     eventosFallidos = totalFallidos,
@@ -108,7 +108,7 @@ class SyncEventosUseCase @Inject constructor(
                 )
             }
             else -> {
-                Log.e(TAG, "❌ Sincronización fallida")
+                Log.e(TAG, "Sincronización fallida")
                 SyncResult.Error(
                     descripcion = errores.firstOrNull() ?: "Error desconocido",
                     exception = null
@@ -129,7 +129,7 @@ class SyncEventosUseCase @Inject constructor(
                 val eventosRequest = eventos.map { EventoRequest.fromEntity(it) }
                 val batchRequest = EventosBatchRequest(eventosRequest)
                 
-                Log.d(TAG, "📤 Enviando batch: ${eventos.size} eventos (intento ${retries + 1})")
+                Log.d(TAG, "Enviando batch: ${eventos.size} eventos (intento ${retries + 1})")
                 
                 // Enviar al servidor
                 val response = eventosApi.crearEventosBatch(batchRequest)
@@ -137,7 +137,7 @@ class SyncEventosUseCase @Inject constructor(
                 if (response.isSuccessful) {
                     val eventosResponse = response.body() ?: emptyList()
                     
-                    Log.d(TAG, "✅ Servidor respondió con ${eventosResponse.size} eventos")
+                    Log.d(TAG, "Servidor respondió con ${eventosResponse.size} eventos")
                     
                     // Marcar como sincronizados en Room
                     var successCount = 0
@@ -150,7 +150,7 @@ class SyncEventosUseCase @Inject constructor(
                                     idServidor = serverEvento.idEvento
                                 )
                                 successCount++
-                                Log.d(TAG, "✅ Evento ${evento.id} marcado como sincronizado → Server ID: ${serverEvento.idEvento}")
+                                Log.d(TAG, "Evento ${evento.id} marcado como sincronizado → Server ID: ${serverEvento.idEvento}")
                             }
                         } catch (e: Exception) {
                             Log.e(TAG, "Error marcando evento ${evento.id}: ${e.message}")
@@ -168,7 +168,7 @@ class SyncEventosUseCase @Inject constructor(
                     }
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Error desconocido"
-                    Log.e(TAG, "❌ Error del servidor: ${response.code()} - $errorBody")
+                    Log.e(TAG, "Error del servidor: ${response.code()} - $errorBody")
                     
                     // Si es error 4xx (cliente), no reintentar
                     if (response.code() in 400..499) {
@@ -186,13 +186,13 @@ class SyncEventosUseCase @Inject constructor(
                     // Si es error 5xx, reintentar
                     retries++
                     if (retries < MAX_RETRIES) {
-                        Log.d(TAG, "⏳ Reintentando en 1 segundo...")
+                        Log.d(TAG, "Reintentando en 1 segundo...")
                         kotlinx.coroutines.delay(1000L * retries)
                     }
                 }
                 
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción en batch: ${e.message}", e)
+                Log.e(TAG, "Excepción en batch: ${e.message}", e)
                 retries++
                 
                 if (retries >= MAX_RETRIES) {

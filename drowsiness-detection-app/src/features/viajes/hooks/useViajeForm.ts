@@ -1,8 +1,6 @@
-// ============================================
 // HOOK PERSONALIZADO PARA FORMULARIO DE VIAJE
 // Maneja estado, validaciones, carga dinámica de choferes y envío
 // Soporta tanto creación como edición
-// ============================================
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';

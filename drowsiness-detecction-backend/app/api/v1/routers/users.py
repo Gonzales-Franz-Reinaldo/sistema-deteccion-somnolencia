@@ -40,7 +40,7 @@ def parse_bool_query(value: Any) -> Optional[bool]:
             return False
     
     # Si llega aquí, el valor no es válido - retornar None en lugar de error
-    logger.warning(f"⚠️ Valor no reconocido para boolean: {value}, retornando None")
+    logger.warning(f"Valor no reconocido para boolean: {value}, retornando None")
     return None
 
 
@@ -161,7 +161,7 @@ def create_user(
     if enviar_email:
         # Validar que el usuario tenga un email válido
         if not user.email or not user.email.strip():
-            logger.warning(f"⚠️ No se puede enviar email: el chofer {user.nombre_completo} no tiene un email registrado")
+            logger.warning(f"No se puede enviar email: el chofer {user.nombre_completo} no tiene un email registrado")
         else:
             try:
                 email_enviado = email_service.enviar_credenciales_chofer(
@@ -171,12 +171,12 @@ def create_user(
                     contrasena=password_temporal
                 )
                 if email_enviado:
-                    logger.info(f"✉️ Credenciales enviadas por email a {user.email}")
+                    logger.info(f"Credenciales enviadas por email a {user.email}")
                 else:
-                    logger.warning(f"⚠️ No se pudo enviar email a {user.email}")
+                    logger.warning(f"No se pudo enviar email a {user.email}")
             except Exception as e:
                 # No fallar la creación del usuario si falla el email
-                logger.error(f"⚠️ Error enviando credenciales a {user.email}: {str(e)}")
+                logger.error(f"Error enviando credenciales a {user.email}: {str(e)}")
     
     return user
 

@@ -104,7 +104,7 @@ async def websocket_admin_endpoint(
         await websocket.close(code=4000, reason="Error de conexión")
         return
     
-    logger.info(f"🔌 Admin conectado para notificaciones: {user.nombre_completo} (ID: {user_id})")
+    logger.info(f"Admin conectado para notificaciones: {user.nombre_completo} (ID: {user_id})")
     
     # Enviar confirmación de conexión
     await websocket.send_json({
@@ -127,16 +127,14 @@ async def websocket_admin_endpoint(
                 logger.warning(f"Mensaje no-JSON de admin {user_id}: {data}")
                 
     except WebSocketDisconnect:
-        logger.info(f"🔌 Admin desconectado: {user.nombre_completo}")
+        logger.info(f"Admin desconectado: {user.nombre_completo}")
     except Exception as e:
         logger.error(f"Error en WebSocket admin {user_id}: {e}")
     finally:
         await connection_manager.disconnect(user_id, ConnectionType.ADMIN)
 
 
-# ═══════════════════════════════════════════════════════════════
-# NUEVO: WebSocket para Choferes (enviar eventos de somnolencia)
-# ═══════════════════════════════════════════════════════════════
+#  WebSocket para Choferes (enviar eventos de somnolencia)
 
 @router.websocket("/chofer/{id_viaje}")
 async def websocket_chofer_eventos(
@@ -148,24 +146,22 @@ async def websocket_chofer_eventos(
     """
     WebSocket para que el chofer envíe eventos de somnolencia en tiempo real.
     """
-    logger.info("═══════════════════════════════════════")
-    logger.info(f"🔌 NUEVA CONEXIÓN WS EVENTOS")
+    logger.info(f"NUEVA CONEXIÓN WS EVENTOS")
     logger.info(f"   Viaje ID: {id_viaje}")
     logger.info(f"   Token: {token[:20]}...")
-    logger.info("═══════════════════════════════════════")
     
     # 1. Verificar autenticación
     user = await verify_websocket_token(token, db)
     if not user:
-        logger.error(f"❌ Token inválido para viaje {id_viaje}")
+        logger.error(f"Token inválido para viaje {id_viaje}")
         await websocket.close(code=4001, reason="Token inválido")
         return
     
-    logger.info(f"✅ Usuario autenticado: {user.nombre_completo} (ID: {user.id_usuario})")
+    logger.info(f"Usuario autenticado: {user.nombre_completo} (ID: {user.id_usuario})")
     
     # 2. Verificar que es chofer
     if user.rol != "chofer":
-        logger.error(f"❌ Usuario {user.id_usuario} no es chofer (rol: {user.rol})")
+        logger.error(f"Usuario {user.id_usuario} no es chofer (rol: {user.rol})")
         await websocket.close(code=4003, reason="Solo choferes pueden conectar")
         return
     
@@ -177,20 +173,18 @@ async def websocket_chofer_eventos(
     ).first()
     
     if not viaje:
-        logger.error(f"❌ Viaje {id_viaje} no encontrado o no pertenece al chofer {user.id_usuario}")
+        logger.error(f"Viaje {id_viaje} no encontrado o no pertenece al chofer {user.id_usuario}")
         await websocket.close(code=4004, reason="Viaje no encontrado")
         return
     
-    logger.info(f"✅ Viaje verificado: {viaje.origen} → {viaje.destino}")
+    logger.info(f"Viaje verificado: {viaje.origen} → {viaje.destino}")
     
     # 4. Aceptar conexión
     await websocket.accept()
     
-    logger.info(f"═══════════════════════════════════════")
-    logger.info(f"✅ CHOFER CONECTADO PARA EVENTOS")
+    logger.info(f"CHOFER CONECTADO PARA EVENTOS")
     logger.info(f"   Chofer: {user.nombre_completo}")
     logger.info(f"   Viaje: {id_viaje}")
-    logger.info(f"═══════════════════════════════════════")
     
     # Enviar confirmación
     await websocket.send_json({
@@ -204,7 +198,7 @@ async def websocket_chofer_eventos(
     try:
         while True:
             data = await websocket.receive_text()
-            logger.info(f"📩 Mensaje recibido de chofer {user.nombre_completo}: {data[:100]}...")
+            logger.info(f"Mensaje recibido de chofer {user.nombre_completo}: {data[:100]}...")
             
             try:
                 message = json.loads(data)
@@ -213,11 +207,11 @@ async def websocket_chofer_eventos(
                 logger.warning(f"Mensaje no es JSON válido: {data}")
                 
     except WebSocketDisconnect:
-        logger.info(f"🔌 Chofer {user.nombre_completo} desconectado de eventos (viaje {id_viaje})")
+        logger.info(f"Chofer {user.nombre_completo} desconectado de eventos (viaje {id_viaje})")
     except Exception as e:
-        logger.error(f"❌ Error en WebSocket eventos: {e}")
+        logger.error(f"Error en WebSocket eventos: {e}")
     finally:
-        logger.info(f"🔴 Conexión eventos finalizada para viaje {id_viaje}")
+        logger.info(f"Conexión eventos finalizada para viaje {id_viaje}")
 
 
 async def handle_chofer_evento_message(
@@ -268,7 +262,7 @@ async def handle_chofer_evento_message(
             })
             
             logger.info(
-                f"📤 Evento {evento.tipo_evento} de {user.nombre_completo} "
+                f"Evento {evento.tipo_evento} de {user.nombre_completo} "
                 f"→ {sent_count} admins notificados"
             )
             
@@ -299,7 +293,7 @@ async def handle_chofer_evento_message(
             })
             
             logger.info(
-                f"📤 Batch de {len(eventos)} eventos de {user.nombre_completo} "
+                f"Batch de {len(eventos)} eventos de {user.nombre_completo} "
                 f"→ {sent_count} admins notificados"
             )
     
@@ -376,9 +370,7 @@ async def handle_admin_message(user_id: int, message: dict, websocket: WebSocket
         })
 
 
-# ═══════════════════════════════════════════════════════════════
 # ENDPOINTS HTTP AUXILIARES
-# ═══════════════════════════════════════════════════════════════
 
 @router.get(
     "/stats",

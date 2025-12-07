@@ -98,7 +98,7 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     """Schema para actualizar un usuario"""
     usuario: Optional[str] = Field(None, min_length=3, max_length=50)
-    password: Optional[str] = Field(None, min_length=6)  # Opcional - solo actualizar si se proporciona
+    password: Optional[str] = Field(None, min_length=6) 
     email: Optional[EmailStr] = None
     nombre_completo: Optional[str] = Field(None, min_length=3, max_length=200)
     telefono: Optional[str] = None
@@ -155,7 +155,7 @@ class UserResponse(UserBase):
     ciudad: Optional[str] = None
     tipo_chofer: Optional[TipoChoferEnum] = None
     id_empresa: Optional[int] = None
-    nombre_empresa: Optional[str] = None  # Nombre de la empresa (JOIN)
+    nombre_empresa: Optional[str] = None  
     numero_licencia: Optional[str] = None
     categoria_licencia: Optional[str] = None
     activo: bool

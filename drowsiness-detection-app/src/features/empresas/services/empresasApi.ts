@@ -1,6 +1,4 @@
-// ============================================
 // SERVICIO API PARA EMPRESAS
-// ============================================
 
 import apiClient from '../../../lib/api/client';
 import type { Empresa } from '../types';

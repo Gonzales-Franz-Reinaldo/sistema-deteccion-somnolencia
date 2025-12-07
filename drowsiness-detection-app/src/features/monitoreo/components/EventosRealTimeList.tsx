@@ -1,6 +1,4 @@
-// ============================================
 // LISTA DE EVENTOS DE SOMNOLENCIA EN TIEMPO REAL
-// ============================================
 
 import React from 'react';
 import type { EventoMonitoreo } from '../types';

@@ -141,7 +141,6 @@ async def websocket_gps_chofer(
                 msg_type = message.get("type", "")
                 
                 if msg_type == "GPS_UPDATE":
-                    # ← FIX: Extraer datos del objeto "data" si existe
                     gps_data = message.get("data", message)
                     
                     lat = gps_data.get("lat")
@@ -149,7 +148,7 @@ async def websocket_gps_chofer(
                     
                     # Validar que las coordenadas existen
                     if lat is None or lng is None:
-                        logger.warning(f"⚠️ Coordenadas inválidas recibidas: lat={lat}, lng={lng}")
+                        logger.warning(f"Coordenadas inválidas recibidas: lat={lat}, lng={lng}")
                         await websocket.send_json({
                             "type": "ERROR",
                             "message": "Coordenadas lat/lng requeridas"

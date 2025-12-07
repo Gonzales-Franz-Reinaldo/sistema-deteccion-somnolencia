@@ -1,7 +1,5 @@
-// ============================================
 // SERVICIO API PARA CHOFERES
 // Maneja todas las llamadas HTTP relacionadas con choferes
-// ============================================
 
 import apiClient from '../../../lib/api/client';
 import type { ChoferesListResponse, Chofer, ChoferesFilters, ChoferCreateData, ChoferUpdateData } from '../types';

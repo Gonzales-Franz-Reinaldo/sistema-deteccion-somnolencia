@@ -15,7 +15,6 @@ import javax.inject.Singleton
 /**
  * Helper para MediaPipe Face Landmarker
  * 
- * Equivalente a: drowsiness_processor/extract_points/face_mesh/face_mesh_processor.py
  * 
  * Detecta 468 puntos faciales (ojos, boca, contorno facial, etc.)
  */
@@ -49,7 +48,7 @@ class FaceLandmarkerHelper @Inject constructor(
             val fileSize = inputStream.available()
             inputStream.close()
             
-            Log.d(TAG, "✅ Archivo encontrado: $MODEL_ASSET ($fileSize bytes)")
+            Log.d(TAG, "Archivo encontrado: $MODEL_ASSET ($fileSize bytes)")
             
             val baseOptions = BaseOptions.builder()
                 .setModelAssetPath(MODEL_ASSET)
@@ -66,10 +65,10 @@ class FaceLandmarkerHelper @Inject constructor(
 
             faceLandmarker = FaceLandmarker.createFromOptions(context, options)
             isInitialized = true
-            Log.d(TAG, "✅ FaceLandmarker inicializado correctamente")
+            Log.d(TAG, "FaceLandmarker inicializado correctamente")
 
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al inicializar FaceLandmarker: ${e.message}", e)
+            Log.e(TAG, "Error al inicializar FaceLandmarker: ${e.message}", e)
             isInitialized = false
         }
     }
@@ -82,7 +81,7 @@ class FaceLandmarkerHelper @Inject constructor(
      */
     fun detect(bitmap: Bitmap): FaceLandmarkerResult? {
         if (!isInitialized || faceLandmarker == null) {
-            Log.w(TAG, "⚠️ FaceLandmarker no está inicializado")
+            Log.w(TAG, "FaceLandmarker no está inicializado")
             return null
         }
 
@@ -91,12 +90,12 @@ class FaceLandmarkerHelper @Inject constructor(
             val result = faceLandmarker?.detect(mpImage)
             
             if (result?.faceLandmarks()?.isEmpty() == true) {
-                Log.w(TAG, "⚠️ No se detectó rostro en el frame")
+                Log.w(TAG, "No se detectó rostro en el frame")
             }
             
             result
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al detectar landmarks: ${e.message}", e)
+            Log.e(TAG, "Error al detectar landmarks: ${e.message}", e)
             null
         }
     }
@@ -108,6 +107,6 @@ class FaceLandmarkerHelper @Inject constructor(
         faceLandmarker?.close()
         faceLandmarker = null
         isInitialized = false
-        Log.d(TAG, "🧹 FaceLandmarker cerrado")
+        Log.d(TAG, "FaceLandmarker cerrado")
     }
 }

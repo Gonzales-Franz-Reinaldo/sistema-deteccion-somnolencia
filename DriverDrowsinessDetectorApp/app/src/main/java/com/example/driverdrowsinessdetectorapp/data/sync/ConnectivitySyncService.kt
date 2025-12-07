@@ -52,32 +52,28 @@ class ConnectivitySyncService @Inject constructor(
      */
     fun start() {
         if (isRunning) {
-            Log.d(TAG, "⚠️ Servicio ya está corriendo")
+            Log.d(TAG, "Servicio ya está corriendo")
             return
         }
         
         isRunning = true
-        Log.d(TAG, "═══════════════════════════════════════")
-        Log.d(TAG, "🚀 INICIANDO ConnectivitySyncService")
-        Log.d(TAG, "═══════════════════════════════════════")
+        Log.d(TAG, "INICIANDO ConnectivitySyncService")
         
         observerJob = scope.launch {
-            Log.d(TAG, "📡 Iniciando observación de red...")
+            Log.d(TAG, "Iniciando observación de red...")
             
             networkObserver.observe()
                 .catch { e ->
-                    Log.e(TAG, "❌ Error en observación de red: ${e.message}", e)
+                    Log.e(TAG, "Error en observación de red: ${e.message}", e)
                 }
                 .collectLatest { status ->
                     Log.d(TAG, "")
-                    Log.d(TAG, "═══════════════════════════════════════")
-                    Log.d(TAG, "📶 CAMBIO DE CONECTIVIDAD: $status")
-                    Log.d(TAG, "   wasDisconnected: $wasDisconnected")
-                    Log.d(TAG, "═══════════════════════════════════════")
+                    Log.d(TAG, "CAMBIO DE CONECTIVIDAD: $status")
+                    Log.d(TAG, " wasDisconnected: $wasDisconnected")
                     
                     when (status) {
                         NetworkConnectivityObserver.Status.Available -> {
-                            Log.d(TAG, "🌐 Conexión DISPONIBLE detectada")
+                            Log.d(TAG, "Conexión DISPONIBLE detectada")
                             
                             // Solo sincronizar si estuvimos desconectados antes
                             // O si es la primera vez que se detecta conexión
@@ -89,7 +85,7 @@ class ConnectivitySyncService @Inject constructor(
                                 
                                 syncIfNeeded()
                             } else {
-                                Log.d(TAG, "ℹ️ Ya estábamos conectados, verificando eventos pendientes...")
+                                Log.d(TAG, "Ya estábamos conectados, verificando eventos pendientes...")
                                 // Verificar si hay eventos pendientes de todos modos
                                 checkPendingEvents()
                             }
@@ -99,19 +95,19 @@ class ConnectivitySyncService @Inject constructor(
                         
                         NetworkConnectivityObserver.Status.Lost,
                         NetworkConnectivityObserver.Status.Unavailable -> {
-                            Log.w(TAG, "📵 Conexión PERDIDA/NO DISPONIBLE")
+                            Log.w(TAG, "Conexión PERDIDA/NO DISPONIBLE")
                             wasDisconnected = true
                         }
                         
                         NetworkConnectivityObserver.Status.Losing -> {
-                            Log.w(TAG, "⚠️ Conexión PERDIENDO...")
+                            Log.w(TAG, "Conexión PERDIENDO...")
                             wasDisconnected = true
                         }
                     }
                 }
         }
         
-        Log.d(TAG, "✅ Job de observación iniciado: ${observerJob?.isActive}")
+        Log.d(TAG, "Job de observación iniciado: ${observerJob?.isActive}")
     }
     
     /**
@@ -120,13 +116,13 @@ class ConnectivitySyncService @Inject constructor(
     private suspend fun checkPendingEvents() {
         try {
             val hasPending = syncEventosUseCase.hasPendingEvents()
-            Log.d(TAG, "📊 ¿Eventos pendientes? $hasPending")
+            Log.d(TAG, "¿Eventos pendientes? $hasPending")
             
             if (hasPending) {
                 syncIfNeeded()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error verificando eventos pendientes: ${e.message}", e)
+            Log.e(TAG, "Error verificando eventos pendientes: ${e.message}", e)
         }
     }
     
@@ -138,7 +134,7 @@ class ConnectivitySyncService @Inject constructor(
         
         // Evitar sincronizaciones muy frecuentes
         if (currentTime - lastSyncTime < MIN_SYNC_INTERVAL_MS) {
-            Log.d(TAG, "⏳ Muy pronto para sincronizar (${currentTime - lastSyncTime}ms desde última sync)")
+            Log.d(TAG, "Muy pronto para sincronizar (${currentTime - lastSyncTime}ms desde última sync)")
             return
         }
         
@@ -146,22 +142,20 @@ class ConnectivitySyncService @Inject constructor(
         try {
             val hasPending = syncEventosUseCase.hasPendingEvents()
             if (!hasPending) {
-                Log.d(TAG, "✅ No hay eventos pendientes de sincronización")
+                Log.d(TAG, "No hay eventos pendientes de sincronización")
                 return
             }
             
             val stats = syncEventosUseCase.getStats()
-            Log.d(TAG, "📊 Eventos pendientes: ${stats.eventosPendientes}")
+            Log.d(TAG, "Eventos pendientes: ${stats.eventosPendientes}")
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error verificando eventos pendientes: ${e.message}", e)
+            Log.e(TAG, "Error verificando eventos pendientes: ${e.message}", e)
             return
         }
         
         Log.d(TAG, "")
-        Log.d(TAG, "═══════════════════════════════════════")
         Log.d(TAG, "⚡ CONEXIÓN RECUPERADA - SINCRONIZANDO")
-        Log.d(TAG, "═══════════════════════════════════════")
         
         lastSyncTime = currentTime
         
@@ -170,34 +164,33 @@ class ConnectivitySyncService @Inject constructor(
             
             when (result) {
                 is SyncResult.Success -> {
-                    Log.d(TAG, "✅ SYNC EXITOSA: ${result.eventosSincronizados} eventos")
+                    Log.d(TAG, "SYNC EXITOSA: ${result.eventosSincronizados} eventos")
                 }
                 is SyncResult.PartialSuccess -> {
-                    Log.w(TAG, "⚠️ SYNC PARCIAL: ${result.eventosSincronizados} OK, ${result.eventosFallidos} fallidos")
+                    Log.w(TAG, "SYNC PARCIAL: ${result.eventosSincronizados} OK, ${result.eventosFallidos} fallidos")
                 }
                 is SyncResult.NothingToSync -> {
-                    Log.d(TAG, "✅ Sin eventos pendientes")
+                    Log.d(TAG, "Sin eventos pendientes")
                 }
                 is SyncResult.NoConnection -> {
-                    Log.w(TAG, "📵 Sin conexión durante sync")
+                    Log.w(TAG, "Sin conexión durante sync")
                     wasDisconnected = true
                 }
                 is SyncResult.Error -> {
-                    Log.e(TAG, "❌ Error en sync: ${result.descripcion}")
+                    Log.e(TAG, "Error en sync: ${result.descripcion}")
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Excepción durante sincronización: ${e.message}", e)
+            Log.e(TAG, "Excepción durante sincronización: ${e.message}", e)
         }
         
-        Log.d(TAG, "═══════════════════════════════════════")
     }
     
     /**
      * Fuerza una sincronización inmediata.
      */
     fun syncNow() {
-        Log.d(TAG, "🔄 Sincronización manual solicitada")
+        Log.d(TAG, "Sincronización manual solicitada")
         scope.launch {
             lastSyncTime = 0  // Resetear para permitir sync inmediata
             syncIfNeeded()
@@ -213,7 +206,7 @@ class ConnectivitySyncService @Inject constructor(
      * Detiene el servicio.
      */
     fun stop() {
-        Log.d(TAG, "🛑 Deteniendo ConnectivitySyncService")
+        Log.d(TAG, "Deteniendo ConnectivitySyncService")
         observerJob?.cancel()
         observerJob = null
         isRunning = false

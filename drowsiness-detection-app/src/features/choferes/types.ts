@@ -1,6 +1,4 @@
-// ============================================
 // TIPOS E INTERFACES PARA FEATURE CHOFERES
-// ============================================
 
 /**
  * Interfaz principal para un Chofer

@@ -1,6 +1,4 @@
-// ============================================
 // INDICADOR DE ESTADO GPS
-// ============================================
 
 import React from 'react';
 import type { EstadoGPS } from '../types';

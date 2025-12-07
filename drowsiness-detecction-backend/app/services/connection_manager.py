@@ -89,7 +89,7 @@ class ConnectionManager:
         self._total_connections = 0
         self._total_messages_sent = 0
         
-        logger.info("🔌 ConnectionManager inicializado")
+        logger.info("ConnectionManager inicializado")
     
     async def connect(
         self,
@@ -129,7 +129,7 @@ class ConnectionManager:
                 self._connections_by_type[connection_type].add(user_id)
                 self._total_connections += 1
             
-            logger.info(f"✅ WebSocket conectado: user_id={user_id}, type={connection_type}")
+            logger.info(f"WebSocket conectado: user_id={user_id}, type={connection_type}")
             
             # Enviar mensaje de bienvenida
             await self.send_personal_message(
@@ -148,7 +148,7 @@ class ConnectionManager:
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error conectando WebSocket: {e}")
+            logger.error(f"Error conectando WebSocket: {e}")
             return False
     
     async def disconnect(
@@ -176,7 +176,7 @@ class ConnectionManager:
                 if user_id in self._connections_by_type.get(connection_type, set()):
                     self._connections_by_type[connection_type].discard(user_id)
         
-        logger.info(f"🔌 WebSocket desconectado: user_id={user_id}, type={connection_type}")
+        logger.info(f"WebSocket desconectado: user_id={user_id}, type={connection_type}")
     
     async def send_personal_message(
         self,
@@ -201,14 +201,14 @@ class ConnectionManager:
             if websocket:
                 await websocket.send_text(message.to_json())
                 self._total_messages_sent += 1
-                logger.debug(f"📤 Mensaje enviado a user_id={user_id}: {message.event_type}")
+                logger.debug(f"Mensaje enviado a user_id={user_id}: {message.event_type}")
                 return True
             else:
-                logger.debug(f"⚠️ Usuario {user_id} no conectado")
+                logger.debug(f"Usuario {user_id} no conectado")
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Error enviando mensaje a user_id={user_id}: {e}")
+            logger.error(f"Error enviando mensaje a user_id={user_id}: {e}")
             await self.disconnect(user_id, connection_type)
             return False
     
@@ -234,7 +234,7 @@ class ConnectionManager:
             if await self.send_personal_message(user_id, message, connection_type):
                 sent_count += 1
         
-        logger.info(f"📢 Broadcast a {connection_type}: {sent_count}/{len(user_ids)} mensajes enviados")
+        logger.info(f"Broadcast a {connection_type}: {sent_count}/{len(user_ids)} mensajes enviados")
         return sent_count
     
     async def broadcast_to_admins(self, message: WebSocketMessage) -> int:

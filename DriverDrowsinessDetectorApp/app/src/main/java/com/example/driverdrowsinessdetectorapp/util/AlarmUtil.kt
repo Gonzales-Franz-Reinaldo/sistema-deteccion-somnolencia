@@ -48,19 +48,19 @@ class AlarmUtil @Inject constructor(
             AlertLevel.MEDIUM -> {
                 //  Solo vibración para advertencias leves
                 vibrateShort()
-                Log.d(TAG, "📳 Vibración MEDIUM activada")
+                Log.d(TAG, "Vibración MEDIUM activada")
             }
             
             AlertLevel.HIGH -> {
                 //  Solo vibración para advertencias moderadas
                 vibrateLong()
-                Log.d(TAG, "📳 Vibración HIGH activada")
+                Log.d(TAG, "Vibración HIGH activada")
             }
             
             AlertLevel.CRITICAL -> {
                 //  ALARMA SONORA + VIBRACIÓN para microsueño/cabeceo
                 playCriticalAlarm()
-                Log.d(TAG, "🔴 ALARMA CRÍTICA ACTIVADA - Volumen máximo + Sirena")
+                Log.d(TAG, "ALARMA CRÍTICA ACTIVADA - Volumen máximo + Sirena")
             }
         }
     }
@@ -87,7 +87,7 @@ class AlarmUtil @Inject constructor(
                 )
                 isLooping = true  // ← Repetir hasta que se detenga manualmente
                 setOnErrorListener { _, what, extra ->
-                    Log.e(TAG, "❌ Error MediaPlayer: what=$what, extra=$extra")
+                    Log.e(TAG, "Error MediaPlayer: what=$what, extra=$extra")
                     false
                 }
                 start()
@@ -96,10 +96,10 @@ class AlarmUtil @Inject constructor(
             // Vibrar continuamente
             vibrateContinuous()
             
-            Log.d(TAG, "🚨 Alarma sonora iniciada (alarma_sonora.mp3)")
+            Log.d(TAG, "Alarma sonora iniciada (alarma_sonora.mp3)")
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al reproducir alarma crítica: ${e.message}", e)
+            Log.e(TAG, "Error al reproducir alarma crítica: ${e.message}", e)
         }
     }
 
@@ -110,9 +110,9 @@ class AlarmUtil @Inject constructor(
         try {
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
             audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
-            Log.d(TAG, "🔊 Volumen configurado al MÁXIMO: $maxVolume")
+            Log.d(TAG, "Volumen configurado al MÁXIMO: $maxVolume")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al configurar volumen: ${e.message}", e)
+            Log.e(TAG, "Error al configurar volumen: ${e.message}", e)
         }
     }
 
@@ -128,9 +128,9 @@ class AlarmUtil @Inject constructor(
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(500)
             }
-            Log.d(TAG, "📳 Vibración corta")
+            Log.d(TAG, "Vibración corta")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al vibrar: ${e.message}", e)
+            Log.e(TAG, "Error al vibrar: ${e.message}", e)
         }
     }
 
@@ -149,9 +149,9 @@ class AlarmUtil @Inject constructor(
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(longArrayOf(0, 300, 100, 300, 100, 300), -1)
             }
-            Log.d(TAG, "📳 Vibración larga")
+            Log.d(TAG, "Vibración larga")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al vibrar: ${e.message}", e)
+            Log.e(TAG, "Error al vibrar: ${e.message}", e)
         }
     }
 
@@ -170,9 +170,9 @@ class AlarmUtil @Inject constructor(
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(longArrayOf(0, 500, 200, 500, 200), 0)
             }
-            Log.d(TAG, "📳 Vibración continua iniciada")
+            Log.d(TAG, "Vibración continua iniciada")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al vibrar: ${e.message}", e)
+            Log.e(TAG, "Error al vibrar: ${e.message}", e)
         }
     }
 
@@ -193,9 +193,9 @@ class AlarmUtil @Inject constructor(
             // Detener vibración
             vibrator.cancel()
             
-            Log.d(TAG, "🛑 Alarma detenida")
+            Log.d(TAG, "Alarma detenida")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al detener alarma: ${e.message}", e)
+            Log.e(TAG, "Error al detener alarma: ${e.message}", e)
         }
     }
 

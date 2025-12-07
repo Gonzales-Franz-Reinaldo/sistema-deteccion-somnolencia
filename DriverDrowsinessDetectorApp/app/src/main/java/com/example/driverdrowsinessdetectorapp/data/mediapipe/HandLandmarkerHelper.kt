@@ -48,10 +48,10 @@ class HandLandmarkerHelper @Inject constructor(
 
             handLandmarker = HandLandmarker.createFromOptions(context, options)
             isInitialized = true
-            Log.d(TAG, "✅ HandLandmarker inicializado correctamente")
+            Log.d(TAG, "HandLandmarker inicializado correctamente")
 
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al inicializar HandLandmarker: ${e.message}", e)
+            Log.e(TAG, "Error al inicializar HandLandmarker: ${e.message}", e)
             isInitialized = false
         }
     }
@@ -61,7 +61,7 @@ class HandLandmarkerHelper @Inject constructor(
      */
     fun detect(bitmap: Bitmap): HandLandmarkerResult? {
         if (!isInitialized || handLandmarker == null) {
-            Log.w(TAG, "⚠️ HandLandmarker no está inicializado")
+            Log.w(TAG, "HandLandmarker no está inicializado")
             return null
         }
 
@@ -69,7 +69,7 @@ class HandLandmarkerHelper @Inject constructor(
             val mpImage = BitmapImageBuilder(bitmap).build()
             handLandmarker?.detect(mpImage)
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error al detectar manos: ${e.message}", e)
+            Log.e(TAG, "Error al detectar manos: ${e.message}", e)
             null
         }
     }
@@ -81,6 +81,6 @@ class HandLandmarkerHelper @Inject constructor(
         handLandmarker?.close()
         handLandmarker = null
         isInitialized = false
-        Log.d(TAG, "🧹 HandLandmarker cerrado")
+        Log.d(TAG, "HandLandmarker cerrado")
     }
 }

@@ -17,28 +17,20 @@ class Empresa(Base):
     # Primary Key
     id_empresa = Column(Integer, primary_key=True, index=True)
     
-    # ============================================
     # INFORMACIÓN DE LA EMPRESA
-    # ============================================
     nombre_empresa = Column(String(200), nullable=False, unique=True, index=True)
     ruc = Column(String(20), unique=True, index=True)
     telefono = Column(String(20))
     email = Column(String(100), index=True)
     direccion = Column(Text)
     
-    # ============================================
     # ESTADO
-    # ============================================
     activo = Column(Boolean, default=True, nullable=False, index=True)
     
-    # ============================================
     # METADATOS
-    # ============================================
     fecha_registro = Column(DateTime(timezone=True), server_default=func.now())
     
-    # ============================================
     # RELACIONES
-    # ============================================
     usuarios = relationship("Usuario", back_populates="empresa")
     viajes = relationship("Viaje", back_populates="empresa")
     
